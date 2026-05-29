@@ -1,0 +1,75 @@
+{
+  "name": "@workspace/electron",
+  "version": "1.0.0",
+  "description": "AetherPulse Desktop App",
+  "main": "dist/main.js",
+  "private": true,
+  "scripts": {
+    "dev": "electron .",
+    "build:ts": "tsc -p tsconfig.json",
+    "build:web": "pnpm --filter @workspace/aetherpulse run build",
+    "build": "pnpm run build:web && pnpm run build:ts",
+    "package:win": "pnpm run build && electron-builder --win",
+    "package:mac": "pnpm run build && electron-builder --mac",
+    "package:linux": "pnpm run build && electron-builder --linux",
+    "package:all": "pnpm run build && electron-builder -mwl"
+  },
+  "dependencies": {
+    "electron-serve": "^2.1.1",
+    "electron-updater": "^6.6.2"
+  },
+  "devDependencies": {
+    "electron": "^35.3.0",
+    "electron-builder": "^26.0.12",
+    "typescript": "~5.9.3"
+  },
+  "build": {
+    "appId": "app.aetherpulse",
+    "productName": "AetherPulse",
+    "copyright": "Copyright © 2025 AetherPulse",
+    "asar": true,
+    "files": [
+      "dist/**/*",
+      "web/**/*",
+      "!node_modules"
+    ],
+    "extraResources": [
+      {
+        "from": "../aetherpulse/dist/public",
+        "to": "web",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "assets/icon.ico",
+      "publisherName": "AetherPulse"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "AetherPulse"
+    },
+    "mac": {
+      "target": ["dmg"],
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.social-networking"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "icon": "assets/icon.png",
+      "category": "Network"
+    },
+    "publish": null
+  }
+}
