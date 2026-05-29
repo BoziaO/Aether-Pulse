@@ -4,7 +4,6 @@ import { useJoinRoom } from "@workspace/api-client-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { GlassButton } from "@/components/ui/glass-button";
 import { Input } from "@/components/ui/input";
-import { Activity } from "lucide-react";
 import { motion } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import { getListRoomsQueryKey } from "@workspace/api-client-react";
@@ -38,9 +37,7 @@ export default function JoinRoomPage() {
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-col items-center mb-8"
         >
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center mb-4 shadow-[0_0_30px_rgba(59,130,246,0.4)]">
-            <Activity className="w-8 h-8 text-white" />
-          </div>
+          <img src="/logo.png" alt="AetherPulse" className="w-20 h-20 object-contain mb-2 drop-shadow-[0_0_20px_rgba(124,58,237,0.6)]" />
           <h1 className="text-3xl font-bold text-white tracking-tight">Join Room</h1>
           <p className="text-muted-foreground mt-2 text-center">Enter the invite code to access this space</p>
         </motion.div>

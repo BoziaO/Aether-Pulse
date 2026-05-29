@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity } from "lucide-react";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -71,9 +70,7 @@ export default function AuthPage() {
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-col items-center mb-8"
         >
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center mb-4 shadow-[0_0_30px_rgba(124,58,237,0.4)]">
-            <Activity className="w-8 h-8 text-white" />
-          </div>
+          <img src="/logo.png" alt="AetherPulse" className="w-24 h-24 object-contain mb-2 drop-shadow-[0_0_24px_rgba(124,58,237,0.6)]" />
           <h1 className="text-3xl font-bold text-white tracking-tight">AetherPulse</h1>
           <p className="text-muted-foreground mt-2 text-center">Your private digital space</p>
         </motion.div>

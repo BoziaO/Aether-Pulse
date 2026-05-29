@@ -6,7 +6,7 @@ import { GlassButton } from "@/components/ui/glass-button";
 import { AvatarFallback } from "@/components/ui/avatar-fallback";
 import { StatusIndicator } from "@/components/ui/status-indicator";
 import { useListRooms, getListRoomsQueryKey, useCreateRoom } from "@workspace/api-client-react";
-import { Activity, Plus, Settings, Users, Hash } from "lucide-react";
+import { Plus, Settings, Users, Hash } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useQueryClient } from "@tanstack/react-query";
@@ -40,9 +40,7 @@ function SidebarComponent({ isMobileOpen = false, onClose }: SidebarProps) {
   const SidebarContent = (
     <div className="w-full md:w-72 h-[100dvh] flex flex-col border-r border-white/10 bg-sidebar/50 backdrop-blur-xl">
       <div className="p-6 flex items-center gap-3 border-b border-white/5">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-[0_0_15px_rgba(124,58,237,0.3)]">
-          <Activity className="w-5 h-5 text-white" />
-        </div>
+        <img src="/logo.png" alt="AetherPulse" className="w-9 h-9 object-contain drop-shadow-[0_0_10px_rgba(124,58,237,0.5)]" />
         <h1 className="text-xl font-bold text-white tracking-tight">AetherPulse</h1>
       </div>
 

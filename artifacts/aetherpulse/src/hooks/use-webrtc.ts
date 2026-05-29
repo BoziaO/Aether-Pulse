@@ -2,16 +2,76 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import Peer, { Instance as PeerInstance } from "simple-peer";
 import { getSocket } from "@/lib/socket";
 
+export type ScreenShareMode = "gaming" | "movie" | "default";
+
+type ScreenSharePreset = {
+  video: boolean | MediaTrackConstraints;
+  audio: boolean | MediaTrackConstraints;
+  contentHint: "motion" | "detail" | "";
+  maxBitrateKbps: number;
+  label: string;
+  description: string;
+};
+
+const SCREEN_SHARE_PRESETS: Record<ScreenShareMode, ScreenSharePreset> = {
+  gaming: {
+    video: true,
+    audio: false,
+    contentHint: "motion",
+    maxBitrateKbps: 8000,
+    label: "Gaming",
+    description: "60fps, optimised for fast motion",
+  },
+  movie: {
+    video: true,
+    audio: { echoCancellation: false, noiseSuppression: false, sampleRate: 48000 },
+    contentHint: "detail",
+    maxBitrateKbps: 6000,
+    label: "Movie / Content",
+    description: "High quality, captures system audio",
+  },
+  default: {
+    video: true,
+    audio: false,
+    contentHint: "",
+    maxBitrateKbps: 2500,
+    label: "Standard",
+    description: "720p 30fps, balanced quality",
+  },
+};
+
+async function applyBitrate(peer: PeerInstance, maxKbps: number) {
+  try {
+    const pc = (peer as unknown as { _pc: RTCPeerConnection })._pc;
+    if (!pc) return;
+    const senders = pc.getSenders();
+    for (const sender of senders) {
+      if (sender.track?.kind !== "video") continue;
+      const params = sender.getParameters();
+      if (!params.encodings || params.encodings.length === 0) {
+        params.encodings = [{}];
+      }
+      params.encodings[0].maxBitrate = maxKbps * 1000;
+      params.encodings[0].networkPriority = "high";
+      await sender.setParameters(params);
+    }
+  } catch {
+    // Not all browsers support setParameters — fail silently
+  }
+}
+
 export function useWebRTC(roomId: string, userId?: number) {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
-  
+  const [screenShareMode, setScreenShareMode] = useState<ScreenShareMode>("default");
+
   const [isCameraEnabled, setIsCameraEnabled] = useState(false);
   const [isMicEnabled, setIsMicEnabled] = useState(false);
-  
+
   const localStreamRef = useRef<MediaStream | null>(null);
+  const cameraStreamRef = useRef<MediaStream | null>(null);
   const peerRef = useRef<PeerInstance | null>(null);
   const socket = getSocket();
 
@@ -25,6 +85,12 @@ export function useWebRTC(roomId: string, userId?: number) {
       initiator,
       trickle: true,
       stream,
+      config: {
+        iceServers: [
+          { urls: "stun:stun.l.google.com:19302" },
+          { urls: "stun:stun1.l.google.com:19302" },
+        ],
+      },
     });
 
     peer.on("signal", (data) => {
@@ -37,8 +103,8 @@ export function useWebRTC(roomId: string, userId?: number) {
       }
     });
 
-    peer.on("stream", (remoteStream) => {
-      setRemoteStream(remoteStream);
+    peer.on("stream", (remote) => {
+      setRemoteStream(remote);
     });
 
     peer.on("connect", () => {
@@ -90,7 +156,7 @@ export function useWebRTC(roomId: string, userId?: number) {
 
     return () => {
       if (localStreamRef.current) {
-        localStreamRef.current.getTracks().forEach((track) => track.stop());
+        localStreamRef.current.getTracks().forEach((t) => t.stop());
       }
       if (peerRef.current) {
         peerRef.current.destroy();
@@ -104,35 +170,36 @@ export function useWebRTC(roomId: string, userId?: number) {
     };
   }, [roomId, userId, createPeer, socket]);
 
-  const startLocalStream = useCallback(async (quality: { width?: number, height?: number, frameRate?: number } = {}) => {
+  const startLocalStream = useCallback(async (quality: { width?: number; height?: number; frameRate?: number } = {}) => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: Object.keys(quality).length > 0 ? { ...quality } : true,
-        audio: true
+        audio: true,
       });
-      
-      stream.getVideoTracks().forEach(track => { track.enabled = false; });
-      stream.getAudioTracks().forEach(track => { track.enabled = false; });
+
+      stream.getVideoTracks().forEach((t) => { t.enabled = false; });
+      stream.getAudioTracks().forEach((t) => { t.enabled = false; });
       setIsCameraEnabled(false);
       setIsMicEnabled(false);
 
+      cameraStreamRef.current = stream;
       setStreamSafe(stream);
-      
+
       if (!peerRef.current) {
         peerRef.current = createPeer(stream, true);
       }
-    } catch (err) {
-      console.error("Failed to start local stream", err);
+    } catch {
+      // Camera might be unavailable on some devices
     }
   }, [createPeer, setStreamSafe]);
 
   const toggleCamera = useCallback(() => {
     const stream = localStreamRef.current;
     if (stream) {
-      const videoTrack = stream.getVideoTracks()[0];
-      if (videoTrack) {
-        videoTrack.enabled = !videoTrack.enabled;
-        setIsCameraEnabled(videoTrack.enabled);
+      const track = stream.getVideoTracks()[0];
+      if (track) {
+        track.enabled = !track.enabled;
+        setIsCameraEnabled(track.enabled);
       }
     }
   }, []);
@@ -140,54 +207,91 @@ export function useWebRTC(roomId: string, userId?: number) {
   const toggleMicrophone = useCallback(() => {
     const stream = localStreamRef.current;
     if (stream) {
-      const audioTrack = stream.getAudioTracks()[0];
-      if (audioTrack) {
-        audioTrack.enabled = !audioTrack.enabled;
-        setIsMicEnabled(audioTrack.enabled);
+      const track = stream.getAudioTracks()[0];
+      if (track) {
+        track.enabled = !track.enabled;
+        setIsMicEnabled(track.enabled);
       }
     }
   }, []);
 
-  const toggleScreenShare = useCallback(async () => {
+  const startScreenShare = useCallback(async (mode: ScreenShareMode = "default") => {
+    const preset = SCREEN_SHARE_PRESETS[mode];
     try {
-      if (isScreenSharing) {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        stream.getVideoTracks().forEach(track => { track.enabled = isCameraEnabled; });
-        stream.getAudioTracks().forEach(track => { track.enabled = isMicEnabled; });
-        
-        setStreamSafe(stream);
-        if (peerRef.current) {
-          const oldVideoTrack = localStreamRef.current?.getVideoTracks()[0];
-          const newVideoTrack = stream.getVideoTracks()[0];
-          if (oldVideoTrack && newVideoTrack) {
-            peerRef.current.replaceTrack(oldVideoTrack, newVideoTrack, stream);
-          }
-        }
-        setIsScreenSharing(false);
-      } else {
-        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-        if (localStreamRef.current) {
-          localStreamRef.current.getAudioTracks().forEach(track => stream.addTrack(track));
-        }
-        
-        setStreamSafe(stream);
-        if (peerRef.current) {
-          const oldVideoTrack = localStreamRef.current?.getVideoTracks()[0];
-          const newVideoTrack = stream.getVideoTracks()[0];
-          if (oldVideoTrack && newVideoTrack) {
-            peerRef.current.replaceTrack(oldVideoTrack, newVideoTrack, stream);
-          }
-        }
+      const screenStream = await navigator.mediaDevices.getDisplayMedia({
+        video: preset.video,
+        audio: preset.audio,
+      });
 
-        stream.getVideoTracks()[0].onended = () => {
-          toggleScreenShare();
-        };
-        setIsScreenSharing(true);
+      const videoTrack = screenStream.getVideoTracks()[0];
+      if (videoTrack && preset.contentHint !== "") {
+        videoTrack.contentHint = preset.contentHint;
       }
-    } catch (err) {
-      console.error("Error toggling screen share", err);
+
+      if (peerRef.current && localStreamRef.current) {
+        const oldVideoTrack = localStreamRef.current.getVideoTracks()[0];
+        if (oldVideoTrack) {
+          peerRef.current.replaceTrack(oldVideoTrack, videoTrack, localStreamRef.current);
+        }
+        await applyBitrate(peerRef.current, preset.maxBitrateKbps);
+      }
+
+      const compositeStream = new MediaStream();
+      compositeStream.addTrack(videoTrack);
+
+      const micStream = cameraStreamRef.current;
+      if (micStream) {
+        micStream.getAudioTracks().forEach((t) => compositeStream.addTrack(t));
+      }
+
+      if (preset.audio !== false) {
+        screenStream.getAudioTracks().forEach((t) => compositeStream.addTrack(t));
+      }
+
+      videoTrack.onended = () => {
+        stopScreenShare();
+      };
+
+      setStreamSafe(compositeStream);
+      setScreenShareMode(mode);
+      setIsScreenSharing(true);
+    } catch {
+      // User cancelled or permission denied
     }
-  }, [isScreenSharing, isCameraEnabled, isMicEnabled, setStreamSafe]);
+  }, [setStreamSafe]);
+
+  const stopScreenShare = useCallback(async () => {
+    if (!cameraStreamRef.current) return;
+    const cameraStream = cameraStreamRef.current;
+
+    if (peerRef.current && localStreamRef.current) {
+      const screenVideoTrack = localStreamRef.current.getVideoTracks()[0];
+      const cameraVideoTrack = cameraStream.getVideoTracks()[0];
+      if (screenVideoTrack && cameraVideoTrack) {
+        peerRef.current.replaceTrack(screenVideoTrack, cameraVideoTrack, localStreamRef.current);
+      }
+      await applyBitrate(peerRef.current, 2500);
+    }
+
+    if (localStreamRef.current) {
+      localStreamRef.current.getVideoTracks().forEach((t) => t.stop());
+    }
+
+    cameraStream.getVideoTracks().forEach((t) => { t.enabled = isCameraEnabled; });
+    cameraStream.getAudioTracks().forEach((t) => { t.enabled = isMicEnabled; });
+
+    setStreamSafe(cameraStream);
+    setIsScreenSharing(false);
+    setScreenShareMode("default");
+  }, [isCameraEnabled, isMicEnabled, setStreamSafe]);
+
+  const toggleScreenShare = useCallback(async (mode: ScreenShareMode = "default") => {
+    if (isScreenSharing) {
+      await stopScreenShare();
+    } else {
+      await startScreenShare(mode);
+    }
+  }, [isScreenSharing, startScreenShare, stopScreenShare]);
 
   return {
     localStream,
@@ -196,9 +300,11 @@ export function useWebRTC(roomId: string, userId?: number) {
     isCameraEnabled,
     isMicEnabled,
     isScreenSharing,
+    screenShareMode,
     toggleCamera,
     toggleMicrophone,
     toggleScreenShare,
     startLocalStream,
+    SCREEN_SHARE_PRESETS,
   };
 }
