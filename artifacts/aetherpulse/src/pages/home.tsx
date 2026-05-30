@@ -55,7 +55,7 @@ export default function HomePage() {
                 <p className="text-sm text-muted-foreground">Create a new private space</p>
               </GlassCard>
               
-              <Link href="/room/join" className="block">
+              <Link href="/join" className="block">
                 <GlassCard className="h-full p-6 flex flex-col items-center justify-center text-center hover:bg-white/10 transition-colors cursor-pointer group">
                   <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <Search className="w-6 h-6 text-accent" />

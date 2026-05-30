@@ -249,6 +249,38 @@ export const JoinRoomResponse = zod.object({
 
 
 /**
+ * @summary Join a room using only an invite code
+ */
+export const JoinRoomByCodeBody = zod.object({
+  "inviteCode": zod.string()
+})
+
+export const JoinRoomByCodeResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "inviteCode": zod.string(),
+  "ownerId": zod.number(),
+  "memberCount": zod.number(),
+  "members": zod.array(zod.object({
+  "id": zod.number(),
+  "username": zod.string(),
+  "displayName": zod.string(),
+  "avatarUrl": zod.string().nullish(),
+  "bannerUrl": zod.string().nullish(),
+  "bio": zod.string().nullish(),
+  "status": zod.enum(['online', 'away', 'busy', 'offline']),
+  "customStatus": zod.string().nullish(),
+  "accentColor": zod.string().nullish(),
+  "badges": zod.array(zod.string()).optional(),
+  "createdAt": zod.string()
+})).optional(),
+  "quality": zod.enum(['360p', '480p', '720p', '1080p', '1440p']).optional(),
+  "isActive": zod.boolean().optional(),
+  "createdAt": zod.string()
+})
+
+
+/**
  * @summary Leave a room
  */
 export const LeaveRoomParams = zod.object({

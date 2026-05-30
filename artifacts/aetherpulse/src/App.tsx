@@ -33,6 +33,7 @@ function App() {
             <Suspense fallback={<div className="h-screen w-screen flex items-center justify-center bg-background"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary" /></div>}>
               <Switch>
                 <Route path="/auth" component={AuthPage} />
+                <Route path="/join" component={JoinRoomPage} />
                 <Route path="/room/:roomId/join" component={JoinRoomPage} />
                 <Route path="/room/:roomId" component={RoomPage} />
                 <Route path="/profile/:userId" component={ProfilePage} />

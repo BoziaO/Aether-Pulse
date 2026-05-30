@@ -128,6 +128,39 @@ router.delete("/rooms/:roomId", async (req, res): Promise<void> => {
   res.sendStatus(204);
 });
 
+router.post("/rooms/join-by-code", async (req, res): Promise<void> => {
+  const userId = requireAuth(req, res);
+  if (!userId) return;
+
+  const parsed = JoinRoomBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const [room] = await db
+    .select()
+    .from(roomsTable)
+    .where(eq(roomsTable.inviteCode, parsed.data.inviteCode));
+
+  if (!room) {
+    res.status(404).json({ error: "Invalid invite code — room not found" });
+    return;
+  }
+
+  const [existing] = await db
+    .select()
+    .from(roomMembersTable)
+    .where(and(eq(roomMembersTable.roomId, room.id), eq(roomMembersTable.userId, userId)));
+
+  if (!existing) {
+    await db.insert(roomMembersTable).values({ roomId: room.id, userId });
+  }
+
+  const result = await getRoomWithMembers(room.id);
+  res.json(result);
+});
+
 router.post("/rooms/:roomId/join", async (req, res): Promise<void> => {
   const userId = requireAuth(req, res);
   if (!userId) return;

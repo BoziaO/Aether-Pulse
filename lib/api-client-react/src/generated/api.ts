@@ -928,6 +928,77 @@ export const useJoinRoom = <TError = ErrorType<void>,
       return useMutation(getJoinRoomMutationOptions(options));
     }
 
+export const getJoinRoomByCodeUrl = () => {
+
+
+
+
+  return `/api/rooms/join-by-code`
+}
+
+/**
+ * @summary Join a room using only an invite code
+ */
+export const joinRoomByCode = async (joinRoomInput: JoinRoomInput, options?: RequestInit): Promise<Room> => {
+
+  return customFetch<Room>(getJoinRoomByCodeUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      joinRoomInput,)
+  }
+);}
+
+
+
+
+export const getJoinRoomByCodeMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof joinRoomByCode>>, TError,{data: BodyType<JoinRoomInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof joinRoomByCode>>, TError,{data: BodyType<JoinRoomInput>}, TContext> => {
+
+const mutationKey = ['joinRoomByCode'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof joinRoomByCode>>, {data: BodyType<JoinRoomInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  joinRoomByCode(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type JoinRoomByCodeMutationResult = NonNullable<Awaited<ReturnType<typeof joinRoomByCode>>>
+    export type JoinRoomByCodeMutationBody = BodyType<JoinRoomInput>
+    export type JoinRoomByCodeMutationError = ErrorType<void>
+
+    /**
+ * @summary Join a room using only an invite code
+ */
+export const useJoinRoomByCode = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof joinRoomByCode>>, TError,{data: BodyType<JoinRoomInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof joinRoomByCode>>,
+        TError,
+        {data: BodyType<JoinRoomInput>},
+        TContext
+      > => {
+      return useMutation(getJoinRoomByCodeMutationOptions(options));
+    }
+
 export const getLeaveRoomUrl = (roomId: string,) => {
 
 

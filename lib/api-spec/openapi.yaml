@@ -242,6 +242,29 @@ paths:
         "404":
           description: Room not found
 
+  /rooms/join-by-code:
+    post:
+      operationId: joinRoomByCode
+      tags: [rooms]
+      summary: Join a room using only an invite code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JoinRoomInput"
+      responses:
+        "200":
+          description: Joined room
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Room"
+        "403":
+          description: Invalid invite code
+        "404":
+          description: Room not found
+
   /rooms/{roomId}/leave:
     post:
       operationId: leaveRoom
