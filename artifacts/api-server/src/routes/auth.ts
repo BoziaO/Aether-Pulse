@@ -28,6 +28,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     .returning();
 
   req.session!.userId = user.id;
+  await new Promise<void>((resolve, reject) => req.session!.save((err) => err ? reject(err) : resolve()));
 
   const { passwordHash: _, ...safeUser } = user;
   res.status(201).json({
@@ -67,6 +68,7 @@ router.post("/auth/login", async (req, res): Promise<void> => {
   await db.update(usersTable).set({ status: "online" }).where(eq(usersTable.id, user.id));
 
   req.session!.userId = user.id;
+  await new Promise<void>((resolve, reject) => req.session!.save((err) => err ? reject(err) : resolve()));
 
   const { passwordHash: _, ...safeUser } = user;
   res.json({
