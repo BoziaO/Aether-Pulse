@@ -112,6 +112,9 @@ export const UpdateUserBody = zod.object({
   "bio": zod.string().optional(),
   "customStatus": zod.string().optional(),
   "accentColor": zod.string().optional(),
+  "profileGradient": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "bannerUrl": zod.string().nullish(),
   "status": zod.enum(['online', 'away', 'busy', 'offline']).optional()
 })
 
@@ -125,6 +128,7 @@ export const UpdateUserResponse = zod.object({
   "status": zod.enum(['online', 'away', 'busy', 'offline']),
   "customStatus": zod.string().nullish(),
   "accentColor": zod.string().nullish(),
+  "profileGradient": zod.string().nullish(),
   "badges": zod.array(zod.string()).optional(),
   "createdAt": zod.string()
 })

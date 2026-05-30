@@ -1,0 +1,28 @@
+kind = "web"
+  previewPath = "/"
+  title = "AetherPulse"
+  version = "1.0.0"
+  id = "artifacts/aetherpulse"
+  router = "path"
+
+  [[services]]
+  name = "web"
+  paths = [ "/" ]
+  localPort = 26020
+
+  [services.development]
+  run = "npm run dev -w @workspace/aetherpulse"
+
+  [services.production]
+  build = [ "npm", "run", "build", "-w", "@workspace/aetherpulse" ]
+  publicDir = "artifacts/aetherpulse/dist/public"
+  serve = "static"
+
+  [[services.production.rewrites]]
+  from = "/*"
+  to = "/index.html"
+
+  [services.env]
+  PORT = "26020"
+  BASE_PATH = "/"
+  

@@ -15,6 +15,7 @@ function serializeUser(user: typeof usersTable.$inferSelect) {
     bio: safe.bio ?? null,
     customStatus: safe.customStatus ?? null,
     accentColor: safe.accentColor ?? null,
+    profileGradient: safe.profileGradient ?? null,
     createdAt: safe.createdAt.toISOString(),
   };
 }

@@ -15,6 +15,7 @@ export const usersTable = pgTable("users", {
   status: userStatusEnum("status").notNull().default("offline"),
   customStatus: text("custom_status"),
   accentColor: text("accent_color"),
+  profileGradient: text("profile_gradient"),
   badges: text("badges").array().notNull().default([]),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),

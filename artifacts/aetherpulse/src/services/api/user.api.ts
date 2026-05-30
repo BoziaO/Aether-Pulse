@@ -1,0 +1,9 @@
+import { apiFetch } from './client'
+import type { User } from '@/types/user.types'
+
+export const userApi = {
+  update: (userId: number, data: Partial<Pick<User, 'displayName' | 'bio' | 'avatarUrl' | 'bannerUrl' | 'customStatus' | 'accentColor' | 'profileGradient' | 'status'>>) =>
+    apiFetch<User>(`/users/${userId}`, { method: 'PATCH', body: JSON.stringify(data) }),
+
+  get: (userId: number) => apiFetch<User>(`/users/${userId}`),
+}
