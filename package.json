@@ -1,20 +1,27 @@
 {
-  "name": "workspace",
-  "version": "0.0.0",
-  "license": "MIT",
-  "workspaces": [
-    "artifacts/*",
-    "lib/*",
-    "scripts"
-  ],
-  "scripts": {
-    "build": "npm run typecheck && npm run build --workspaces --if-present",
-    "typecheck:libs": "tsc --build",
-    "typecheck": "npm run typecheck:libs && npm run typecheck -w @workspace/aetherpulse -w @workspace/api-server"
-  },
+  "name": "aetherpulse-monorepo",
+  "version": "0.1.0",
   "private": true,
+  "license": "MIT",
+  "scripts": {
+    "dev": "node -e \"require('fs').copyFileSync('.env', 'shared/db/.env')\" && pnpm --filter @workspace/db push && turbo dev",
+    "db:push": "pnpm --filter @workspace/db push",
+    "build": "turbo build",
+    "typecheck": "turbo typecheck",
+    "start:client": "pnpm --filter aetherpulse-client dev",
+    "start:server": "pnpm --filter aetherpulse-server dev",
+    "build:client": "pnpm --filter aetherpulse-client build",
+    "build:server": "pnpm --filter aetherpulse-server build"
+  },
   "devDependencies": {
     "prettier": "^3.8.3",
+    "turbo": "^2.1.2",
     "typescript": "~5.9.3"
+  },
+  "packageManager": "pnpm@10.4.1",
+  "dependencies": {
+    "events": "^3.3.0",
+    "util": "^0.12.5",
+    "util-browser": "^0.0.2"
   }
 }
