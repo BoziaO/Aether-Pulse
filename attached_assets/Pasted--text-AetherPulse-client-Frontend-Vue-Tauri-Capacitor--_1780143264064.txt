@@ -1,0 +1,344 @@
+```text
+AetherPulse/
+│
+├── client/                         # Frontend Vue + Tauri + Capacitor
+│   │
+│   ├── public/
+│   │   ├── icons/
+│   │   ├── sounds/
+│   │   └── splash/
+│   │
+│   ├── src/
+│   │   │
+│   │   ├── app/
+│   │   │   ├── router/
+│   │   │   ├── layouts/
+│   │   │   ├── providers/
+│   │   │   └── guards/
+│   │   │
+│   │   ├── assets/
+│   │   │   ├── images/
+│   │   │   ├── avatars/
+│   │   │   ├── fonts/
+│   │   │   └── animations/
+│   │   │
+│   │   ├── components/
+│   │   │   │
+│   │   │   ├── ui/                # przyciski, inputy itd
+│   │   │   ├── chat/
+│   │   │   ├── stream/
+│   │   │   ├── call/
+│   │   │   ├── profile/
+│   │   │   ├── rooms/
+│   │   │   ├── sidebar/
+│   │   │   ├── settings/
+│   │   │   └── modals/
+│   │   │
+│   │   ├── views/
+│   │   │   ├── HomeView.vue
+│   │   │   ├── LoginView.vue
+│   │   │   ├── RegisterView.vue
+│   │   │   ├── RoomView.vue
+│   │   │   ├── ProfileView.vue
+│   │   │   ├── SettingsView.vue
+│   │   │   └── NotFoundView.vue
+│   │   │
+│   │   ├── stores/                # Pinia
+│   │   │   ├── auth.store.ts
+│   │   │   ├── user.store.ts
+│   │   │   ├── room.store.ts
+│   │   │   ├── rtc.store.ts
+│   │   │   ├── chat.store.ts
+│   │   │   └── settings.store.ts
+│   │   │
+│   │   ├── services/
+│   │   │   ├── api/
+│   │   │   │   ├── auth.api.ts
+│   │   │   │   ├── user.api.ts
+│   │   │   │   ├── room.api.ts
+│   │   │   │   └── upload.api.ts
+│   │   │   │
+│   │   │   ├── socket/
+│   │   │   │   ├── socket.ts
+│   │   │   │   ├── events.ts
+│   │   │   │   └── listeners.ts
+│   │   │   │
+│   │   │   ├── rtc/
+│   │   │   │   ├── peer.ts
+│   │   │   │   ├── media.ts
+│   │   │   │   ├── screenShare.ts
+│   │   │   │   ├── quality.ts
+│   │   │   │   ├── audio.ts
+│   │   │   │   └── connection.ts
+│   │   │   │
+│   │   │   └── storage/
+│   │   │       ├── token.ts
+│   │   │       └── cache.ts
+│   │   │
+│   │   ├── composables/
+│   │   │   ├── useAuth.ts
+│   │   │   ├── useRTC.ts
+│   │   │   ├── useChat.ts
+│   │   │   ├── useRoom.ts
+│   │   │   └── useProfile.ts
+│   │   │
+│   │   ├── styles/
+│   │   │   ├── main.css
+│   │   │   ├── theme.css
+│   │   │   ├── animations.css
+│   │   │   └── scrollbar.css
+│   │   │
+│   │   ├── utils/
+│   │   │   ├── formatters.ts
+│   │   │   ├── validators.ts
+│   │   │   ├── constants.ts
+│   │   │   ├── logger.ts
+│   │   │   └── helpers.ts
+│   │   │
+│   │   ├── types/
+│   │   │   ├── user.types.ts
+│   │   │   ├── room.types.ts
+│   │   │   ├── message.types.ts
+│   │   │   └── rtc.types.ts
+│   │   │
+│   │   ├── App.vue
+│   │   └── main.ts
+│   │
+│   ├── src-tauri/                 # desktop
+│   │   ├── icons/
+│   │   ├── capabilities/
+│   │   ├── src/
+│   │   │   └── main.rs
+│   │   ├── Cargo.toml
+│   │   └── tauri.conf.json
+│   │
+│   ├── android/                   # Capacitor Android
+│   ├── ios/                       # Capacitor iOS
+│   │
+│   ├── capacitor.config.ts
+│   ├── vite.config.ts
+│   ├── tailwind.config.js
+│   ├── package.json
+│   └── tsconfig.json
+│
+│
+├── server/                        # Backend Node.js
+│   │
+│   ├── src/
+│   │   │
+│   │   ├── config/
+│   │   │   ├── db.ts
+│   │   │   ├── env.ts
+│   │   │   ├── socket.ts
+│   │   │   └── rtc.ts
+│   │   │
+│   │   ├── controllers/
+│   │   │   ├── auth.controller.ts
+│   │   │   ├── user.controller.ts
+│   │   │   ├── room.controller.ts
+│   │   │   ├── message.controller.ts
+│   │   │   └── upload.controller.ts
+│   │   │
+│   │   ├── routes/
+│   │   │   ├── auth.routes.ts
+│   │   │   ├── user.routes.ts
+│   │   │   ├── room.routes.ts
+│   │   │   ├── upload.routes.ts
+│   │   │   └── message.routes.ts
+│   │   │
+│   │   ├── models/
+│   │   │   ├── User.model.ts
+│   │   │   ├── Room.model.ts
+│   │   │   ├── Message.model.ts
+│   │   │   └── Session.model.ts
+│   │   │
+│   │   ├── middleware/
+│   │   │   ├── auth.middleware.ts
+│   │   │   ├── error.middleware.ts
+│   │   │   ├── upload.middleware.ts
+│   │   │   └── rateLimit.middleware.ts
+│   │   │
+│   │   ├── services/
+│   │   │   ├── auth.service.ts
+│   │   │   ├── room.service.ts
+│   │   │   ├── message.service.ts
+│   │   │   ├── upload.service.ts
+│   │   │   └── rtc.service.ts
+│   │   │
+│   │   ├── sockets/
+│   │   │   ├── index.ts
+│   │   │   ├── chat.socket.ts
+│   │   │   ├── room.socket.ts
+│   │   │   ├── rtc.socket.ts
+│   │   │   └── presence.socket.ts
+│   │   │
+│   │   ├── utils/
+│   │   │   ├── logger.ts
+│   │   │   ├── jwt.ts
+│   │   │   ├── generateRoomId.ts
+│   │   │   └── validators.ts
+│   │   │
+│   │   ├── uploads/
+│   │   │   ├── avatars/
+│   │   │   ├── banners/
+│   │   │   └── attachments/
+│   │   │
+│   │   ├── app.ts
+│   │   └── server.ts
+│   │
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── .env
+│
+│
+├── shared/                        # wspólne typy i helpery
+│   ├── types/
+│   ├── constants/
+│   └── events/
+│
+│
+├── docs/
+│   ├── api/
+│   ├── architecture/
+│   ├── ui/
+│   └── rtc/
+│
+│
+├── .github/
+│   └── workflows/
+│       ├── client.yml
+│       └── server.yml
+│
+│
+├── docker/
+│   ├── client/
+│   ├── server/
+│   └── mongodb/
+│
+│
+├── scripts/
+│   ├── build-client.sh
+│   ├── build-server.sh
+│   └── deploy.sh
+│
+│
+├── package.json
+├── README.md
+├── .gitignore
+└── turbo.json
+```
+
+## Najważniejsze foldery
+
+### `services/rtc`
+
+Tu jest całe serce aplikacji:
+
+* WebRTC
+* screen share
+* voice
+* bitrate
+* jakość streamu
+
+Tu będziesz siedział najwięcej.
+
+---
+
+### `sockets/`
+
+Realtime:
+
+* czat
+* pokoje
+* online status
+* signaling WebRTC
+
+---
+
+### `stores/`
+
+Globalny state:
+
+* użytkownik
+* pokój
+* stream
+* ustawienia
+
+---
+
+### `components/stream`
+
+Komponenty:
+
+* player streamu
+* fullscreen
+* overlay jakości
+* controls
+
+---
+
+### `uploads/`
+
+Na start lokalne pliki:
+
+* avatary
+* bannery
+* załączniki
+
+Później możesz wrzucić Cloudinary.
+
+---
+
+## Jak powinno wyglądać MVP
+
+### Najpierw:
+
+```text
+auth
+chat
+rooms
+voice
+screen share
+```
+
+### Potem:
+
+```text
+profiles
+themes
+quality settings
+mobile support
+notifications
+```
+
+---
+
+## Najbardziej krytyczne pliki
+
+### Front
+
+```text
+peer.ts
+screenShare.ts
+socket.ts
+rtc.store.ts
+RoomView.vue
+```
+
+### Backend
+
+```text
+rtc.socket.ts
+room.socket.ts
+server.ts
+```
+
+---
+
+## Polecam TypeScript wszędzie
+
+Bo przy WebRTC bez typów:
+
+* oszalejesz
+* pogubisz eventy
+* zaczniesz debugować duchy o 4 rano jak przeklęty alchemik UDP.
