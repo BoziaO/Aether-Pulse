@@ -10,5 +10,5 @@ export const authApi = {
 
   logout: () => apiFetch<{ ok: boolean }>('/auth/logout', { method: 'POST' }),
 
-  me: () => apiFetch<User>('/auth/me'),
+  me: () => apiFetch<{ user: User | null }>('/auth/me'),
 }

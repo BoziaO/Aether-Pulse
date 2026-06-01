@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { getSocket } from '@/services/socket/socket'
 import { authApi } from '@/services/api/auth.api'
 import { userApi } from '@/services/api/user.api'
 import type { User } from '@/types/user.types'
@@ -46,8 +47,8 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function fetchMe() {
     try {
-      const u = await authApi.me()
-      user.value = u
+      const res = await authApi.me()
+      user.value = res.user
     } catch {
       user.value = null
     }
@@ -57,6 +58,9 @@ export const useAuthStore = defineStore('auth', () => {
     if (!user.value) return
     const updated = await userApi.update(user.value.id, data)
     user.value = { ...user.value, ...updated }
+    try {
+      getSocket().emit('user-status', { userId: user.value.id, status: updated.status ?? user.value.status })
+    } catch {}
     return updated
   }
 

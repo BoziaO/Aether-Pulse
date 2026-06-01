@@ -14,32 +14,42 @@ export class PeerManager {
   private peers = new Map<string, PeerConnection>()
   private socket: Socket
   private localStream: MediaStream | null = null
+  private localUserId: number
   private onStream: (userId: number, stream: MediaStream) => void
   private onClose: (userId: number) => void
 
+  private onOffer = ({ from, fromUserId, offer }: { from: string; fromUserId?: number; offer: SimplePeer.SignalData }) => {
+    this.handleOffer(from, fromUserId ?? 0, offer)
+  }
+  private onAnswer = ({ from, fromUserId, answer }: { from: string; fromUserId?: number; answer: SimplePeer.SignalData }) => {
+    const conn = this.peers.get(from)
+    if (conn) {
+      if (!conn.userId && fromUserId) conn.userId = fromUserId
+      conn.peer.signal(answer)
+    }
+  }
+  private onIceCandidate = ({ from, candidate }: { from: string; candidate: SimplePeer.SignalData }) => {
+    const conn = this.peers.get(from)
+    if (conn) conn.peer.signal(candidate)
+  }
+
   constructor(
     socket: Socket,
+    localUserId: number,
     onStream: (userId: number, stream: MediaStream) => void,
     onClose: (userId: number) => void,
   ) {
     this.socket = socket
+    this.localUserId = localUserId
     this.onStream = onStream
     this.onClose = onClose
     this.setupSignaling()
   }
 
   private setupSignaling() {
-    this.socket.on('offer', ({ from, offer }: { from: string; offer: SimplePeer.SignalData }) => {
-      this.handleOffer(from, offer)
-    })
-    this.socket.on('answer', ({ from, answer }: { from: string; answer: SimplePeer.SignalData }) => {
-      const conn = this.peers.get(from)
-      if (conn) conn.peer.signal(answer)
-    })
-    this.socket.on('ice-candidate', ({ from, candidate }: { from: string; candidate: SimplePeer.SignalData }) => {
-      const conn = this.peers.get(from)
-      if (conn) conn.peer.signal(candidate)
-    })
+    this.socket.on('offer', this.onOffer)
+    this.socket.on('answer', this.onAnswer)
+    this.socket.on('ice-candidate', this.onIceCandidate)
   }
 
   setLocalStream(stream: MediaStream | null) {
@@ -52,13 +62,13 @@ export class PeerManager {
     this.peers.set(socketId, { peer, userId, socketId, stream: null })
   }
 
-  private handleOffer(fromSocketId: string, signal: SimplePeer.SignalData) {
+  private handleOffer(fromSocketId: string, fromUserId: number, signal: SimplePeer.SignalData) {
     if (this.peers.has(fromSocketId)) {
       this.peers.get(fromSocketId)!.peer.signal(signal)
       return
     }
-    const peer = this.createPeer(false, 0, fromSocketId)
-    this.peers.set(fromSocketId, { peer, userId: 0, socketId: fromSocketId, stream: null })
+    const peer = this.createPeer(false, fromUserId, fromSocketId)
+    this.peers.set(fromSocketId, { peer, userId: fromUserId, socketId: fromSocketId, stream: null })
     peer.signal(signal)
   }
 
@@ -77,13 +87,23 @@ export class PeerManager {
 
     peer.on('signal', (signal) => {
       if (initiator) {
-        this.socket.emit('offer', { to: socketId, offer: signal })
+        this.socket.emit('offer', { to: socketId, fromUserId: this.localUserId, offer: signal })
       } else {
-        this.socket.emit('answer', { to: socketId, answer: signal })
+        this.socket.emit('answer', { to: socketId, fromUserId: this.localUserId, answer: signal })
       }
     })
 
     peer.on('stream', (stream: MediaStream) => {
+      const conn = this.peers.get(socketId)
+      if (conn) {
+        conn.stream = stream
+        conn.userId = userId || conn.userId
+        this.onStream(conn.userId, stream)
+      }
+    })
+
+    // When new tracks are added (e.g., camera toggled on, screen share), ensure UI/audio updates.
+    peer.on('track', (_track: MediaStreamTrack, stream: MediaStream) => {
       const conn = this.peers.get(socketId)
       if (conn) {
         conn.stream = stream
@@ -122,6 +142,11 @@ export class PeerManager {
   destroyAll() {
     this.peers.forEach(({ peer }) => peer.destroy())
     this.peers.clear()
+
+    // Avoid duplicated listeners when leaving/re-joining calls.
+    this.socket.off('offer', this.onOffer)
+    this.socket.off('answer', this.onAnswer)
+    this.socket.off('ice-candidate', this.onIceCandidate)
   }
 
   hasPeer(socketId: string): boolean {

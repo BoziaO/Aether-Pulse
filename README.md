@@ -72,5 +72,3 @@ Please see [CONTRIBUTING.md](./CONTRIBUTING.md) (coming soon) for details on our
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-For more technical details, see [GEMINI.md](./GEMINI.md).

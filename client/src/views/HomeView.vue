@@ -4,6 +4,7 @@ import { Hash, Plus, UserPlus, Sparkles } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth.store'
 import { useRoomStore } from '@/stores/room.store'
 import RoomCard from '@/components/rooms/RoomCard.vue'
+import RoomCardSkeleton from '@/components/rooms/RoomCardSkeleton.vue'
 import CreateRoomModal from '@/components/rooms/CreateRoomModal.vue'
 
 const auth = useAuthStore()
@@ -36,8 +37,8 @@ const showCreate = ref(false)
         <span class="section-count">{{ roomStore.rooms.length }}</span>
       </div>
 
-      <div v-if="roomStore.loading" class="empty-state">
-        <div class="pulse">Loading rooms...</div>
+      <div v-if="roomStore.loading" class="rooms-grid">
+        <RoomCardSkeleton v-for="i in 3" :key="i" />
       </div>
 
       <div v-else-if="roomStore.rooms.length === 0" class="empty-state">

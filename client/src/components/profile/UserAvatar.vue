@@ -1,15 +1,20 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { User } from '@/types/user.types'
+import type { MessageUser } from '@/types/message.types'
 
 const props = defineProps<{
-  user: User | null | undefined
+  user: User | MessageUser | null | undefined
   size?: number
 }>()
 
 const sz = computed(() => props.size ?? 36)
 const initials = computed(() => {
-  const name = props.user?.displayName || props.user?.username || '?'
+  const u = props.user
+  const name =
+    u?.displayName ||
+    (u && 'username' in u ? u.username : null) ||
+    '?'
   return name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
 })
 const gradient = computed(() => {

@@ -20,8 +20,8 @@ export const useRoomStore = defineStore('room', () => {
     }
   }
 
-  async function createRoom(name: string): Promise<Room> {
-    const room = await roomApi.create(name)
+  async function createRoom(name: string, quality?: string): Promise<Room> {
+    const room = await roomApi.create(name, quality)
     rooms.value.unshift(room)
     return room
   }
@@ -40,6 +40,26 @@ export const useRoomStore = defineStore('room', () => {
     return room
   }
 
+  async function updateRoom(roomId: string, data: { name?: string; quality?: string }) {
+    const room = await roomApi.update(roomId, data)
+    if (currentRoom.value?.id === roomId) currentRoom.value = room
+    const idx = rooms.value.findIndex(r => r.id === roomId)
+    if (idx >= 0) rooms.value[idx] = room
+    return room
+  }
+
+  async function deleteRoom(roomId: string) {
+    await roomApi.delete(roomId)
+    rooms.value = rooms.value.filter(r => r.id !== roomId)
+    if (currentRoom.value?.id === roomId) currentRoom.value = null
+  }
+
+  async function leaveRoom(roomId: string) {
+    await roomApi.leave(roomId)
+    rooms.value = rooms.value.filter(r => r.id !== roomId)
+    if (currentRoom.value?.id === roomId) currentRoom.value = null
+  }
+
   function setCurrentRoom(room: Room | null) {
     currentRoom.value = room
   }
@@ -48,5 +68,5 @@ export const useRoomStore = defineStore('room', () => {
     return `${window.location.origin}/join/${room.inviteCode}`
   }
 
-  return { rooms, currentRoom, loading, error, fetchRooms, createRoom, joinByCode, loadRoom, setCurrentRoom, getInviteLink }
+  return { rooms, currentRoom, loading, error, fetchRooms, createRoom, joinByCode, loadRoom, updateRoom, deleteRoom, leaveRoom, setCurrentRoom, getInviteLink }
 })

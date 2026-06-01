@@ -1,11 +1,13 @@
 {
-  "name": "aetherpulse-monorepo",
+  "name": "aetherpulse",
   "version": "0.1.0",
   "private": true,
   "license": "MIT",
   "scripts": {
     "dev": "node -e \"require('fs').copyFileSync('.env', 'shared/db/.env')\" && pnpm --filter @workspace/db push && turbo dev",
     "db:push": "pnpm --filter @workspace/db push",
+    "migrate:chat": "node scripts/migrate-chat.mjs",
+    "migrate:social": "node scripts/migrate-social.mjs",
     "build": "turbo build",
     "typecheck": "turbo typecheck",
     "start:client": "pnpm --filter aetherpulse-client dev",
@@ -14,11 +16,15 @@
     "build:server": "pnpm --filter aetherpulse-server build"
   },
   "devDependencies": {
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/express-session": "^1.19.0",
     "prettier": "^3.8.3",
-    "turbo": "^2.1.2",
-    "typescript": "~5.9.3"
+    "turbo": "^2.9.16",
+    "typescript": "~6.0.3"
   },
-  "packageManager": "pnpm@10.4.1",
+  "packageManager": "pnpm@11.5.0",
   "dependencies": {
     "events": "^3.3.0",
     "util": "^0.12.5",

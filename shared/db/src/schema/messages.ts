@@ -10,6 +10,12 @@ export const messagesTable = sqliteTable("messages", {
   userId: integer("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
   content: text("content").notNull(),
   type: text("type", { enum: ["text", "system", "file"] }).notNull().default("text"),
+  replyToId: integer("reply_to_id"),
+  editedAt: integer("edited_at", { mode: "timestamp_ms" }),
+  isDeleted: integer("is_deleted", { mode: "boolean" }).notNull().default(false),
+  attachmentUrl: text("attachment_url"),
+  attachmentName: text("attachment_name"),
+  attachmentMime: text("attachment_mime"),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull().defaultNow(),
 });
 

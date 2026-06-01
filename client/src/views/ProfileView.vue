@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import {
   AtSign,
   Check,
@@ -19,6 +19,7 @@ import { useAuthStore } from '@/stores/auth.store'
 import UserAvatar from '@/components/profile/UserAvatar.vue'
 import GradientPicker from '@/components/profile/GradientPicker.vue'
 import type { User } from '@/types/user.types'
+import { userApi } from '@/services/api/user.api'
 
 type ProfileStatus = User['status']
 type EditorTab = 'identity' | 'appearance' | 'presence'
@@ -28,6 +29,8 @@ const saving = ref(false)
 const saved = ref(false)
 const error = ref('')
 const activeTab = ref<EditorTab>('identity')
+const uploadingAvatar = ref(false)
+const uploadingBanner = ref(false)
 
 const emptyUser: User = {
   id: 0,
@@ -50,18 +53,36 @@ const emptyUser: User = {
 const initialUser = computed(() => auth.user ?? emptyUser)
 
 const form = reactive({
-  displayName: initialUser.value.displayName,
-  bio: initialUser.value.bio ?? '',
-  pronouns: initialUser.value.pronouns ?? '',
-  website: initialUser.value.website ?? '',
-  location: initialUser.value.location ?? '',
-  customStatus: initialUser.value.customStatus ?? '',
-  avatarUrl: initialUser.value.avatarUrl ?? '',
-  bannerUrl: initialUser.value.bannerUrl ?? '',
-  accentColor: initialUser.value.accentColor ?? '#8b5cf6',
-  profileGradient: initialUser.value.profileGradient,
-  status: initialUser.value.status,
+  displayName: '',
+  bio: '',
+  pronouns: '',
+  website: '',
+  location: '',
+  customStatus: '',
+  avatarUrl: '',
+  bannerUrl: '',
+  accentColor: '#8b5cf6',
+  profileGradient: null as string | null,
+  status: 'offline' as ProfileStatus,
 })
+
+function syncFormFromUser() {
+  const user = initialUser.value
+  if (!user.id) return
+  form.displayName = user.displayName
+  form.bio = user.bio ?? ''
+  form.pronouns = user.pronouns ?? ''
+  form.website = user.website ?? ''
+  form.location = user.location ?? ''
+  form.customStatus = user.customStatus ?? ''
+  form.avatarUrl = user.avatarUrl ?? ''
+  form.bannerUrl = user.bannerUrl ?? ''
+  form.accentColor = user.accentColor ?? '#8b5cf6'
+  form.profileGradient = user.profileGradient
+  form.status = user.status
+}
+
+watch(initialUser, syncFormFromUser, { immediate: true })
 
 const TABS: Array<{ value: EditorTab; label: string; icon: typeof UserRound }> = [
   { value: 'identity', label: 'Profile', icon: UserRound },
@@ -107,7 +128,9 @@ const bannerStyle = computed(() => {
   if (form.bannerUrl.trim()) {
     return { backgroundImage: `url(${form.bannerUrl.trim()})` }
   }
-  return cardStyle.value
+  // Banner: gradient or solid color (Discord-like)
+  if (form.profileGradient) return { background: form.profileGradient }
+  return { background: form.accentColor }
 })
 
 const dirty = computed(() => {
@@ -193,6 +216,54 @@ async function save() {
   } finally {
     saving.value = false
   }
+}
+
+async function handleAvatarFile(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file || !auth.user) return
+  uploadingAvatar.value = true
+  error.value = ''
+  try {
+    const dataUrl = await fileToDataUrl(file)
+    const res = await userApi.uploadAvatar(auth.user.id, dataUrl)
+    form.avatarUrl = res.avatarUrl
+    // keep auth store in sync so other UI updates immediately
+    auth.user.avatarUrl = res.avatarUrl
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : 'Failed to upload avatar.'
+  } finally {
+    uploadingAvatar.value = false
+    input.value = ''
+  }
+}
+
+async function handleBannerFile(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file || !auth.user) return
+  uploadingBanner.value = true
+  error.value = ''
+  try {
+    const dataUrl = await fileToDataUrl(file)
+    const res = await userApi.uploadBanner(auth.user.id, dataUrl)
+    form.bannerUrl = res.bannerUrl
+    auth.user.bannerUrl = res.bannerUrl
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : 'Failed to upload banner.'
+  } finally {
+    uploadingBanner.value = false
+    input.value = ''
+  }
+}
+
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onerror = () => reject(new Error('Failed to read file.'))
+    reader.onload = () => resolve(String(reader.result || ''))
+    reader.readAsDataURL(file)
+  })
 }
 </script>
 
@@ -289,29 +360,33 @@ async function save() {
         </div>
 
         <div>
-          <label class="label" for="avatar-url">Avatar URL</label>
-          <div class="input-action">
-            <div class="input-with-icon">
-              <UserRound :size="15" />
-              <input id="avatar-url" v-model="form.avatarUrl" placeholder="https://..." />
-            </div>
-            <button class="icon-button" type="button" title="Clear avatar" @click="form.avatarUrl = ''">
+          <label class="label">Avatar</label>
+          <div class="upload-row">
+            <UserAvatar :user="previewUser" :size="44" />
+            <label class="btn-ghost upload-btn">
+              <input type="file" accept="image/*" class="file-input" @change="handleAvatarFile" />
+              {{ uploadingAvatar ? 'Uploading...' : 'Upload avatar' }}
+            </label>
+            <button class="icon-button" type="button" title="Remove avatar" @click="form.avatarUrl = ''">
               <X :size="15" />
             </button>
           </div>
+          <div class="hint">PNG/JPG/WebP/GIF, max 6MB. Saved on the server.</div>
         </div>
 
         <div>
-          <label class="label" for="banner-url">Banner URL</label>
-          <div class="input-action">
-            <div class="input-with-icon">
-              <Image :size="15" />
-              <input id="banner-url" v-model="form.bannerUrl" placeholder="https://..." />
-            </div>
-            <button class="icon-button" type="button" title="Clear banner" @click="form.bannerUrl = ''">
+          <label class="label">Banner</label>
+          <div class="upload-row">
+            <div class="banner-preview" :style="bannerStyle" />
+            <label class="btn-ghost upload-btn">
+              <input type="file" accept="image/*" class="file-input" @change="handleBannerFile" />
+              {{ uploadingBanner ? 'Uploading...' : 'Upload banner' }}
+            </label>
+            <button class="icon-button" type="button" title="Remove banner image" @click="form.bannerUrl = ''">
               <X :size="15" />
             </button>
           </div>
+          <div class="hint">If no banner image is set, your accent color or profile gradient is used.</div>
         </div>
 
         <div class="color-field">
@@ -599,6 +674,50 @@ async function save() {
 .icon-button:hover {
   color: var(--text-primary);
   background: var(--bg-hover);
+}
+
+.upload-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.upload-btn {
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface-2);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.upload-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.file-input { display: none; }
+
+.banner-preview {
+  width: 88px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+}
+
+.hint {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
 }
 
 .color-field {

@@ -78,17 +78,19 @@ router.post("/auth/logout", async (req, res): Promise<void> => {
 router.get("/auth/me", async (req, res): Promise<void> => {
   const userId = req.session?.userId;
   if (!userId) {
-    res.status(401).json({ error: "Not authenticated" });
+    // Returning 200 prevents "failed to load resource 401" noise in the browser console
+    // and lets the client treat unauthenticated state as a normal case.
+    res.json({ user: null });
     return;
   }
 
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
   if (!user) {
-    res.status(401).json({ error: "Not authenticated" });
+    res.json({ user: null });
     return;
   }
 
-  res.json(serializeUser(user));
+  res.json({ user: serializeUser(user) });
 });
 
 export default router;

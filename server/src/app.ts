@@ -1,9 +1,11 @@
 import express, { type Express } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
-import session from "express-session";
+import fs from "node:fs";
+import path from "node:path";
 import router from "./routes";
 import { logger } from "./utils/logger";
+import { sessionMiddleware } from "./middleware/session";
 
 declare module "express-session" {
   interface SessionData {
@@ -44,25 +46,34 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const sessionSecret = process.env.SESSION_SECRET;
-if (!sessionSecret) {
-  throw new Error("SESSION_SECRET environment variable is required");
-}
+const uploadsDir = path.resolve(process.cwd(), "uploads");
+fs.mkdirSync(uploadsDir, { recursive: true });
+app.use("/api/uploads", express.static(uploadsDir));
 
-app.use(
-  session({
-    secret: sessionSecret,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: false,
-      httpOnly: true,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      sameSite: "lax",
-    },
-  }),
-);
-
+app.use(sessionMiddleware);
 app.use("/api", router);
+
+// Global Error Handler
+app.use((err: any, req: any, res: any, next: any) => {
+  const statusCode = err.status || err.statusCode || 500;
+  logger.error({ 
+    err: {
+      message: err.message,
+      stack: err.stack,
+      ...err
+    },
+    req: {
+      method: req.method,
+      url: req.url,
+    }
+  }, "Unhandled error");
+
+  res.status(statusCode).json({
+    error: {
+      message: process.env.NODE_ENV === "production" ? "Internal Server Error" : err.message,
+      code: err.code || "INTERNAL_ERROR",
+    },
+  });
+});
 
 export default app;

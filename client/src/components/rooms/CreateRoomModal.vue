@@ -8,6 +8,8 @@ const emit = defineEmits<{ (e: 'close'): void }>()
 const router = useRouter()
 const roomStore = useRoomStore()
 const name = ref('')
+const quality = ref('1080p')
+const QUALITIES = ['360p', '480p', '720p', '1080p', '1440p']
 const loading = ref(false)
 const error = ref('')
 
@@ -16,7 +18,7 @@ async function create() {
   loading.value = true
   error.value = ''
   try {
-    const room = await roomStore.createRoom(name.value.trim())
+    const room = await roomStore.createRoom(name.value.trim(), quality.value)
     emit('close')
     router.push(`/room/${room.id}`)
   } catch (e: unknown) {
@@ -43,6 +45,10 @@ async function create() {
           @keydown.enter="create"
           autofocus
         />
+        <label class="label">Stream quality</label>
+        <select v-model="quality" class="input">
+          <option v-for="q in QUALITIES" :key="q" :value="q">{{ q }}</option>
+        </select>
         <p v-if="error" class="error-msg">{{ error }}</p>
       </div>
       <div class="modal-footer">

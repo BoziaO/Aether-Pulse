@@ -1,3 +1,5 @@
+import type { User } from './user.types'
+
 export interface Room {
   id: string
   name: string
@@ -7,4 +9,5 @@ export interface Room {
   isActive: boolean
   createdAt: string
   memberCount?: number
+  members?: User[]
 }

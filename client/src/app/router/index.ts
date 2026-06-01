@@ -21,6 +21,8 @@ export const router = createRouter({
         { path: 'room/:roomId', name: 'room', component: () => import('@/views/RoomView.vue') },
         { path: 'profile', name: 'profile', component: () => import('@/views/ProfileView.vue') },
         { path: 'settings', name: 'settings', component: () => import('@/views/SettingsView.vue') },
+        { path: 'friends', name: 'friends', component: () => import('@/views/FriendsView.vue') },
+        { path: 'dm/:userId', name: 'dm', component: () => import('@/views/DmView.vue') },
       ],
     },
     { path: '/:pathMatch(.*)*', redirect: '/' },

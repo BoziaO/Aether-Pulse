@@ -4,12 +4,24 @@ import { RouterView } from 'vue-router'
 import Sidebar from '@/components/sidebar/Sidebar.vue'
 import { useAuthStore } from '@/stores/auth.store'
 import { useRoomStore } from '@/stores/room.store'
+import { useFriendsStore } from '@/stores/friends.store'
+import { useDmStore } from '@/stores/dm.store'
+import { connectSocket } from '@/services/socket/socket'
 
 const auth = useAuthStore()
 const roomStore = useRoomStore()
+const friendsStore = useFriendsStore()
+const dmStore = useDmStore()
 
 onMounted(async () => {
-  await roomStore.fetchRooms()
+  connectSocket()
+  await Promise.all([
+    roomStore.fetchRooms(),
+    friendsStore.fetchFriends(),
+    dmStore.fetchConversations(),
+  ])
+  friendsStore.bindSocketEvents()
+  dmStore.bindGlobalDmListener()
 })
 </script>
 

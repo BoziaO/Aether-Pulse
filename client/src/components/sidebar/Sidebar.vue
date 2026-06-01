@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Hash, Plus, Settings, LogOut, Mic, MicOff, Headphones, Volume2 } from 'lucide-vue-next'
+import { Hash, Plus, Settings, LogOut, Mic, MicOff, Users, MessageCircle } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth.store'
 import { useRoomStore } from '@/stores/room.store'
 import { useRtcStore } from '@/stores/rtc.store'
+import { useFriendsStore } from '@/stores/friends.store'
+import { useDmStore } from '@/stores/dm.store'
 import UserAvatar from '@/components/profile/UserAvatar.vue'
 import CreateRoomModal from '@/components/rooms/CreateRoomModal.vue'
 
@@ -13,6 +15,8 @@ const route = useRoute()
 const auth = useAuthStore()
 const roomStore = useRoomStore()
 const rtcStore = useRtcStore()
+const friendsStore = useFriendsStore()
+const dmStore = useDmStore()
 
 const showCreateModal = ref(false)
 
@@ -20,14 +24,35 @@ function goToRoom(roomId: string) {
   router.push(`/room/${roomId}`)
 }
 
+function goToDm(userId: number) {
+  router.push({ name: 'dm', params: { userId: String(userId) } })
+}
+
 function isActiveRoom(roomId: string) {
   return route.params.roomId === roomId
+}
+
+function isActiveDm(userId: number) {
+  return route.name === 'dm' && Number(route.params.userId) === userId
+}
+
+function dmPreview(conv: import('@/types/dm.types').DmConversation) {
+  const lm = conv.lastMessage
+  if (!lm) return 'No messages yet'
+  if (lm.type === 'file') return lm.attachmentName || 'Attachment'
+  const text = lm.content
+  const snippet = text.length > 36 ? `${text.slice(0, 36)}…` : text
+  return lm.userId === auth.user?.id ? `You: ${snippet}` : snippet
 }
 
 async function handleLogout() {
   await auth.logout()
   router.push('/auth')
 }
+
+onMounted(() => {
+  friendsStore.bindSocketEvents()
+})
 </script>
 
 <template>
@@ -37,8 +62,29 @@ async function handleLogout() {
       <span class="sidebar-brand">AetherPulse</span>
     </div>
 
-    <div class="sidebar-section-label">Rooms</div>
+    <div class="sidebar-section-label">Direct Messages</div>
+    <div class="sidebar-dms">
+      <button class="room-item friends-link" :class="{ active: route.path === '/friends' }" @click="router.push('/friends')">
+        <Users :size="16" />
+        <span>Friends</span>
+        <span v-if="friendsStore.pendingCount" class="pending-badge">{{ friendsStore.pendingCount }}</span>
+      </button>
+      <button
+        v-for="conv in dmStore.conversations"
+        :key="conv.id"
+        class="room-item"
+        :class="{ active: conv.otherUser && isActiveDm(conv.otherUser.id) }"
+        @click="conv.otherUser && goToDm(conv.otherUser.id)"
+      >
+        <MessageCircle :size="16" class="room-icon" />
+        <div class="dm-label">
+          <span class="room-name">{{ conv.otherUser?.displayName || 'Unknown' }}</span>
+          <span class="dm-preview">{{ dmPreview(conv) }}</span>
+        </div>
+      </button>
+    </div>
 
+    <div class="sidebar-section-label">Rooms</div>
     <div class="sidebar-rooms">
       <button
         v-for="room in roomStore.rooms"
@@ -51,7 +97,6 @@ async function handleLogout() {
         <span class="room-name">{{ room.name }}</span>
         <span v-if="room.isActive" class="room-active-dot" />
       </button>
-
       <button class="room-item add-room" @click="showCreateModal = true">
         <Plus :size="16" />
         <span>New Room</span>
@@ -113,11 +158,7 @@ async function handleLogout() {
   padding: 16px 16px 12px;
   border-bottom: 1px solid var(--border);
 }
-.sidebar-logo {
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
-}
+.sidebar-logo { width: 28px; height: 28px; object-fit: contain; }
 .sidebar-brand {
   font-size: 15px;
   font-weight: 700;
@@ -134,11 +175,13 @@ async function handleLogout() {
   color: var(--text-muted);
   padding: 16px 16px 6px;
 }
+.sidebar-dms,
 .sidebar-rooms {
-  flex: 1;
   overflow-y: auto;
   padding: 0 8px;
+  max-height: 180px;
 }
+.sidebar-rooms { flex: 1; max-height: none; }
 .room-item {
   width: 100%;
   display: flex;
@@ -155,29 +198,36 @@ async function handleLogout() {
   text-align: left;
   position: relative;
 }
-.room-item:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
-}
-.room-item.active {
-  background: rgba(139, 92, 246, 0.15);
-  color: var(--text-primary);
-}
-.room-item.active .room-icon {
-  color: var(--accent-violet);
-}
-.room-name {
+.room-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+.room-item.active { background: rgba(139, 92, 246, 0.15); color: var(--text-primary); }
+.room-item.active .room-icon { color: var(--accent-violet); }
+.dm-label {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.room-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dm-preview {
+  font-size: 11px;
+  color: var(--text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.room-item .room-name { flex: 1; }
 .room-active-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--success);
-  flex-shrink: 0;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--success); flex-shrink: 0;
+}
+.pending-badge {
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--danger);
+  color: white;
+  padding: 1px 6px;
+  border-radius: 999px;
 }
 .add-room {
   color: var(--text-muted);
@@ -205,13 +255,7 @@ async function handleLogout() {
   color: var(--success);
   font-weight: 600;
 }
-.call-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--success);
-  display: inline-block;
-}
+.call-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
 .call-controls { display: flex; gap: 4px; margin-top: 6px; }
 .call-btn {
   background: rgba(255,255,255,0.08);
@@ -221,7 +265,6 @@ async function handleLogout() {
   color: var(--text-secondary);
   cursor: pointer;
   display: flex;
-  align-items: center;
 }
 .call-btn:hover { background: rgba(255,255,255,0.15); color: var(--text-primary); }
 .sidebar-user {
@@ -231,41 +274,20 @@ async function handleLogout() {
   align-items: center;
   gap: 8px;
 }
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  min-width: 0;
-}
+.user-info { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
 .user-details { min-width: 0; }
 .user-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 13px; font-weight: 600; color: var(--text-primary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .user-status {
-  font-size: 11px;
-  color: var(--text-muted);
-  text-transform: capitalize;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 11px; color: var(--text-muted); text-transform: capitalize;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .user-actions { display: flex; gap: 2px; }
 .icon-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 6px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  transition: all 0.15s;
+  background: transparent; border: none; color: var(--text-muted);
+  cursor: pointer; padding: 6px; border-radius: 6px; display: flex;
 }
 .icon-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
 .icon-btn.danger:hover { background: rgba(239,68,68,0.1); color: var(--danger); }

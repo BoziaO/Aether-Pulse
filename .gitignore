@@ -64,3 +64,13 @@ Thumbs.db
 logs
 *.log
 
+# Databases
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Uploads
+uploads/
+.uploads/
+
