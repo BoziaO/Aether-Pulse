@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { X, AtSign, Link, MapPin, UserPlus, MessageCircle, Check, Ban } from 'lucide-vue-next'
+import { X, AtSign, Link, MapPin, UserPlus, MessageCircle, Check, Ban, Globe, Clock } from 'lucide-vue-next'
 import { userApi } from '@/services/api/user.api'
 import { useAuthStore } from '@/stores/auth.store'
 import { useFriendsStore } from '@/stores/friends.store'
@@ -80,6 +80,22 @@ function displayWebsite(url: string | null) {
   const v = (url ?? '').trim()
   if (!v) return ''
   return v.replace(/^https?:\/\//i, '').replace(/\/$/, '')
+}
+
+function formatLastSeen(isoStr: string | null | undefined): string {
+  if (!isoStr) return ''
+  const d = new Date(isoStr)
+  if (isNaN(d.getTime())) return ''
+  const now = Date.now()
+  const diff = now - d.getTime()
+  const mins = Math.floor(diff / 60_000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs}h ago`
+  const days = Math.floor(hrs / 24)
+  if (days < 7) return `${days}d ago`
+  return d.toLocaleDateString()
 }
 
 async function addFriend() {
@@ -192,7 +208,7 @@ async function blockUser() {
               <span v-if="user.pronouns" class="pill">{{ user.pronouns }}</span>
             </div>
 
-            <div v-if="user.website || user.location" class="links">
+            <div v-if="user.website || user.location || user.timezone" class="links">
               <a
                 v-if="user.website"
                 :href="safeWebsite(user.website)"
@@ -206,6 +222,29 @@ async function blockUser() {
                 <MapPin :size="14" />
                 {{ user.location }}
               </span>
+              <span v-if="user.timezone">
+                <Globe :size="14" />
+                {{ user.timezone }}
+              </span>
+            </div>
+
+            <div v-if="user.socialLinks?.length" class="social-links">
+              <a
+                v-for="sl in user.socialLinks"
+                :key="sl.platform + sl.url"
+                :href="sl.url"
+                target="_blank"
+                rel="noreferrer"
+                class="social-chip"
+              >
+                <Globe :size="12" />
+                {{ sl.label || sl.platform }}
+              </a>
+            </div>
+
+            <div v-if="user.lastSeenAt && user.status === 'offline'" class="last-seen">
+              <Clock :size="12" />
+              Last seen {{ formatLastSeen(user.lastSeenAt) }}
             </div>
           </template>
         </div>
@@ -250,9 +289,7 @@ async function blockUser() {
   z-index: 1;
   transition: background 0.15s;
 }
-.close:hover {
-  background: rgba(0, 0, 0, 0.4);
-}
+.close:hover { background: rgba(0, 0, 0, 0.4); }
 
 .card {
   overflow: hidden;
@@ -266,9 +303,7 @@ async function blockUser() {
   background-size: cover;
   background-position: center;
 }
-.shell {
-  padding: 0 18px 18px;
-}
+.shell { padding: 0 18px 18px; }
 .avatar-row {
   min-height: 56px;
   display: flex;
@@ -279,9 +314,7 @@ async function blockUser() {
   border: 6px solid #111318;
   border-radius: 50%;
 }
-.name-block {
-  margin-top: 10px;
-}
+.name-block { margin-top: 10px; }
 .name-block h3 {
   color: var(--text-primary);
   font-size: 22px;
@@ -330,18 +363,9 @@ async function blockUser() {
   border-color: rgba(139, 92, 246, 0.35);
   color: #c4b5fd;
 }
-.action-btn.danger {
-  color: var(--danger);
-  padding: 8px 10px;
-}
-.action-btn:hover:not(:disabled) {
-  filter: brightness(1.08);
-}
-.action-hint {
-  font-size: 12px;
-  color: var(--text-muted);
-  align-self: center;
-}
+.action-btn.danger { color: var(--danger); padding: 8px 10px; }
+.action-btn:hover:not(:disabled) { filter: brightness(1.08); }
+.action-hint { font-size: 12px; color: var(--text-muted); align-self: center; }
 .section {
   margin-top: 18px;
   padding-top: 14px;
@@ -385,8 +409,40 @@ async function blockUser() {
   font-size: 13px;
   text-decoration: none;
 }
-.links a:hover {
-  color: var(--accent-blue);
+.links a:hover { color: var(--accent-blue); }
+
+.social-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.social-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text-secondary);
+  font-size: 12px;
+  text-decoration: none;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.social-chip:hover { color: #93c5fd; border-color: #93c5fd; }
+
+.last-seen {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 12px;
+  color: var(--text-muted);
+  font-size: 12px;
 }
 
 .state {
@@ -397,9 +453,7 @@ async function blockUser() {
   color: var(--text-muted);
   font-size: 13px;
 }
-.state.error {
-  color: var(--danger);
-}
+.state.error { color: var(--danger); }
 .spinner {
   width: 16px;
   height: 16px;
@@ -409,27 +463,10 @@ async function blockUser() {
   animation: spin 0.7s linear infinite;
 }
 
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>

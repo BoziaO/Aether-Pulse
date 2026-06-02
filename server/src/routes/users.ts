@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
-import { db, usersTable } from "@workspace/db";
+import { eq, or, and } from "drizzle-orm";
+import { db, usersTable, friendshipsTable } from "@workspace/db";
 import { UpdateUserBody } from "@workspace/api-zod";
 import { serializeUser } from "../utils/serialize-user";
 import path from "node:path";
@@ -21,6 +21,27 @@ function parseImageDataUrl(dataUrl: string): { buffer: Buffer; ext: string } | n
   return { buffer, ext };
 }
 
+async function areFriends(userA: number, userB: number): Promise<boolean> {
+  try {
+    const rows = await db
+      .select({ id: friendshipsTable.id })
+      .from(friendshipsTable)
+      .where(
+        and(
+          eq(friendshipsTable.status, "accepted"),
+          or(
+            and(eq(friendshipsTable.requesterId, userA), eq(friendshipsTable.addresseeId, userB)),
+            and(eq(friendshipsTable.requesterId, userB), eq(friendshipsTable.addresseeId, userA)),
+          ),
+        ),
+      )
+      .limit(1);
+    return rows.length > 0;
+  } catch {
+    return false;
+  }
+}
+
 router.get("/users/:userId", async (req, res): Promise<void> => {
   const rawId = Array.isArray(req.params.userId) ? req.params.userId[0] : req.params.userId;
   const userId = parseInt(rawId, 10);
@@ -35,7 +56,18 @@ router.get("/users/:userId", async (req, res): Promise<void> => {
     return;
   }
 
-  res.json(serializeUser(user));
+  const viewerId = req.session?.userId ?? null;
+  const privacy = user.profilePrivacy ?? "public";
+  const isOwn = viewerId === userId;
+
+  if (privacy === "private" && !isOwn) {
+    res.status(403).json({ error: "This profile is private." });
+    return;
+  }
+
+  const isFriend = viewerId != null && !isOwn ? await areFriends(viewerId, userId) : false;
+
+  res.json(serializeUser(user, { viewerId, isFriend }));
 });
 
 router.post("/users/:userId/avatar", async (req, res): Promise<void> => {
@@ -85,7 +117,7 @@ router.post("/users/:userId/avatar", async (req, res): Promise<void> => {
     res.status(404).json({ error: "User not found" });
     return;
   }
-  res.json({ avatarUrl, user: serializeUser(updated) });
+  res.json({ avatarUrl, user: serializeUser(updated, { viewerId: userId }) });
 });
 
 router.post("/users/:userId/banner", async (req, res): Promise<void> => {
@@ -135,7 +167,7 @@ router.post("/users/:userId/banner", async (req, res): Promise<void> => {
     res.status(404).json({ error: "User not found" });
     return;
   }
-  res.json({ bannerUrl, user: serializeUser(updated) });
+  res.json({ bannerUrl, user: serializeUser(updated, { viewerId: userId }) });
 });
 
 router.patch("/users/:userId", async (req, res): Promise<void> => {
@@ -165,7 +197,7 @@ router.patch("/users/:userId", async (req, res): Promise<void> => {
 
   const [updated] = await db
     .update(usersTable)
-    .set(parsed.data)
+    .set(parsed.data as any)
     .where(eq(usersTable.id, userId))
     .returning();
 
@@ -174,7 +206,7 @@ router.patch("/users/:userId", async (req, res): Promise<void> => {
     return;
   }
 
-  res.json(serializeUser(updated));
+  res.json(serializeUser(updated, { viewerId: userId }));
 });
 
 export default router;

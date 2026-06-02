@@ -28,7 +28,8 @@ export default defineConfig({
       "@": path.resolve(import.meta.dirname, "src"),
       // Use util-browser as a polyfill for Node.js 'util' module
       "util": "util-browser",
-      // 'events' module is often browser-compatible, so explicit alias might not be needed
+      // lucide-vue-next was renamed to @lucide/vue
+      "lucide-vue-next": "@lucide/vue",
     },
   },
   root: path.resolve(import.meta.dirname),

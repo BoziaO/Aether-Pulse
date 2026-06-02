@@ -213,8 +213,14 @@ io.on("connection", (socket) => {
 
   socket.on("user-status", async ({ userId, status }: { userId: number; status: string }) => {
     if (userId !== authedUserId) return;
-    await db.update(usersTable).set({ status: status as any }).where(eq(usersTable.id, userId));
+    const now = new Date();
+    await db.update(usersTable).set({ status: status as any, lastSeenAt: now }).where(eq(usersTable.id, userId));
     socket.broadcast.emit("user-status-changed", { userId, status });
+  });
+
+  socket.on("ping-activity", async ({ userId }: { userId: number }) => {
+    if (userId !== authedUserId) return;
+    await db.update(usersTable).set({ lastSeenAt: new Date() }).where(eq(usersTable.id, userId));
   });
 
   socket.on("join-dm", async ({ conversationId }: { conversationId: string }) => {
@@ -266,6 +272,13 @@ io.on("connection", (socket) => {
         await updateRoomActiveState(roomId);
       }
     }
+
+    try {
+      const now = new Date();
+      await db.update(usersTable).set({ status: "offline", lastSeenAt: now }).where(eq(usersTable.id, authedUserId));
+      socket.broadcast.emit("user-status-changed", { userId: authedUserId, status: "offline" });
+    } catch {}
+
     logger.info({ socketId: socket.id }, "Socket disconnected");
   });
 });

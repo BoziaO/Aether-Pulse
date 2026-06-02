@@ -1,3 +1,9 @@
+export interface SocialLink {
+  platform: string
+  url: string
+  label?: string
+}
+
 export interface User {
   id: number
   username: string
@@ -13,5 +19,12 @@ export interface User {
   accentColor: string | null
   profileGradient: string | null
   badges: string[]
+  socialLinks: SocialLink[]
+  timezone: string | null
+  profilePrivacy: 'public' | 'friends' | 'private'
+  showTimezone: boolean
+  showLastSeen: boolean
+  preferredTheme: string | null
+  lastSeenAt: string | null
   createdAt: string
 }

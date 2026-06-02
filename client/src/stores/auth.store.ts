@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { getSocket } from '@/services/socket/socket'
 import { authApi } from '@/services/api/auth.api'
-import { userApi } from '@/services/api/user.api'
+import { userApi, type UpdateUserData } from '@/services/api/user.api'
 import type { User } from '@/types/user.types'
 
 export const useAuthStore = defineStore('auth', () => {
@@ -54,7 +54,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function updateProfile(data: Partial<Pick<User, 'displayName' | 'bio' | 'pronouns' | 'website' | 'location' | 'avatarUrl' | 'bannerUrl' | 'customStatus' | 'accentColor' | 'profileGradient' | 'status'>>) {
+  async function updateProfile(data: UpdateUserData) {
     if (!user.value) return
     const updated = await userApi.update(user.value.id, data)
     user.value = { ...user.value, ...updated }

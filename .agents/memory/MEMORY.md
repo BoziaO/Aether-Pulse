@@ -2,3 +2,4 @@
 - [Socket.IO artifact routing](socketio-routing.md) — Socket.IO WebSocket path must be listed in artifact.toml `paths` array alongside REST paths or connections are silently dropped
 - [Session auth pattern](session-auth.md) — httpOnly cookie sessions via express-session; SESSION_SECRET env var required; declare `SessionData.userId` in express-session module augmentation
 - [npm vs pnpm workspace](npm-pnpm-workspace.md) — npm install times out on large workspaces; use pnpm for installs; catalog: and workspace:* are pnpm-only syntax that npm rejects
+- [AetherPulse dev environment](aetherpulse-dev-env.md) — startup quirks: pnpm version, ports, DATABASE_URL, turbo env passthrough, lucide alias

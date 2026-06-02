@@ -43,6 +43,12 @@ export const useSettingsStore = defineStore('settings', () => {
     }
   }
 
+  function applyUserTheme(preferredTheme: string | null | undefined) {
+    if (preferredTheme && VALID_THEMES.has(preferredTheme as ThemeMode)) {
+      theme.value = preferredTheme as ThemeMode
+    }
+  }
+
   watch(theme, (v) => {
     localStorage.setItem('theme', v)
     applyTheme()
@@ -73,6 +79,7 @@ export const useSettingsStore = defineStore('settings', () => {
   return {
     theme,
     AVAILABLE_THEMES,
+    VALID_THEMES,
     spatialAudioEnabled,
     inputVolume,
     outputVolume,
@@ -80,6 +87,7 @@ export const useSettingsStore = defineStore('settings', () => {
     messageNotifications,
     applyTheme,
     setTheme,
+    applyUserTheme,
     toggleSpatialAudio,
   }
 })

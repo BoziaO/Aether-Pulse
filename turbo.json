@@ -10,7 +10,8 @@
     },
     "dev": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "env": ["DATABASE_URL", "CLIENT_PORT", "PORT", "NODE_ENV", "SESSION_SECRET", "BASE_PATH"]
     }
   }
 }

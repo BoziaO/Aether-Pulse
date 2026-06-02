@@ -127,7 +127,13 @@ export const UpdateUserBody = zod.object({
   "profileGradient": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
   "bannerUrl": zod.string().nullish(),
-  "status": zod.enum(['online', 'away', 'busy', 'offline']).optional()
+  "status": zod.enum(['online', 'away', 'busy', 'offline']).optional(),
+  "socialLinks": zod.string().nullish(),
+  "timezone": zod.string().max(60).nullish(),
+  "profilePrivacy": zod.enum(['public', 'friends', 'private']).optional(),
+  "showTimezone": zod.boolean().optional(),
+  "showLastSeen": zod.boolean().optional(),
+  "preferredTheme": zod.string().max(40).nullish(),
 })
 
 export const UpdateUserResponse = zod.object({
