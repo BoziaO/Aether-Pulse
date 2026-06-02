@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { eq, or, and } from "drizzle-orm";
-import { db, usersTable, friendshipsTable } from "@workspace/db";
+import { eq, or, and, count, desc, gte, sql } from "drizzle-orm";
+import { db, usersTable, friendshipsTable, messagesTable, messageReactionsTable } from "@workspace/db";
 import { UpdateUserBody } from "@workspace/api-zod";
 import { serializeUser } from "../utils/serialize-user";
 import path from "node:path";
@@ -67,7 +67,85 @@ router.get("/users/:userId", async (req, res): Promise<void> => {
 
   const isFriend = viewerId != null && !isOwn ? await areFriends(viewerId, userId) : false;
 
+  // Track profile views (not for own profile)
+  if (!isOwn && viewerId != null) {
+    db.update(usersTable)
+      .set({ profileViews: (user.profileViews ?? 0) + 1 })
+      .where(eq(usersTable.id, userId))
+      .then(() => {})
+      .catch(() => {});
+  }
+
   res.json(serializeUser(user, { viewerId, isFriend }));
+});
+
+router.get("/users/:userId/stats", async (req, res): Promise<void> => {
+  const rawId = Array.isArray(req.params.userId) ? req.params.userId[0] : req.params.userId;
+  const userId = parseInt(rawId, 10);
+  if (isNaN(userId)) {
+    res.status(400).json({ error: "Invalid user ID" });
+    return;
+  }
+
+  try {
+    const [msgRow] = await db
+      .select({ c: count() })
+      .from(messagesTable)
+      .where(and(eq(messagesTable.userId, userId), eq(messagesTable.isDeleted, false)));
+
+    const [friendRow] = await db
+      .select({ c: count() })
+      .from(friendshipsTable)
+      .where(
+        and(
+          eq(friendshipsTable.status, "accepted"),
+          or(eq(friendshipsTable.requesterId, userId), eq(friendshipsTable.addresseeId, userId)),
+        ),
+      );
+
+    const topReactions = await db
+      .select({ emoji: messageReactionsTable.emoji, cnt: count() })
+      .from(messageReactionsTable)
+      .where(eq(messageReactionsTable.userId, userId))
+      .groupBy(messageReactionsTable.emoji)
+      .orderBy(desc(count()))
+      .limit(5);
+
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const activity = await db
+      .select({
+        date: sql<string>`strftime('%Y-%m-%d', datetime(created_at/1000, 'unixepoch'))`,
+        cnt: count(),
+      })
+      .from(messagesTable)
+      .where(
+        and(
+          eq(messagesTable.userId, userId),
+          eq(messagesTable.isDeleted, false),
+          gte(messagesTable.createdAt, sevenDaysAgo),
+        ),
+      )
+      .groupBy(sql`strftime('%Y-%m-%d', datetime(created_at/1000, 'unixepoch'))`)
+      .orderBy(sql`strftime('%Y-%m-%d', datetime(created_at/1000, 'unixepoch'))`);
+
+    // Fill in missing days with 0
+    const activityMap = new Map(activity.map((a) => [a.date, a.cnt]));
+    const activityByDay = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+      const key = d.toISOString().slice(0, 10);
+      activityByDay.push({ date: key, count: activityMap.get(key) ?? 0 });
+    }
+
+    res.json({
+      messageCount: msgRow?.c ?? 0,
+      friendCount: friendRow?.c ?? 0,
+      topReactions: topReactions.map((r) => ({ emoji: r.emoji, count: r.cnt })),
+      activityByDay,
+    });
+  } catch {
+    res.status(500).json({ error: "Failed to load stats" });
+  }
 });
 
 router.post("/users/:userId/avatar", async (req, res): Promise<void> => {

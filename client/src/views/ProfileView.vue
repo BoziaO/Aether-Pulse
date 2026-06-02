@@ -30,6 +30,24 @@ import { userApi } from '@/services/api/user.api'
 type ProfileStatus = User['status']
 type EditorTab = 'identity' | 'appearance' | 'presence' | 'privacy'
 
+const ANIMATED_BANNER_PRESETS = [
+  { id: 'animated:aurora', name: 'Aurora', preview: 'linear-gradient(135deg, #0f2027, #203a43, #667db6, #7f00ff)' },
+  { id: 'animated:neon', name: 'Neon Pulse', preview: 'linear-gradient(135deg, #ff0099, #7928ca, #200122)' },
+  { id: 'animated:sunset', name: 'Sunset', preview: 'linear-gradient(135deg, #f093fb, #f5576c, #fda085)' },
+  { id: 'animated:ocean', name: 'Ocean', preview: 'linear-gradient(135deg, #0099f7, #00d2ff, #1a1a2e)' },
+  { id: 'animated:forest', name: 'Forest', preview: 'linear-gradient(135deg, #11998e, #38ef7d, #134e5e)' },
+  { id: 'animated:cosmic', name: 'Cosmic', preview: 'linear-gradient(135deg, #09203f, #7b2ff7, #f107a3)' },
+]
+
+const ANIM_CLASSES: Record<string, string> = {
+  'animated:aurora': 'banner-aurora',
+  'animated:neon': 'banner-neon',
+  'animated:sunset': 'banner-sunset',
+  'animated:ocean': 'banner-ocean',
+  'animated:forest': 'banner-forest',
+  'animated:cosmic': 'banner-cosmic',
+}
+
 const auth = useAuthStore()
 const settingsStore = useSettingsStore()
 const saving = ref(false)
@@ -85,8 +103,10 @@ const emptyUser: User = {
   profilePrivacy: 'public',
   showTimezone: true,
   showLastSeen: true,
+  showProfileViews: true,
   preferredTheme: null,
   lastSeenAt: null,
+  profileViews: null,
   createdAt: new Date().toISOString(),
 }
 
@@ -109,6 +129,7 @@ const form = reactive({
   profilePrivacy: 'public' as 'public' | 'friends' | 'private',
   showTimezone: true,
   showLastSeen: true,
+  showProfileViews: true,
   preferredTheme: '' as string,
 })
 
@@ -131,6 +152,7 @@ function syncFormFromUser() {
   form.profilePrivacy = user.profilePrivacy ?? 'public'
   form.showTimezone = user.showTimezone ?? true
   form.showLastSeen = user.showLastSeen ?? true
+  form.showProfileViews = user.showProfileViews ?? true
   form.preferredTheme = user.preferredTheme ?? ''
 }
 
@@ -180,11 +202,18 @@ const normalizedWebsite = computed(() => {
   return /^https?:\/\//i.test(website) ? website : `https://${website}`
 })
 
+const bannerAnimClass = computed(() => {
+  if (form.bannerUrl.trim()) return ''
+  if (form.profileGradient && ANIM_CLASSES[form.profileGradient]) return ANIM_CLASSES[form.profileGradient]
+  return ''
+})
+
 const bannerStyle = computed(() => {
-  if (form.bannerUrl.trim()) {
-    return { backgroundImage: `url(${form.bannerUrl.trim()})` }
+  if (form.bannerUrl.trim()) return { backgroundImage: `url(${form.bannerUrl.trim()})` }
+  if (form.profileGradient) {
+    if (ANIM_CLASSES[form.profileGradient]) return {}
+    return { background: form.profileGradient }
   }
-  if (form.profileGradient) return { background: form.profileGradient }
   return { background: form.accentColor }
 })
 
@@ -207,6 +236,7 @@ const dirty = computed(() => {
     form.profilePrivacy !== (user.profilePrivacy ?? 'public') ||
     form.showTimezone !== (user.showTimezone ?? true) ||
     form.showLastSeen !== (user.showLastSeen ?? true) ||
+    form.showProfileViews !== (user.showProfileViews ?? true) ||
     form.preferredTheme !== (user.preferredTheme ?? '')
   )
 })
@@ -291,6 +321,7 @@ async function save() {
       profilePrivacy: form.profilePrivacy,
       showTimezone: form.showTimezone,
       showLastSeen: form.showLastSeen,
+      showProfileViews: form.showProfileViews,
       preferredTheme: form.preferredTheme || null,
     })
 
@@ -498,7 +529,7 @@ function fileToDataUrl(file: File): Promise<string> {
         <div>
           <label class="label">Banner</label>
           <div class="upload-row">
-            <div class="banner-preview" :style="bannerStyle" />
+            <div class="banner-preview" :class="bannerAnimClass" :style="bannerStyle" />
             <label class="btn-ghost upload-btn">
               <input type="file" accept="image/*" class="file-input" @change="handleBannerFile" />
               {{ uploadingBanner ? 'Uploading...' : 'Upload banner' }}
@@ -521,6 +552,27 @@ function fileToDataUrl(file: File): Promise<string> {
         <div>
           <label class="label">Profile Gradient</label>
           <GradientPicker v-model="form.profileGradient" />
+        </div>
+
+        <div class="anim-section">
+          <label class="label">Animated Banners</label>
+          <div class="anim-presets">
+            <button
+              v-for="preset in ANIMATED_BANNER_PRESETS"
+              :key="preset.id"
+              type="button"
+              class="anim-preset"
+              :class="{ active: form.profileGradient === preset.id }"
+              :style="{ background: preset.preview }"
+              :title="preset.name"
+              @click="form.profileGradient = form.profileGradient === preset.id ? null : preset.id"
+            >
+              <span class="anim-label">{{ preset.name }}</span>
+            </button>
+          </div>
+          <div v-if="form.profileGradient?.startsWith('animated:')" class="hint">
+            Click preset again to clear. Animated banners are live in the preview →
+          </div>
         </div>
       </section>
 
@@ -659,13 +711,24 @@ function fileToDataUrl(file: File): Promise<string> {
             <span class="toggle-slider" />
           </label>
         </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-title">Show Profile Views</div>
+            <div class="setting-desc">Display how many times your profile has been viewed</div>
+          </div>
+          <label class="toggle">
+            <input v-model="form.showProfileViews" type="checkbox" />
+            <span class="toggle-slider" />
+          </label>
+        </div>
       </section>
     </div>
 
     <aside class="profile-preview">
       <h2 class="preview-title">Live Preview</h2>
       <div class="discord-card">
-        <div class="card-banner" :style="bannerStyle" />
+        <div class="card-banner" :class="bannerAnimClass" :style="bannerStyle" />
         <div class="card-shell">
           <div class="avatar-row">
             <UserAvatar :user="previewUser" :size="86" />
@@ -941,6 +1004,38 @@ function fileToDataUrl(file: File): Promise<string> {
   margin-top: 6px;
   font-size: 12px;
   color: var(--text-muted);
+}
+
+/* ── Animated banner presets ── */
+.anim-section { display: flex; flex-direction: column; gap: 6px; }
+
+.anim-presets {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.anim-preset {
+  height: 50px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.15s, transform 0.15s;
+  display: flex;
+  align-items: flex-end;
+  padding: 4px 6px;
+}
+.anim-preset:hover { transform: scale(1.04); border-color: rgba(255,255,255,0.3); }
+.anim-preset.active { border-color: #8b5cf6; }
+
+.anim-label {
+  font-size: 10px;
+  font-weight: 750;
+  color: rgba(255,255,255,0.9);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+  line-height: 1;
 }
 
 .color-field { max-width: 230px; }
@@ -1222,6 +1317,42 @@ function fileToDataUrl(file: File): Promise<string> {
   height: 110px;
   background-size: cover;
   background-position: center;
+}
+
+/* ── Animated banner keyframes ── */
+@keyframes banner-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.banner-aurora {
+  background: linear-gradient(270deg, #0f2027, #203a43, #667db6, #7f00ff, #2c5364) !important;
+  background-size: 300% 300% !important;
+  animation: banner-shift 8s ease infinite;
+}
+.banner-neon {
+  background: linear-gradient(270deg, #ff0099, #493240, #7928ca, #ff0080, #200122) !important;
+  background-size: 300% 300% !important;
+  animation: banner-shift 6s ease infinite;
+}
+.banner-sunset {
+  background: linear-gradient(270deg, #f093fb, #f5576c, #fda085, #ff6a00, #f093fb) !important;
+  background-size: 300% 300% !important;
+  animation: banner-shift 7s ease infinite;
+}
+.banner-ocean {
+  background: linear-gradient(270deg, #0099f7, #00d2ff, #1a1a2e, #16213e, #0f3460) !important;
+  background-size: 300% 300% !important;
+  animation: banner-shift 9s ease infinite;
+}
+.banner-forest {
+  background: linear-gradient(270deg, #11998e, #38ef7d, #1a4731, #134e5e, #11998e) !important;
+  background-size: 300% 300% !important;
+  animation: banner-shift 8s ease infinite;
+}
+.banner-cosmic {
+  background: linear-gradient(270deg, #09203f, #537895, #7b2ff7, #f107a3, #09203f) !important;
+  background-size: 300% 300% !important;
+  animation: banner-shift 10s ease infinite;
 }
 
 .card-shell { padding: 0 16px 16px; }

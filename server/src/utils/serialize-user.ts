@@ -48,6 +48,8 @@ export function serializeUser(
   const socialLinks = parseSocialLinks(safe.socialLinks);
   const lastSeenAt = safe.lastSeenAt ? safe.lastSeenAt.toISOString() : null;
 
+  const canViewViews = safe.showProfileViews ?? true;
+
   return {
     id: safe.id,
     username: safe.username,
@@ -68,8 +70,10 @@ export function serializeUser(
     profilePrivacy: safe.profilePrivacy ?? "public",
     showTimezone: safe.showTimezone ?? true,
     showLastSeen: safe.showLastSeen ?? true,
+    showProfileViews: safe.showProfileViews ?? true,
     preferredTheme: isOwn ? (safe.preferredTheme ?? null) : null,
     lastSeenAt: canViewFull && safe.showLastSeen ? lastSeenAt : null,
+    profileViews: (isOwn || canViewViews) ? (safe.profileViews ?? 0) : null,
     createdAt: safe.createdAt.toISOString(),
   };
 }

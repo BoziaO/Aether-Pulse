@@ -18,7 +18,15 @@ export interface UpdateUserData {
   profilePrivacy?: 'public' | 'friends' | 'private'
   showTimezone?: boolean
   showLastSeen?: boolean
+  showProfileViews?: boolean
   preferredTheme?: string | null
+}
+
+export interface UserStats {
+  messageCount: number
+  friendCount: number
+  topReactions: { emoji: string; count: number }[]
+  activityByDay: { date: string; count: number }[]
 }
 
 export const userApi = {
@@ -26,6 +34,8 @@ export const userApi = {
     apiFetch<User>(`/users/${userId}`, { method: 'PATCH', body: JSON.stringify(data) }),
 
   get: (userId: number) => apiFetch<User>(`/users/${userId}`),
+
+  getStats: (userId: number) => apiFetch<UserStats>(`/users/${userId}/stats`),
 
   uploadAvatar: (userId: number, dataUrl: string) =>
     apiFetch<{ avatarUrl: string; user: User }>(`/users/${userId}/avatar`, { method: 'POST', body: JSON.stringify({ dataUrl }) }),

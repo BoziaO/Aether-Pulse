@@ -133,6 +133,7 @@ export const UpdateUserBody = zod.object({
   "profilePrivacy": zod.enum(['public', 'friends', 'private']).optional(),
   "showTimezone": zod.boolean().optional(),
   "showLastSeen": zod.boolean().optional(),
+  "showProfileViews": zod.boolean().optional(),
   "preferredTheme": zod.string().max(40).nullish(),
 })
 

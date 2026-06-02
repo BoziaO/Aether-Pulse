@@ -24,7 +24,9 @@ export interface User {
   profilePrivacy: 'public' | 'friends' | 'private'
   showTimezone: boolean
   showLastSeen: boolean
+  showProfileViews: boolean
   preferredTheme: string | null
   lastSeenAt: string | null
+  profileViews: number | null
   createdAt: string
 }

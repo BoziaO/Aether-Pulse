@@ -26,6 +26,8 @@ export const usersTable = sqliteTable("users", {
   showLastSeen: integer("show_last_seen", { mode: "boolean" }).notNull().default(true),
   preferredTheme: text("preferred_theme"),
   lastSeenAt: integer("last_seen_at", { mode: "timestamp_ms" }),
+  profileViews: integer("profile_views").notNull().default(0),
+  showProfileViews: integer("show_profile_views", { mode: "boolean" }).notNull().default(true),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull().defaultNow(),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
