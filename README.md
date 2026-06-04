@@ -1,14 +1,16 @@
-# AetherPulse
+# 🌌 AetherPulse
 
-AetherPulse is a modern, real-time communication platform built with Vue, Node.js, and WebRTC. It provides a seamless experience for spatial audio, video calls, and instant messaging.
+AetherPulse is a state-of-the-art, real-time communication and collaboration platform designed for seamless instant messaging, high-fidelity video calling, and immersive spatial audio. 
 
-## Features
+Built as a high-performance TypeScript monorepo, the platform combines a premium, highly responsive user interface with a robust, secure, and production-ready backend architecture.
 
-- **Real-time Communication:** Powered by WebRTC and Socket.io.
-- **Spatial Audio:** Immersive audio experience based on user positioning.
-- **Instant Messaging:** Fast and reliable chat system.
-- **Monorepo Architecture:** Managed with pnpm and Turborepo for efficient development.
-- **Full-stack Type Safety:** End-to-end type safety using TypeScript and Zod.
+### ✨ Highlighted Features
+
+- **🎙️ Immersive Spatial Audio & Video:** Next-gen WebRTC voice and video calls featuring localized spatial audio positioning for organic team interactions.
+- **💬 Real-Time Messaging & DMs:** Fully-featured group rooms and direct messages with instantaneous sync, message editing, soft-deletion, and dynamic typing indicators.
+- **🎨 Visual Customization:** Beautiful design system with fluid glassmorphism animations, supporting highly customizable user profiles and dual UI/UX paradigms (Maximalist Aesthetic and Minimalist Pixel art).
+- **🛡️ Enterprise-Grade Security:** Hardened Express backend with JWT session auth, strict CORS configurations, atomic database transactions, upload mime-type verification, and built-in rate-limiting guards.
+- **⚡ Built to Scale:** Powered by Turborepo and pnpm workspace. Automatically scales in production using a clustered Socket.io Redis Adapter while maintaining a zero-dependency in-memory configuration for lightweight local development.
 
 ## Project Structure
 
