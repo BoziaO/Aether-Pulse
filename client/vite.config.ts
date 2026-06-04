@@ -1,50 +1,49 @@
-import { defineConfig } from "vite";
-import vue from "@vitejs/plugin-vue";
-import tailwindcss from "@tailwindcss/vite";
-import path from "path";
-import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import tailwindcss from '@tailwindcss/vite'
+import path from 'path'
+import runtimeErrorOverlay from '@replit/vite-plugin-runtime-error-modal'
 
-const port = Number(process.env.CLIENT_PORT) || 5174;
-const apiTarget = process.env.API_TARGET || `http://localhost:${process.env.PORT || 3000}`;
-const basePath = process.env.BASE_PATH || "/";
+const port = Number(process.env.CLIENT_PORT) || 5174
+const apiTarget = process.env.API_TARGET || `http://localhost:${process.env.PORT || 3000}`
+const basePath = process.env.BASE_PATH || '/'
 
 export default defineConfig({
   base: basePath,
   define: {
-    global: "globalThis",
+    global: 'globalThis',
   },
+
   plugins: [
     vue(),
     tailwindcss(),
     runtimeErrorOverlay(),
-    ...(process.env.NODE_ENV !== "production" && process.env.REPL_ID !== undefined
-      ? [
-          await import("@replit/vite-plugin-dev-banner").then((m) => m.devBanner()),
-        ]
+    ...(process.env.NODE_ENV !== 'production' && process.env.REPL_ID !== undefined
+      ? [await import('@replit/vite-plugin-dev-banner').then((m) => m.devBanner())]
       : []),
   ],
   resolve: {
     alias: {
-      "@": path.resolve(import.meta.dirname, "src"),
+      '@': path.resolve(import.meta.dirname, 'src'),
       // Use util-browser as a polyfill for Node.js 'util' module
-      "util": "util-browser",
+      util: 'util-browser',
       // lucide-vue-next was renamed to @lucide/vue
-      "lucide-vue-next": "@lucide/vue",
+      'lucide-vue-next': '@lucide/vue',
     },
   },
   root: path.resolve(import.meta.dirname),
   build: {
-    outDir: path.resolve(import.meta.dirname, "dist/public"),
+    outDir: path.resolve(import.meta.dirname, 'dist/public'),
     emptyOutDir: true,
   },
   server: {
     port,
     strictPort: true,
-    host: "0.0.0.0",
+    host: '0.0.0.0',
     allowedHosts: true,
     fs: { strict: true },
     proxy: {
-      "/api": {
+      '/api': {
         target: apiTarget,
         changeOrigin: true,
         ws: true,
@@ -53,7 +52,7 @@ export default defineConfig({
   },
   preview: {
     port,
-    host: "0.0.0.0",
+    host: '0.0.0.0',
     allowedHosts: true,
   },
-});
+})

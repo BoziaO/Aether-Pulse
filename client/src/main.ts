@@ -15,6 +15,18 @@ const app = createApp(App)
 const pinia = createPinia()
 app.use(pinia)
 
+// Global error handler for Vue components
+import { useToastStore } from './stores/toast.store'
+app.config.errorHandler = (err, instance, info) => {
+  console.error('Vue error:', err, info)
+  try {
+    const toast = useToastStore(pinia)
+    toast.error('An unexpected error occurred. Please try again.')
+  } catch (e) {
+    console.error('Failed to show error toast:', e)
+  }
+}
+
 // Apply persisted theme ASAP to avoid flash.
 useSettingsStore(pinia).applyTheme()
 

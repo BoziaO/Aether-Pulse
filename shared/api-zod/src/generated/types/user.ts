@@ -5,31 +5,37 @@
  * AetherPulse API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { UserStatus } from './userStatus';
+import type { UserStatus } from './userStatus'
 
 export interface User {
-  id: number;
-  username: string;
-  displayName: string;
+  id: number
+  username: string
+  displayName: string
   /** @nullable */
-  avatarUrl?: string | null;
+  avatarUrl?: string | null
   /** @nullable */
-  bannerUrl?: string | null;
+  bannerUrl?: string | null
   /** @nullable */
-  bio?: string | null;
+  bio?: string | null
   /** @nullable */
-  pronouns?: string | null;
+  pronouns?: string | null
   /** @nullable */
-  website?: string | null;
+  website?: string | null
   /** @nullable */
-  location?: string | null;
-  status: UserStatus;
+  location?: string | null
+  status: UserStatus
   /** @nullable */
-  customStatus?: string | null;
+  customStatus?: string | null
   /** @nullable */
-  accentColor?: string | null;
+  accentColor?: string | null
   /** @nullable */
-  profileGradient?: string | null;
-  badges?: string[];
-  createdAt: string;
+  profileGradient?: string | null
+  /** @nullable */
+  avatarFrame?: string | null
+  /** @nullable */
+  profileTheme?: string | null
+  /** @nullable */
+  customTheme?: string | null
+  badges?: string[]
+  createdAt: string
 }

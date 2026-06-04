@@ -21,10 +21,6 @@
     "skipLibCheck": true,
     "target": "es2022",
     "types": [],
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["client/src/*"]
-    },
     "customConditions": ["workspace"]
   }
 }

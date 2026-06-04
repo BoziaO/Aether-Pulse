@@ -4,7 +4,7 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "dev": "turbo dev",
+    "dev": "node -e \"require('fs').copyFileSync('.env', 'shared/db/.env')\" && pnpm --filter @workspace/db push && turbo dev",
     "db:push": "pnpm --filter @workspace/db push",
     "migrate:chat": "node scripts/migrate-chat.mjs",
     "migrate:social": "node scripts/migrate-social.mjs",
@@ -20,11 +20,12 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/express-session": "^1.19.0",
+    "lint-staged": "^17.0.7",
     "prettier": "^3.8.3",
     "turbo": "^2.9.16",
     "typescript": "~6.0.3"
   },
-  "packageManager": "pnpm@10.26.1",
+  "packageManager": "pnpm@11.5.0",
   "dependencies": {
     "events": "^3.3.0",
     "util": "^0.12.5",

@@ -27,4 +27,15 @@ export const dmApi = {
       method: 'POST',
       body: JSON.stringify({ dataUrl, fileName, caption }),
     }),
+
+  edit: (conversationId: string, messageId: number, content: string) =>
+    apiFetch<DmMessage>(`/dms/${conversationId}/messages/${messageId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ content }),
+    }),
+
+  delete: (conversationId: string, messageId: number) =>
+    apiFetch<DmMessage>(`/dms/${conversationId}/messages/${messageId}`, {
+      method: 'DELETE',
+    }),
 }

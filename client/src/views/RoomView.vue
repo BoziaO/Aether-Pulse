@@ -1,17 +1,23 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, defineAsyncComponent } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Phone, ArrowLeft, Link2, Settings, Users } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth.store'
 import { useRoomStore } from '@/stores/room.store'
 import { useRtcStore } from '@/stores/rtc.store'
-import VideoTile from '@/components/call/VideoTile.vue'
-import CallControls from '@/components/call/CallControls.vue'
-import ChatPanel from '@/components/chat/ChatPanel.vue'
-import MemberSidebar from '@/components/rooms/MemberSidebar.vue'
-import InviteModal from '@/components/modals/InviteModal.vue'
-import RoomSettingsModal from '@/components/rooms/RoomSettingsModal.vue'
-import UserProfileModal from '@/components/profile/UserProfileModal.vue'
+
+// Lazy-loaded components for performance
+const VideoTile = defineAsyncComponent(() => import('@/components/call/VideoTile.vue'))
+const CallControls = defineAsyncComponent(() => import('@/components/call/CallControls.vue'))
+const ChatPanel = defineAsyncComponent(() => import('@/components/chat/ChatPanel.vue'))
+const MemberSidebar = defineAsyncComponent(() => import('@/components/rooms/MemberSidebar.vue'))
+const InviteModal = defineAsyncComponent(() => import('@/components/modals/InviteModal.vue'))
+const RoomSettingsModal = defineAsyncComponent(
+  () => import('@/components/rooms/RoomSettingsModal.vue')
+)
+const UserProfileModal = defineAsyncComponent(
+  () => import('@/components/profile/UserProfileModal.vue')
+)
 
 const route = useRoute()
 const router = useRouter()
@@ -107,7 +113,10 @@ function handleDeletedRoom() {
             <div class="join-icon">🎙️</div>
             <h3>{{ room?.name }}</h3>
             <p>Join the voice channel — spatial audio, screen share, and HD video built in.</p>
-            <p v-if="inVoiceCount > 0" class="voice-hint">{{ inVoiceCount }} {{ inVoiceCount === 1 ? 'person is' : 'people are' }} already in voice</p>
+            <p v-if="inVoiceCount > 0" class="voice-hint">
+              {{ inVoiceCount }} {{ inVoiceCount === 1 ? 'person is' : 'people are' }} already in
+              voice
+            </p>
             <p v-if="callError" class="error-msg">{{ callError }}</p>
             <button class="btn-primary join-btn" @click="handleJoinCall">
               <Phone :size="18" />
@@ -160,7 +169,11 @@ function handleDeletedRoom() {
     @left="handleLeftRoom"
     @deleted="handleDeletedRoom"
   />
-  <UserProfileModal v-if="selectedUserId" :user-id="selectedUserId" @close="selectedUserId = null" />
+  <UserProfileModal
+    v-if="selectedUserId"
+    :user-id="selectedUserId"
+    @close="selectedUserId = null"
+  />
 </template>
 
 <style scoped>
@@ -195,7 +208,10 @@ function handleDeletedRoom() {
   display: flex;
   align-items: center;
 }
-.back-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+.back-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
 .room-title {
   display: flex;
   align-items: center;
@@ -203,8 +219,16 @@ function handleDeletedRoom() {
   flex: 1;
   flex-wrap: wrap;
 }
-.room-hash { font-size: 18px; font-weight: 700; color: var(--text-muted); }
-.room-title h2 { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+.room-hash {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.room-title h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
 .live-badge {
   font-size: 10px;
   font-weight: 800;
@@ -227,18 +251,30 @@ function handleDeletedRoom() {
   color: var(--accent-violet);
   background: rgba(139, 92, 246, 0.12);
 }
-.room-actions { display: flex; gap: 6px; }
+.room-actions {
+  display: flex;
+  gap: 6px;
+}
 .header-btn {
   font-size: 13px;
   padding: 6px 10px;
 }
-.room-content { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.room-content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
 .join-call-screen {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(139, 92, 246, 0.08) 0%, transparent 70%);
+  background: radial-gradient(
+    ellipse 60% 60% at 50% 50%,
+    rgba(139, 92, 246, 0.08) 0%,
+    transparent 70%
+  );
 }
 .join-card {
   text-align: center;
@@ -248,12 +284,39 @@ function handleDeletedRoom() {
   border-radius: 20px;
   max-width: 420px;
 }
-.join-icon { font-size: 48px; margin-bottom: 16px; }
-.join-card h3 { font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
-.join-card p { font-size: 14px; color: var(--text-muted); line-height: 1.5; }
-.voice-hint { color: var(--accent-violet) !important; font-weight: 600; margin-top: 8px; }
-.join-btn { margin-top: 24px; width: 100%; padding: 12px; font-size: 15px; gap: 10px; }
-.call-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.join-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+.join-card h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+.join-card p {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.voice-hint {
+  color: var(--accent-violet) !important;
+  font-weight: 600;
+  margin-top: 8px;
+}
+.join-btn {
+  margin-top: 24px;
+  width: 100%;
+  padding: 12px;
+  font-size: 15px;
+  gap: 10px;
+}
+.call-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 .video-grid {
   flex: 1;
   display: grid;
@@ -262,9 +325,28 @@ function handleDeletedRoom() {
   overflow: hidden;
   align-items: center;
 }
-.video-grid.peers-1 { grid-template-columns: 1fr; max-width: 700px; margin: 0 auto; width: 100%; }
-.video-grid.peers-2 { grid-template-columns: 1fr 1fr; }
-.video-grid.peers-3 { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; }
-.video-grid.peers-4 { grid-template-columns: 1fr 1fr; }
-.error-msg { font-size: 13px; color: var(--danger); background: rgba(239,68,68,0.1); border-radius: 6px; padding: 8px 12px; margin-top: 8px; }
+.video-grid.peers-1 {
+  grid-template-columns: 1fr;
+  max-width: 700px;
+  margin: 0 auto;
+  width: 100%;
+}
+.video-grid.peers-2 {
+  grid-template-columns: 1fr 1fr;
+}
+.video-grid.peers-3 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+}
+.video-grid.peers-4 {
+  grid-template-columns: 1fr 1fr;
+}
+.error-msg {
+  font-size: 13px;
+  color: var(--danger);
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-top: 8px;
+}
 </style>

@@ -9,6 +9,7 @@ import { useAuthStore } from './auth.store'
 import { usePresenceStore } from './presence.store'
 import { useRoomStore } from './room.store'
 import { useSettingsStore } from './settings.store'
+import { useToastStore } from './toast.store'
 import type { Message } from '@/types/message.types'
 import type { User } from '@/types/user.types'
 
@@ -95,43 +96,49 @@ export const useRtcStore = defineStore('rtc', () => {
     })
 
     socket.on('user-left', ({ userId: uid }: { userId: number }) => {
-      roomUsers.value = roomUsers.value.filter(id => id !== uid)
+      roomUsers.value = roomUsers.value.filter((id) => id !== uid)
       presenceStore.userLeft(uid)
       onPeerClose(uid)
     })
 
-    socket.on('user-status-changed', ({ userId: uid, status }: { userId: number; status: User['status'] }) => {
-      presenceStore.setStatus(uid, status)
-      if (roomStore.currentRoom?.members) {
-        const member = roomStore.currentRoom.members.find(m => m.id === uid)
-        if (member) member.status = status
+    socket.on(
+      'user-status-changed',
+      ({ userId: uid, status }: { userId: number; status: User['status'] }) => {
+        presenceStore.setStatus(uid, status)
+        if (roomStore.currentRoom?.members) {
+          const member = roomStore.currentRoom.members.find((m) => m.id === uid)
+          if (member) member.status = status
+        }
       }
-    })
+    )
 
-    socket.on('room-activity-changed', ({ roomId: rid, isActive }: { roomId: string; isActive: boolean }) => {
-      const room = roomStore.rooms.find(r => r.id === rid)
-      if (room) room.isActive = isActive
-      if (roomStore.currentRoom?.id === rid) {
-        roomStore.currentRoom.isActive = isActive
+    socket.on(
+      'room-activity-changed',
+      ({ roomId: rid, isActive }: { roomId: string; isActive: boolean }) => {
+        const room = roomStore.rooms.find((r) => r.id === rid)
+        if (room) room.isActive = isActive
+        if (roomStore.currentRoom?.id === rid) {
+          roomStore.currentRoom.isActive = isActive
+        }
       }
-    })
+    )
 
     socket.on('room-updated', (room: typeof roomStore.currentRoom) => {
       if (!room) return
       if (roomStore.currentRoom?.id === room.id) roomStore.currentRoom = room
-      const idx = roomStore.rooms.findIndex(r => r.id === room.id)
+      const idx = roomStore.rooms.findIndex((r) => r.id === room.id)
       if (idx >= 0) roomStore.rooms[idx] = room
     })
 
     // Voice/video call participants (separate from "in room")
     socket.on('call-users', ({ users }: { users: { userId: number; socketId: string }[] }) => {
       const m = new Map<number, string>()
-      users.forEach(u => m.set(u.userId, u.socketId))
+      users.forEach((u) => m.set(u.userId, u.socketId))
       callUsers.value = m
 
       // If we're already in-call, connect to existing call participants.
       if (inCall.value && peerManager && authStore.user) {
-        users.forEach(u => {
+        users.forEach((u) => {
           if (u.userId === authStore.user!.id) return
           // Deterministic initiator to avoid duplicate peer connections.
           if (authStore.user!.id < u.userId) peerManager!.initiateCall(u.userId, u.socketId)
@@ -139,14 +146,17 @@ export const useRtcStore = defineStore('rtc', () => {
       }
     })
 
-    socket.on('call-user-joined', ({ userId: uid, socketId }: { userId: number; socketId: string }) => {
-      callUsers.value = new Map(callUsers.value.set(uid, socketId))
-      if (inCall.value && peerManager && authStore.user) {
-        if (authStore.user.id < uid && !peerManager.hasPeer(socketId)) {
-          peerManager.initiateCall(uid, socketId)
+    socket.on(
+      'call-user-joined',
+      ({ userId: uid, socketId }: { userId: number; socketId: string }) => {
+        callUsers.value = new Map(callUsers.value.set(uid, socketId))
+        if (inCall.value && peerManager && authStore.user) {
+          if (authStore.user.id < uid && !peerManager.hasPeer(socketId)) {
+            peerManager.initiateCall(uid, socketId)
+          }
         }
       }
-    })
+    )
 
     socket.on('call-user-left', ({ userId: uid }: { userId: number }) => {
       const m = new Map(callUsers.value)
@@ -210,8 +220,16 @@ export const useRtcStore = defineStore('rtc', () => {
 
       // Announce that we joined the call; server replies with current call participants.
       socket.emit('join-call', { roomId: currentRoomId, userId: authStore.user.id })
-    } catch (e) {
+    } catch (e: any) {
       console.error('Failed to start call:', e)
+      const toastStore = useToastStore()
+      let msg = 'Failed to start call'
+      if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
+        msg = 'Microphone/Camera permission denied. Please allow access.'
+      } else if (e.name === 'NotFoundError' || e.name === 'DevicesNotFoundError') {
+        msg = 'No input media devices found.'
+      }
+      toastStore.error(msg)
       throw e
     }
   }
@@ -224,8 +242,8 @@ export const useRtcStore = defineStore('rtc', () => {
       } catch {}
     }
 
-    localStream.value?.getTracks().forEach(t => t.stop())
-    screenStream.value?.getTracks().forEach(t => t.stop())
+    localStream.value?.getTracks().forEach((t) => t.stop())
+    screenStream.value?.getTracks().forEach((t) => t.stop())
     localStream.value = null
     screenStream.value = null
     isScreenSharing.value = false
@@ -242,7 +260,9 @@ export const useRtcStore = defineStore('rtc', () => {
 
   function toggleMute() {
     isMuted.value = !isMuted.value
-    localStream.value?.getAudioTracks().forEach(t => { t.enabled = !isMuted.value })
+    localStream.value?.getAudioTracks().forEach((t) => {
+      t.enabled = !isMuted.value
+    })
   }
 
   async function toggleVideo() {
@@ -255,12 +275,18 @@ export const useRtcStore = defineStore('rtc', () => {
           localStream.value.addTrack(videoTrack)
           peerManager?.addTrack(videoTrack, localStream.value)
         }
-      } catch (e) {
+      } catch (e: any) {
         isVideoOn.value = false
+        const toastStore = useToastStore()
+        let msg = 'Failed to access camera'
+        if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
+          msg = 'Camera permission denied.'
+        }
+        toastStore.error(msg)
         throw e
       }
     } else {
-      localStream.value?.getVideoTracks().forEach(t => {
+      localStream.value?.getVideoTracks().forEach((t) => {
         t.stop()
         peerManager?.removeTrack(t, localStream.value!)
         localStream.value?.removeTrack(t)
@@ -284,8 +310,14 @@ export const useRtcStore = defineStore('rtc', () => {
         peerManager.addTrack(videoTrack, stream)
       }
       videoTrack.onended = () => stopScreenShare()
-    } catch (e) {
+    } catch (e: any) {
       console.error('Screen share failed:', e)
+      const toastStore = useToastStore()
+      let msg = 'Failed to share screen'
+      if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
+        msg = 'Screen sharing permission denied.'
+      }
+      toastStore.error(msg)
       throw e
     }
   }
@@ -296,7 +328,7 @@ export const useRtcStore = defineStore('rtc', () => {
       peerManager.removeTrack(lastSharedScreenVideoTrack, screenStream.value)
     }
 
-    screenStream.value?.getTracks().forEach(t => t.stop())
+    screenStream.value?.getTracks().forEach((t) => t.stop())
     screenStream.value = null
     isScreenSharing.value = false
 
@@ -310,9 +342,22 @@ export const useRtcStore = defineStore('rtc', () => {
   }
 
   return {
-    localStream, screenStream, remoteStreams, isMuted, isVideoOn,
-    isScreenSharing, inCall, roomUsers, callUsers,
-    joinRoom, leaveRoom, startCall, endCall,
-    toggleMute, toggleVideo, shareScreen, stopScreenShare,
+    localStream,
+    screenStream,
+    remoteStreams,
+    isMuted,
+    isVideoOn,
+    isScreenSharing,
+    inCall,
+    roomUsers,
+    callUsers,
+    joinRoom,
+    leaveRoom,
+    startCall,
+    endCall,
+    toggleMute,
+    toggleVideo,
+    shareScreen,
+    stopScreenShare,
   }
 })

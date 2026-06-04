@@ -1,0 +1,129 @@
+import { type Request, type Response, type NextFunction } from 'express'
+import jwt from 'jsonwebtoken'
+
+const jwtSecret = process.env.JWT_SECRET
+const jwtExpiresIn = process.env.JWT_EXPIRES_IN || '1d'
+const refreshExpiresIn = process.env.JWT_REFRESH_EXPIRES_IN || '7d'
+
+if (!jwtSecret) {
+  throw new Error('JWT_SECRET environment variable is required')
+}
+
+export interface JwtPayload {
+  userId: number
+  username: string
+  iat?: number
+  exp?: number
+}
+
+export interface TokenPair {
+  accessToken: string
+  refreshToken: string
+}
+
+/**
+ * Generate JWT token pair (access + refresh)
+ */
+export function generateTokens(userId: number, username: string): TokenPair {
+  const accessToken = jwt.sign({ userId, username }, jwtSecret!, { expiresIn: jwtExpiresIn } as any)
+
+  const refreshToken = jwt.sign({ userId, username }, jwtSecret!, {
+    expiresIn: refreshExpiresIn,
+  } as any)
+
+  return { accessToken, refreshToken }
+}
+
+/**
+ * Verify JWT token and return payload
+ */
+export function verifyToken(token: string): JwtPayload | null {
+  try {
+    const payload = jwt.verify(token, jwtSecret!) as any
+    return payload as JwtPayload
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Verify refresh token and return new access token
+ */
+export function verifyRefreshToken(token: string): JwtPayload | null {
+  try {
+    const payload = jwt.verify(token, jwtSecret!) as any
+    return payload as JwtPayload
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Express middleware to authenticate JWT from Authorization header
+ * Sets req.user with the decoded payload
+ */
+export function jwtMiddleware(req: Request, res: Response, next: NextFunction): void {
+  const authHeader = req.headers['authorization']
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined
+
+  if (!token) {
+    res.status(401).json({
+      error: {
+        message: 'Authentication required',
+        code: 'UNAUTHORIZED',
+      },
+    })
+    return
+  }
+
+  const payload = verifyToken(token)
+  if (!payload) {
+    res.status(401).json({
+      error: {
+        message: 'Invalid or expired token',
+        code: 'INVALID_TOKEN',
+      },
+    })
+    return
+  }
+
+  // Attach user to request
+  ;(req as any).user = payload
+  next()
+}
+
+/**
+ * Optional JWT middleware - sets req.user if valid token present,
+ * but doesn't fail if missing or invalid
+ */
+export function optionalJwtMiddleware(req: Request, res: Response, next: NextFunction): void {
+  const authHeader = req.headers['authorization']
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined
+
+  if (token) {
+    const payload = verifyToken(token)
+    if (payload) {
+      ;(req as any).user = payload
+    }
+  }
+
+  next()
+}
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: JwtPayload
+    }
+  }
+}
+
+import 'express-session'
+
+declare module 'express-session' {
+  interface SessionData {
+    userId: number
+    csrfToken: string
+    csrfTokenExpires: number
+  }
+}

@@ -11,6 +11,7 @@ export const useChatStore = defineStore('chat', () => {
   const messages = ref<Message[]>([])
   const loading = ref(false)
   const loadingMore = ref(false)
+  const uploading = ref(false)
   const hasMore = ref(true)
   const typingUsers = ref<Set<number>>(new Set())
   const replyTo = ref<Message | null>(null)
@@ -48,6 +49,7 @@ export const useChatStore = defineStore('chat', () => {
       }
     } catch (e) {
       console.error('Failed to load more messages', e)
+      useToastStore().error(e instanceof Error ? e.message : 'Failed to load older messages')
     } finally {
       loadingMore.value = false
     }
@@ -64,11 +66,12 @@ export const useChatStore = defineStore('chat', () => {
     } catch (e) {
       console.error('Search failed', e)
       searchResults.value = []
+      useToastStore().error(e instanceof Error ? e.message : 'Search failed')
     }
   }
 
   function upsertMessage(message: Message) {
-    const idx = messages.value.findIndex(m => m.id === message.id)
+    const idx = messages.value.findIndex((m) => m.id === message.id)
     if (idx >= 0) {
       messages.value[idx] = message
     } else {
@@ -77,7 +80,7 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   function addMessage(message: Message) {
-    if (messages.value.find(m => m.id === message.id)) return
+    if (messages.value.find((m) => m.id === message.id)) return
     messages.value.push(message)
 
     const auth = useAuthStore()
@@ -102,24 +105,47 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   async function editMessage(roomId: string, messageId: number, content: string) {
-    const updated = await roomApi.editMessage(roomId, messageId, content)
-    upsertMessage(updated)
+    try {
+      const updated = await roomApi.editMessage(roomId, messageId, content)
+      upsertMessage(updated)
+    } catch (e) {
+      useToastStore().error(e instanceof Error ? e.message : 'Failed to edit message')
+      throw e
+    }
   }
 
   async function deleteMessage(roomId: string, messageId: number) {
-    const updated = await roomApi.deleteMessage(roomId, messageId)
-    upsertMessage(updated)
+    try {
+      const updated = await roomApi.deleteMessage(roomId, messageId)
+      upsertMessage(updated)
+    } catch (e) {
+      useToastStore().error(e instanceof Error ? e.message : 'Failed to delete message')
+      throw e
+    }
   }
 
   async function toggleReaction(roomId: string, messageId: number, emoji: string) {
-    const updated = await roomApi.toggleReaction(roomId, messageId, emoji)
-    upsertMessage(updated)
+    try {
+      const updated = await roomApi.toggleReaction(roomId, messageId, emoji)
+      upsertMessage(updated)
+    } catch (e) {
+      useToastStore().error(e instanceof Error ? e.message : 'Failed to update reaction')
+      throw e
+    }
   }
 
   async function uploadFile(roomId: string, dataUrl: string, fileName: string, caption?: string) {
-    const msg = await roomApi.uploadFile(roomId, dataUrl, fileName, caption, replyTo.value?.id)
-    upsertMessage(msg)
-    replyTo.value = null
+    uploading.value = true
+    try {
+      const msg = await roomApi.uploadFile(roomId, dataUrl, fileName, caption, replyTo.value?.id)
+      upsertMessage(msg)
+      replyTo.value = null
+    } catch (e) {
+      useToastStore().error(e instanceof Error ? e.message : 'File upload failed')
+      throw e
+    } finally {
+      uploading.value = false
+    }
   }
 
   function setReply(message: Message | null) {
@@ -155,6 +181,7 @@ export const useChatStore = defineStore('chat', () => {
     messages,
     loading,
     loadingMore,
+    uploading,
     hasMore,
     typingUsers,
     replyTo,

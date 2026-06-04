@@ -1,7 +1,22 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { X, AtSign, Link, MapPin, UserPlus, MessageCircle, Check, Ban, Globe, Clock, BarChart2, Users, MessageSquare, Eye } from 'lucide-vue-next'
+import {
+  X,
+  AtSign,
+  Link,
+  MapPin,
+  UserPlus,
+  MessageCircle,
+  Check,
+  Ban,
+  Globe,
+  Clock,
+  BarChart2,
+  Users,
+  MessageSquare,
+  Eye,
+} from 'lucide-vue-next'
 import { userApi, type UserStats } from '@/services/api/user.api'
 import { useAuthStore } from '@/stores/auth.store'
 import { useFriendsStore } from '@/stores/friends.store'
@@ -41,8 +56,11 @@ async function load() {
       friendStatus.value = await friendsStore.getStatus(props.userId)
     }
     // Load stats in background (non-blocking)
-    userApi.getStats(props.userId)
-      .then(s => { stats.value = s })
+    userApi
+      .getStats(props.userId)
+      .then((s) => {
+        stats.value = s
+      })
       .catch(() => {})
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : 'Failed to load user profile.'
@@ -89,7 +107,8 @@ const bannerStyle = computed(() => {
   const u = user.value
   if (!u) return {}
   if (u.bannerUrl) return { backgroundImage: `url(${u.bannerUrl})` }
-  if (u.profileGradient && !u.profileGradient.startsWith('animated:')) return { background: u.profileGradient }
+  if (u.profileGradient && !u.profileGradient.startsWith('animated:'))
+    return { background: u.profileGradient }
   if (!u.profileGradient) return { background: u.accentColor || '#5865f2' }
   return {}
 })
@@ -124,7 +143,7 @@ function formatLastSeen(isoStr: string | null | undefined): string {
 
 const maxActivity = computed(() => {
   if (!stats.value?.activityByDay?.length) return 1
-  return Math.max(...stats.value.activityByDay.map(d => d.count), 1)
+  return Math.max(...stats.value.activityByDay.map((d) => d.count), 1)
 })
 
 async function addFriend() {
@@ -173,7 +192,10 @@ async function blockUser() {
         <X :size="18" />
       </button>
 
-      <div class="card">
+      <div
+        class="card"
+        :class="user?.profileTheme ? `profile-theme-${user.profileTheme}` : 'profile-theme-default'"
+      >
         <div class="banner" :class="bannerAnimClass" :style="bannerStyle" />
 
         <div class="shell">
@@ -214,12 +236,10 @@ async function blockUser() {
               >
                 <Check :size="14" /> Accept Request
               </button>
-              <span v-if="friendStatus === 'pending_outgoing'" class="action-hint">Friend request sent</span>
-              <button
-                v-if="friendStatus === 'friends'"
-                class="action-btn"
-                @click="openMessage"
+              <span v-if="friendStatus === 'pending_outgoing'" class="action-hint"
+                >Friend request sent</span
               >
+              <button v-if="friendStatus === 'friends'" class="action-btn" @click="openMessage">
                 <MessageCircle :size="14" /> Message
               </button>
               <button
@@ -313,7 +333,7 @@ async function blockUser() {
                 </span>
               </div>
 
-              <div v-if="stats.activityByDay.some(d => d.count > 0)" class="activity-chart">
+              <div v-if="stats.activityByDay.some((d) => d.count > 0)" class="activity-chart">
                 <div class="chart-label">
                   <BarChart2 :size="11" />
                   Activity (7 days)
@@ -327,7 +347,9 @@ async function blockUser() {
                   >
                     <div
                       class="chart-bar"
-                      :style="{ height: `${Math.max(2, Math.round((day.count / maxActivity) * 32))}px` }"
+                      :style="{
+                        height: `${Math.max(2, Math.round((day.count / maxActivity) * 32))}px`,
+                      }"
                     />
                     <div class="chart-day">{{ day.date.slice(5) }}</div>
                   </div>
@@ -380,7 +402,9 @@ async function blockUser() {
   z-index: 1;
   transition: background 0.15s;
 }
-.close:hover { background: rgba(0, 0, 0, 0.4); }
+.close:hover {
+  background: rgba(0, 0, 0, 0.4);
+}
 
 .card {
   overflow: hidden;
@@ -394,7 +418,9 @@ async function blockUser() {
   background-size: cover;
   background-position: center;
 }
-.shell { padding: 0 18px 18px; }
+.shell {
+  padding: 0 18px 18px;
+}
 .avatar-row {
   min-height: 56px;
   display: flex;
@@ -405,7 +431,9 @@ async function blockUser() {
   border: 6px solid #111318;
   border-radius: 50%;
 }
-.name-block { margin-top: 10px; }
+.name-block {
+  margin-top: 10px;
+}
 .name-block h3 {
   color: var(--text-primary);
   font-size: 22px;
@@ -454,9 +482,18 @@ async function blockUser() {
   border-color: rgba(139, 92, 246, 0.35);
   color: #c4b5fd;
 }
-.action-btn.danger { color: var(--danger); padding: 8px 10px; }
-.action-btn:hover:not(:disabled) { filter: brightness(1.08); }
-.action-hint { font-size: 12px; color: var(--text-muted); align-self: center; }
+.action-btn.danger {
+  color: var(--danger);
+  padding: 8px 10px;
+}
+.action-btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.action-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  align-self: center;
+}
 .section {
   margin-top: 18px;
   padding-top: 14px;
@@ -500,7 +537,9 @@ async function blockUser() {
   font-size: 13px;
   text-decoration: none;
 }
-.links a:hover { color: var(--accent-blue); }
+.links a:hover {
+  color: var(--accent-blue);
+}
 
 .social-links {
   display: flex;
@@ -517,14 +556,19 @@ async function blockUser() {
   gap: 5px;
   padding: 5px 10px;
   border-radius: 6px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-secondary);
   font-size: 12px;
   text-decoration: none;
-  transition: border-color 0.15s, color 0.15s;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
 }
-.social-chip:hover { color: #93c5fd; border-color: #93c5fd; }
+.social-chip:hover {
+  color: #93c5fd;
+  border-color: #93c5fd;
+}
 
 .last-seen {
   display: inline-flex;
@@ -556,7 +600,10 @@ async function blockUser() {
   gap: 8px;
 }
 
-.stat-icon { color: var(--text-muted); flex-shrink: 0; }
+.stat-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
 
 .stat-value {
   font-size: 15px;
@@ -583,8 +630,8 @@ async function blockUser() {
   gap: 4px;
   padding: 4px 8px;
   border-radius: 6px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   font-size: 14px;
   cursor: default;
 }
@@ -634,7 +681,9 @@ async function blockUser() {
   transition: background 0.2s;
 }
 
-.chart-bar-wrap:hover .chart-bar { background: rgba(139, 92, 246, 0.85); }
+.chart-bar-wrap:hover .chart-bar {
+  background: rgba(139, 92, 246, 0.85);
+}
 
 .chart-day {
   font-size: 9px;
@@ -644,8 +693,13 @@ async function blockUser() {
 
 /* ── Animated banners ── */
 @keyframes banner-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 .banner-aurora {
   background: linear-gradient(270deg, #0f2027, #203a43, #667db6, #7f00ff, #2c5364);
@@ -686,7 +740,9 @@ async function blockUser() {
   color: var(--text-muted);
   font-size: 13px;
 }
-.state.error { color: var(--danger); }
+.state.error {
+  color: var(--danger);
+}
 .spinner {
   width: 16px;
   height: 16px;
@@ -696,10 +752,27 @@ async function blockUser() {
   animation: spin 0.7s linear infinite;
 }
 
-@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slide-up {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 </style>

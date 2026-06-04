@@ -50,26 +50,34 @@ function resetAwayTimer() {
 const activityEvents = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll']
 
 onMounted(async () => {
-  connectSocket()
-  await Promise.all([
-    roomStore.fetchRooms(),
-    friendsStore.fetchFriends(),
-    dmStore.fetchConversations(),
-  ])
-  friendsStore.bindSocketEvents()
-  dmStore.bindGlobalDmListener()
+  // Always try to fetch current user first if we have tokens
+  if (auth.accessToken && !auth.user) {
+    await auth.fetchMe()
+  }
+
+  // Only proceed if logged in
+  if (auth.isLoggedIn) {
+    connectSocket()
+    await Promise.all([
+      roomStore.fetchRooms(),
+      friendsStore.fetchFriends(),
+      dmStore.fetchConversations(),
+    ])
+    friendsStore.bindSocketEvents()
+    dmStore.bindGlobalDmListener()
+  }
 
   if (auth.user?.preferredTheme) {
     settings.applyUserTheme(auth.user.preferredTheme)
   }
 
-  activityEvents.forEach(evt => document.addEventListener(evt, resetAwayTimer, { passive: true }))
+  activityEvents.forEach((evt) => document.addEventListener(evt, resetAwayTimer, { passive: true }))
   resetAwayTimer()
   pingTimer = setInterval(pingActivity, ACTIVITY_PING_MS)
 })
 
 onUnmounted(() => {
-  activityEvents.forEach(evt => document.removeEventListener(evt, resetAwayTimer))
+  activityEvents.forEach((evt) => document.removeEventListener(evt, resetAwayTimer))
   if (awayTimer) clearTimeout(awayTimer)
   if (pingTimer) clearInterval(pingTimer)
 })

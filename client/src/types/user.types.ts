@@ -18,6 +18,9 @@ export interface User {
   customStatus: string | null
   accentColor: string | null
   profileGradient: string | null
+  avatarFrame: string | null
+  profileTheme: string | null
+  customTheme: string | null
   badges: string[]
   socialLinks: SocialLink[]
   timezone: string | null

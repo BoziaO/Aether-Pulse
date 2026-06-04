@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, defineAsyncComponent } from 'vue'
 import { Hash, Plus, UserPlus, Sparkles } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth.store'
 import { useRoomStore } from '@/stores/room.store'
-import RoomCard from '@/components/rooms/RoomCard.vue'
 import RoomCardSkeleton from '@/components/rooms/RoomCardSkeleton.vue'
-import CreateRoomModal from '@/components/rooms/CreateRoomModal.vue'
+
+// Lazy-loaded components for performance
+const RoomCard = defineAsyncComponent(() => import('@/components/rooms/RoomCard.vue'))
+const CreateRoomModal = defineAsyncComponent(() => import('@/components/rooms/CreateRoomModal.vue'))
 
 const auth = useAuthStore()
 const roomStore = useRoomStore()
@@ -16,7 +18,9 @@ const showCreate = ref(false)
   <div class="home-view">
     <div class="home-header">
       <div class="greeting">
-        <h1>Welcome back, <span class="name">{{ auth.user?.displayName }}</span> 👋</h1>
+        <h1>
+          Welcome back, <span class="name">{{ auth.user?.displayName }}</span> 👋
+        </h1>
         <p>Your private digital space is ready</p>
       </div>
       <div class="header-actions">
@@ -45,18 +49,14 @@ const showCreate = ref(false)
         <div class="empty-icon"><Hash :size="40" /></div>
         <h3>No rooms yet</h3>
         <p>Create your first room to start chatting and calling</p>
-        <button class="btn-primary" style="margin-top:16px" @click="showCreate = true">
+        <button class="btn-primary" style="margin-top: 16px" @click="showCreate = true">
           <Plus :size="16" />
           Create Room
         </button>
       </div>
 
       <div v-else class="rooms-grid">
-        <RoomCard
-          v-for="room in roomStore.rooms"
-          :key="room.id"
-          :room="room"
-        />
+        <RoomCard v-for="room in roomStore.rooms" :key="room.id" :room="room" />
       </div>
     </div>
 
@@ -106,21 +106,36 @@ const showCreate = ref(false)
   color: var(--text-primary);
   margin-bottom: 4px;
 }
-.greeting p { font-size: 14px; color: var(--text-muted); }
+.greeting p {
+  font-size: 14px;
+  color: var(--text-muted);
+}
 .name {
   background: linear-gradient(135deg, var(--accent-violet), var(--accent-blue));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
-.header-actions { display: flex; gap: 8px; align-items: center; }
-.section { display: flex; flex-direction: column; gap: 16px; }
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
 .section-header {
   display: flex;
   align-items: center;
   gap: 8px;
 }
-.section-header h2 { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+.section-header h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
 .section-count {
   background: rgba(139, 92, 246, 0.15);
   color: var(--accent-violet);
@@ -142,9 +157,21 @@ const showCreate = ref(false)
   border-radius: 16px;
   color: var(--text-muted);
 }
-.empty-icon { color: var(--border-accent); margin-bottom: 12px; display: flex; justify-content: center; }
-.empty-state h3 { font-size: 16px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
-.empty-state p { font-size: 14px; }
+.empty-icon {
+  color: var(--border-accent);
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: center;
+}
+.empty-state h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.empty-state p {
+  font-size: 14px;
+}
 .features-bar {
   display: flex;
   gap: 24px;
@@ -161,5 +188,7 @@ const showCreate = ref(false)
   font-size: 13px;
   color: var(--text-secondary);
 }
-.feature-icon { font-size: 16px; }
+.feature-icon {
+  font-size: 16px;
+}
 </style>

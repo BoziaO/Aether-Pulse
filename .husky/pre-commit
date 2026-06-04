@@ -1,0 +1,2 @@
+# Run lint-staged in the workspace
+pnpm exec lint-staged

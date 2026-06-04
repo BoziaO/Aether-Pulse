@@ -1,8 +1,18 @@
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 import { spatialAudio } from '@/services/rtc/spatial-audio'
+import { useAuthStore } from './auth.store'
 
-export type ThemeMode = 'dark' | 'light' | 'nord' | 'dracula' | 'solarized-dark' | 'cyberpunk' | 'monokai'
+export type ThemeMode =
+  | 'dark'
+  | 'light'
+  | 'nord'
+  | 'dracula'
+  | 'solarized-dark'
+  | 'cyberpunk'
+  | 'monokai'
+  | 'maximalism-beauty'
+  | 'minimalism-pixel'
 
 export const AVAILABLE_THEMES: Array<{ id: ThemeMode; name: string; colors: string[] }> = [
   { id: 'dark', name: 'Dark (Default)', colors: ['#070a13', '#8b5cf6', '#e2e8f0'] },
@@ -12,9 +22,19 @@ export const AVAILABLE_THEMES: Array<{ id: ThemeMode; name: string; colors: stri
   { id: 'solarized-dark', name: 'Solarized Dark', colors: ['#002b36', '#6c71c4', '#fdf6e3'] },
   { id: 'cyberpunk', name: 'Cyberpunk', colors: ['#0a0a12', '#ff00ff', '#f0f0ff'] },
   { id: 'monokai', name: 'Monokai', colors: ['#272822', '#ae81ff', '#f8f8f2'] },
+  {
+    id: 'maximalism-beauty',
+    name: 'Maximalism Beauty ✨',
+    colors: ['#0c061d', '#d946ef', '#00ffff'],
+  },
+  {
+    id: 'minimalism-pixel',
+    name: 'Minimalism Pixel 👾',
+    colors: ['#080c08', '#39ff14', '#ffffff'],
+  },
 ]
 
-const VALID_THEMES = new Set<ThemeMode>(AVAILABLE_THEMES.map(t => t.id))
+const VALID_THEMES = new Set<ThemeMode>(AVAILABLE_THEMES.map((t) => t.id))
 
 function readStoredTheme(): ThemeMode {
   const stored = localStorage.getItem('theme') as ThemeMode | null
@@ -40,6 +60,14 @@ export const useSettingsStore = defineStore('settings', () => {
   function setTheme(next: ThemeMode) {
     if (VALID_THEMES.has(next)) {
       theme.value = next
+      try {
+        const auth = useAuthStore()
+        if (auth.user && auth.user.customTheme !== next) {
+          auth.updateProfile({ customTheme: next })
+        }
+      } catch (e) {
+        // Safe fallback if authStore is not ready
+      }
     }
   }
 
@@ -49,22 +77,38 @@ export const useSettingsStore = defineStore('settings', () => {
     }
   }
 
-  watch(theme, (v) => {
-    localStorage.setItem('theme', v)
-    applyTheme()
-  }, { immediate: true })
+  watch(
+    theme,
+    (v) => {
+      localStorage.setItem('theme', v)
+      applyTheme()
+    },
+    { immediate: true }
+  )
 
-  watch(outputVolume, (v) => {
-    if (spatialAudio.enabled) spatialAudio.setOutputVolume(v)
-  }, { immediate: true })
+  watch(
+    outputVolume,
+    (v) => {
+      if (spatialAudio.enabled) spatialAudio.setOutputVolume(v)
+    },
+    { immediate: true }
+  )
 
-  watch(noiseSuppressionEnabled, (v) => {
-    localStorage.setItem('noiseSuppression', String(v))
-  }, { immediate: true })
+  watch(
+    noiseSuppressionEnabled,
+    (v) => {
+      localStorage.setItem('noiseSuppression', String(v))
+    },
+    { immediate: true }
+  )
 
-  watch(messageNotifications, (v) => {
-    localStorage.setItem('messageNotifications', String(v))
-  }, { immediate: true })
+  watch(
+    messageNotifications,
+    (v) => {
+      localStorage.setItem('messageNotifications', String(v))
+    },
+    { immediate: true }
+  )
 
   function toggleSpatialAudio() {
     spatialAudioEnabled.value = !spatialAudioEnabled.value

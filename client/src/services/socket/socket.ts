@@ -4,10 +4,14 @@ let _socket: Socket | null = null
 
 export function getSocket(): Socket {
   if (!_socket) {
+    const token = localStorage.getItem('aetherpulse_access_token')
     _socket = io({
       path: '/api/socket.io',
       autoConnect: false,
       withCredentials: true,
+      auth: {
+        token,
+      },
     })
   }
   return _socket

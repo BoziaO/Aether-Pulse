@@ -1,23 +1,23 @@
 :root {
-  --bg-primary:    #070a13;
-  --bg-secondary:  #0d1017;
-  --bg-surface:    #141820;
-  --bg-surface-2:  #1a2030;
-  --bg-hover:      #1e2535;
+  --bg-primary: #070a13;
+  --bg-secondary: #0d1017;
+  --bg-surface: #141820;
+  --bg-surface-2: #1a2030;
+  --bg-hover: #1e2535;
 
   --accent-violet: #8b5cf6;
-  --accent-blue:   #3b82f6;
-  --accent-teal:   #06b6d4;
+  --accent-blue: #3b82f6;
+  --accent-teal: #06b6d4;
 
-  --text-primary:   #e2e8f0;
+  --text-primary: #e2e8f0;
   --text-secondary: #94a3b8;
-  --text-muted:     #475569;
+  --text-muted: #475569;
 
-  --border:         rgba(255,255,255,0.07);
-  --border-accent:  rgba(139, 92, 246, 0.35);
+  --border: rgba(255, 255, 255, 0.07);
+  --border-accent: rgba(139, 92, 246, 0.35);
 
-  --glass:          rgba(255,255,255,0.02);
-  --glass-border:   rgba(255,255,255,0.06);
+  --glass: rgba(255, 255, 255, 0.02);
+  --glass-border: rgba(255, 255, 255, 0.06);
 
   --danger: #ef4444;
   --success: #22c55e;
@@ -26,103 +26,511 @@
 
 /* Light theme */
 :root[data-theme='light'] {
-  --bg-primary:    #f6f7fb;
-  --bg-secondary:  #ffffff;
-  --bg-surface:    #ffffff;
-  --bg-surface-2:  #f1f3f9;
-  --bg-hover:      #e9edf7;
+  --bg-primary: #f6f7fb;
+  --bg-secondary: #ffffff;
+  --bg-surface: #ffffff;
+  --bg-surface-2: #f1f3f9;
+  --bg-hover: #e9edf7;
 
   --accent-violet: #6d28d9;
-  --accent-blue:   #2563eb;
-  --accent-teal:   #0891b2;
+  --accent-blue: #2563eb;
+  --accent-teal: #0891b2;
 
-  --text-primary:   #0f172a;
+  --text-primary: #0f172a;
   --text-secondary: #334155;
-  --text-muted:     #64748b;
+  --text-muted: #64748b;
 
-  --border:         rgba(15, 23, 42, 0.10);
-  --border-accent:  rgba(109, 40, 217, 0.25);
+  --border: rgba(15, 23, 42, 0.1);
+  --border-accent: rgba(109, 40, 217, 0.25);
 
-  --glass:          rgba(15, 23, 42, 0.02);
-  --glass-border:   rgba(15, 23, 42, 0.08);
+  --glass: rgba(15, 23, 42, 0.02);
+  --glass-border: rgba(15, 23, 42, 0.08);
 }
 
 :root[data-theme='nord'] {
-  --bg-primary:    #2e3440;
-  --bg-secondary:  #3b4252;
-  --bg-surface:    #434c5e;
-  --bg-surface-2:  #4c566a;
-  --bg-hover:      #525d70;
+  --bg-primary: #2e3440;
+  --bg-secondary: #3b4252;
+  --bg-surface: #434c5e;
+  --bg-surface-2: #4c566a;
+  --bg-hover: #525d70;
   --accent-violet: #b48ead;
-  --accent-blue:   #81a1c1;
-  --accent-teal:   #88c0d0;
-  --text-primary:   #eceff4;
+  --accent-blue: #81a1c1;
+  --accent-teal: #88c0d0;
+  --text-primary: #eceff4;
   --text-secondary: #d8dee9;
-  --text-muted:     #a3b1c6;
-  --border:         rgba(236, 239, 244, 0.08);
-  --border-accent:  rgba(180, 142, 173, 0.35);
+  --text-muted: #a3b1c6;
+  --border: rgba(236, 239, 244, 0.08);
+  --border-accent: rgba(180, 142, 173, 0.35);
 }
 
 :root[data-theme='dracula'] {
-  --bg-primary:    #282a36;
-  --bg-secondary:  #21222c;
-  --bg-surface:    #343746;
-  --bg-surface-2:  #3a3d4f;
-  --bg-hover:      #44475a;
+  --bg-primary: #282a36;
+  --bg-secondary: #21222c;
+  --bg-surface: #343746;
+  --bg-surface-2: #3a3d4f;
+  --bg-hover: #44475a;
   --accent-violet: #bd93f9;
-  --accent-blue:   #8be9fd;
-  --accent-teal:   #50fa7b;
-  --text-primary:   #f8f8f2;
+  --accent-blue: #8be9fd;
+  --accent-teal: #50fa7b;
+  --text-primary: #f8f8f2;
   --text-secondary: #cfcfd6;
-  --text-muted:     #9aa0b5;
-  --border:         rgba(248, 248, 242, 0.08);
-  --border-accent:  rgba(189, 147, 249, 0.35);
+  --text-muted: #9aa0b5;
+  --border: rgba(248, 248, 242, 0.08);
+  --border-accent: rgba(189, 147, 249, 0.35);
 }
 
 :root[data-theme='solarized-dark'] {
-  --bg-primary:    #002b36;
-  --bg-secondary:  #073642;
-  --bg-surface:    #0a3942;
-  --bg-surface-2:  #0f424d;
-  --bg-hover:      #124b57;
+  --bg-primary: #002b36;
+  --bg-secondary: #073642;
+  --bg-surface: #0a3942;
+  --bg-surface-2: #0f424d;
+  --bg-hover: #124b57;
   --accent-violet: #6c71c4;
-  --accent-blue:   #268bd2;
-  --accent-teal:   #2aa198;
-  --text-primary:   #fdf6e3;
+  --accent-blue: #268bd2;
+  --accent-teal: #2aa198;
+  --text-primary: #fdf6e3;
   --text-secondary: #cbd5cf;
-  --text-muted:     #839496;
-  --border:         rgba(253, 246, 227, 0.08);
-  --border-accent:  rgba(108, 113, 196, 0.35);
+  --text-muted: #839496;
+  --border: rgba(253, 246, 227, 0.08);
+  --border-accent: rgba(108, 113, 196, 0.35);
 }
 
 :root[data-theme='cyberpunk'] {
-  --bg-primary:    #0a0a12;
-  --bg-secondary:  #12121f;
-  --bg-surface:    #18182a;
-  --bg-surface-2:  #1f1f35;
-  --bg-hover:      #262640;
+  --bg-primary: #0a0a12;
+  --bg-secondary: #12121f;
+  --bg-surface: #18182a;
+  --bg-surface-2: #1f1f35;
+  --bg-hover: #262640;
   --accent-violet: #ff00ff;
-  --accent-blue:   #00ffff;
-  --accent-teal:   #00ff9f;
-  --text-primary:   #f0f0ff;
+  --accent-blue: #00ffff;
+  --accent-teal: #00ff9f;
+  --text-primary: #f0f0ff;
   --text-secondary: #b8b8d9;
-  --text-muted:     #6b6b8a;
-  --border:         rgba(255, 0, 255, 0.12);
-  --border-accent:  rgba(0, 255, 255, 0.35);
+  --text-muted: #6b6b8a;
+  --border: rgba(255, 0, 255, 0.12);
+  --border-accent: rgba(0, 255, 255, 0.35);
 }
 
 :root[data-theme='monokai'] {
-  --bg-primary:    #272822;
-  --bg-secondary:  #1e1f1a;
-  --bg-surface:    #2d2e27;
-  --bg-surface-2:  #383932;
-  --bg-hover:      #41423a;
+  --bg-primary: #272822;
+  --bg-secondary: #1e1f1a;
+  --bg-surface: #2d2e27;
+  --bg-surface-2: #383932;
+  --bg-hover: #41423a;
   --accent-violet: #ae81ff;
-  --accent-blue:   #66d9ef;
-  --accent-teal:   #a6e22e;
-  --text-primary:   #f8f8f2;
+  --accent-blue: #66d9ef;
+  --accent-teal: #a6e22e;
+  --text-primary: #f8f8f2;
   --text-secondary: #cfcfc7;
-  --text-muted:     #8f908a;
-  --border:         rgba(248, 248, 242, 0.08);
-  --border-accent:  rgba(174, 129, 255, 0.35);
+  --text-muted: #8f908a;
+  --border: rgba(248, 248, 242, 0.08);
+  --border-accent: rgba(174, 129, 255, 0.35);
+}
+
+/* ==========================================================================
+   MAXIMALISM BEAUTY THEME (glowing glassmorphism, floating layouts, gradient flows)
+   ========================================================================== */
+:root[data-theme='maximalism-beauty'] {
+  --bg-primary: #060212;
+  --bg-secondary: rgba(20, 10, 42, 0.5);
+  --bg-surface: rgba(32, 14, 66, 0.45);
+  --bg-surface-2: rgba(48, 22, 98, 0.55);
+  --bg-hover: rgba(217, 70, 239, 0.22);
+
+  --accent-violet: #d946ef;
+  --accent-blue: #3b82f6;
+  --accent-teal: #00ffff;
+
+  --text-primary: #ffffff;
+  --text-secondary: #f472b6;
+  --text-muted: #a21caf;
+
+  --border: rgba(217, 70, 239, 0.18);
+  --border-accent: rgba(0, 255, 255, 0.45);
+
+  --glass: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(217, 70, 239, 0.25);
+}
+
+/* Maximalism Theme Overrides */
+:root[data-theme='maximalism-beauty'] body {
+  background: radial-gradient(circle at center, #150a30 0%, #03010b 100%) !important;
+  background-size: 200% 200%;
+  animation: beautyGradientFlow 15s ease infinite;
+}
+
+@keyframes beautyGradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+:root[data-theme='maximalism-beauty'] .card,
+:root[data-theme='maximalism-beauty'] .settings-nav,
+:root[data-theme='maximalism-beauty'] .settings-content,
+:root[data-theme='maximalism-beauty'] .sidebar,
+:root[data-theme='maximalism-beauty'] .chat-panel,
+:root[data-theme='maximalism-beauty'] .room-view,
+:root[data-theme='maximalism-beauty'] .home-view,
+:root[data-theme='maximalism-beauty'] .user-profile-modal,
+:root[data-theme='maximalism-beauty'] .modal-content,
+:root[data-theme='maximalism-beauty'] .dm-view {
+  border-radius: 20px !important;
+  backdrop-filter: blur(25px) !important;
+  -webkit-backdrop-filter: blur(25px) !important;
+  box-shadow:
+    0 10px 40px 0 rgba(217, 70, 239, 0.16),
+    inset 0 0 12px rgba(255, 255, 255, 0.05) !important;
+  border: 1.5px solid rgba(217, 70, 239, 0.25) !important;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+:root[data-theme='maximalism-beauty'] .btn-primary {
+  background: linear-gradient(135deg, #ec4899, #8b5cf6, #06b6d4) !important;
+  box-shadow: 0 0 15px rgba(217, 70, 239, 0.45) !important;
+  border-radius: 14px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+:root[data-theme='maximalism-beauty'] .btn-primary:hover {
+  transform: translateY(-3px) scale(1.04) !important;
+  box-shadow:
+    0 0 25px rgba(0, 255, 255, 0.75),
+    0 0 10px rgba(217, 70, 239, 0.5) !important;
+}
+
+:root[data-theme='maximalism-beauty'] .btn-ghost {
+  border-radius: 12px !important;
+  color: var(--text-secondary) !important;
+}
+
+:root[data-theme='maximalism-beauty'] .btn-ghost:hover {
+  background: rgba(217, 70, 239, 0.15) !important;
+  color: #ffffff !important;
+}
+
+:root[data-theme='maximalism-beauty'] .input {
+  border-radius: 12px !important;
+  border: 1px solid rgba(217, 70, 239, 0.3) !important;
+  background: rgba(13, 8, 30, 0.7) !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+  transition: all 0.2s ease !important;
+}
+
+:root[data-theme='maximalism-beauty'] .input:focus {
+  border-color: var(--accent-teal) !important;
+  box-shadow: 0 0 12px rgba(0, 255, 255, 0.4) !important;
+}
+
+:root[data-theme='maximalism-beauty'] .avatar {
+  border: 2.5px solid rgba(217, 70, 239, 0.5) !important;
+  box-shadow: 0 0 10px rgba(217, 70, 239, 0.3) !important;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+:root[data-theme='maximalism-beauty'] .avatar:hover {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 0 18px rgba(0, 255, 255, 0.6) !important;
+  border-color: var(--accent-teal) !important;
+}
+
+:root[data-theme='maximalism-beauty'] .status-dot.online {
+  box-shadow:
+    0 0 8px #23a55a,
+    0 0 15px #23a55a !important;
+  animation: pulseNeonGreen 2s infinite alternate;
+}
+
+@keyframes pulseNeonGreen {
+  0% {
+    box-shadow:
+      0 0 4px #23a55a,
+      0 0 8px #23a55a;
+  }
+  100% {
+    box-shadow:
+      0 0 12px #23a55a,
+      0 0 20px #39ff14;
+  }
+}
+
+:root[data-theme='maximalism-beauty'] h1,
+:root[data-theme='maximalism-beauty'] h2,
+:root[data-theme='maximalism-beauty'] h3,
+:root[data-theme='maximalism-beauty'] .nav-label {
+  background: linear-gradient(135deg, #ff00af, #00ffff) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  text-shadow: 0 0 15px rgba(217, 70, 239, 0.15) !important;
+  font-weight: 800 !important;
+}
+
+/* ==========================================================================
+   MINIMALISM PIXEL THEME (retro game monospace console aesthetics)
+   ========================================================================== */
+:root[data-theme='minimalism-pixel'] {
+  --bg-primary: #030503;
+  --bg-secondary: #000000;
+  --bg-surface: #070a07;
+  --bg-surface-2: #0b0f0b;
+  --bg-hover: rgba(57, 255, 20, 0.18);
+
+  --accent-violet: #39ff14;
+  --accent-blue: #39ff14;
+  --accent-teal: #39ff14;
+
+  --text-primary: #39ff14;
+  --text-secondary: #7aff7a;
+  --text-muted: #165010;
+
+  --border: #39ff14;
+  --border-accent: #39ff14;
+
+  --glass: #000000;
+  --glass-border: #39ff14;
+}
+
+/* Minimalism Pixel Overrides */
+:root[data-theme='minimalism-pixel'] * {
+  font-family: 'Courier New', Courier, monospace !important;
+  border-radius: 0px !important;
+  text-transform: uppercase !important;
+  image-rendering: pixelated !important;
+  letter-spacing: 0.5px;
+}
+
+:root[data-theme='minimalism-pixel'] .card,
+:root[data-theme='minimalism-pixel'] .settings-nav,
+:root[data-theme='minimalism-pixel'] .settings-content,
+:root[data-theme='minimalism-pixel'] .sidebar,
+:root[data-theme='minimalism-pixel'] .chat-panel,
+:root[data-theme='minimalism-pixel'] .room-view,
+:root[data-theme='minimalism-pixel'] .home-view,
+:root[data-theme='minimalism-pixel'] .user-profile-modal,
+:root[data-theme='minimalism-pixel'] .modal-content,
+:root[data-theme='minimalism-pixel'] .dm-view {
+  border: 3px double #39ff14 !important;
+  box-shadow:
+    5px 5px 0px #000000,
+    5px 5px 0px 1px #39ff14 !important;
+  background: #000000 !important;
+  border-radius: 0px !important;
+  margin: 4px;
+}
+
+:root[data-theme='minimalism-pixel'] .btn-primary {
+  background: #000000 !important;
+  color: #39ff14 !important;
+  border: 2px solid #39ff14 !important;
+  box-shadow: 4px 4px 0px #39ff14 !important;
+  font-weight: 900 !important;
+  border-radius: 0px !important;
+  text-transform: uppercase !important;
+  transition: all 0.1s steps(4) !important;
+}
+
+:root[data-theme='minimalism-pixel'] .btn-primary:hover {
+  background: #39ff14 !important;
+  color: #000000 !important;
+  box-shadow: 2px 2px 0px #000000 !important;
+  transform: translate(2px, 2px) !important;
+}
+
+:root[data-theme='minimalism-pixel'] .btn-primary:active {
+  box-shadow: none !important;
+  transform: translate(4px, 4px) !important;
+}
+
+:root[data-theme='minimalism-pixel'] .btn-ghost {
+  border-radius: 0px !important;
+  border: 1px dashed transparent !important;
+  color: #39ff14 !important;
+}
+
+:root[data-theme='minimalism-pixel'] .btn-ghost:hover {
+  background: #000000 !important;
+  border-color: #39ff14 !important;
+  box-shadow: 2px 2px 0px #39ff14 !important;
+  transform: translate(-2px, -2px);
+}
+
+:root[data-theme='minimalism-pixel'] .input {
+  border: 2px solid #39ff14 !important;
+  background: #000000 !important;
+  color: #39ff14 !important;
+  box-shadow:
+    3px 3px 0px #000000,
+    inset 1px 1px 3px rgba(57, 255, 20, 0.15) !important;
+  border-radius: 0px !important;
+}
+
+:root[data-theme='minimalism-pixel'] .input:focus {
+  background: #050a05 !important;
+  box-shadow: 3px 3px 0px #39ff14 !important;
+  outline: none !important;
+}
+
+:root[data-theme='minimalism-pixel'] .avatar {
+  border-radius: 0px !important;
+  border: 2px solid #39ff14 !important;
+  background: #000000 !important;
+  box-shadow: 3px 3px 0px #000000 !important;
+}
+
+:root[data-theme='minimalism-pixel'] .status-dot {
+  border-radius: 0px !important;
+  border: 1px solid #000000 !important;
+  width: 12px !important;
+  height: 12px !important;
+}
+
+:root[data-theme='minimalism-pixel'] .status-dot.online {
+  background: #39ff14 !important;
+}
+
+:root[data-theme='minimalism-pixel'] .status-dot.away {
+  background: #ffff00 !important;
+}
+
+:root[data-theme='minimalism-pixel'] .status-dot.busy {
+  background: #ff0000 !important;
+}
+
+:root[data-theme='minimalism-pixel'] .status-dot.offline {
+  background: #444444 !important;
+}
+
+:root[data-theme='minimalism-pixel'] h1,
+:root[data-theme='minimalism-pixel'] h2,
+:root[data-theme='minimalism-pixel'] h3 {
+  border-bottom: 2px dashed #39ff14 !important;
+  padding-bottom: 4px;
+  color: #39ff14 !important;
+  font-weight: bold !important;
+}
+
+/* ==========================================================================
+   CUSTOM PROFILE THEMES (applied to profile card dialogs and live previews)
+   ========================================================================== */
+
+/* 1. Glowing Glassmorphism Theme */
+.discord-card.profile-theme-glowing-glass,
+.card.profile-theme-glowing-glass {
+  background: rgba(18, 9, 36, 0.65) !important;
+  backdrop-filter: blur(25px) !important;
+  -webkit-backdrop-filter: blur(25px) !important;
+  border: 1.5px solid rgba(217, 70, 239, 0.4) !important;
+  box-shadow:
+    0 15px 35px rgba(217, 70, 239, 0.25),
+    inset 0 0 15px rgba(255, 255, 255, 0.08) !important;
+  border-radius: 18px !important;
+}
+
+.profile-theme-glowing-glass h3 {
+  background: linear-gradient(135deg, #d946ef, #00ffff) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  font-weight: 850 !important;
+}
+
+.profile-theme-glowing-glass .custom-status {
+  background: rgba(217, 70, 239, 0.12) !important;
+  border: 1px solid rgba(217, 70, 239, 0.25) !important;
+  color: #f472b6 !important;
+}
+
+/* 2. Retro Pixel Console Theme */
+.discord-card.profile-theme-pixel-classic,
+.card.profile-theme-pixel-classic {
+  background: #000000 !important;
+  border: 3px double #39ff14 !important;
+  box-shadow:
+    6px 6px 0px #000000,
+    6px 6px 0px 1px #39ff14 !important;
+  border-radius: 0px !important;
+}
+
+.profile-theme-pixel-classic * {
+  font-family: 'Courier New', Courier, monospace !important;
+  border-radius: 0px !important;
+  text-transform: uppercase !important;
+  color: #39ff14 !important;
+}
+
+.profile-theme-pixel-classic h3 {
+  border-bottom: 2px dashed #39ff14 !important;
+  padding-bottom: 4px;
+}
+
+.profile-theme-pixel-classic .custom-status {
+  background: #000000 !important;
+  border: 1px dashed #39ff14 !important;
+}
+
+.profile-theme-pixel-classic .pill,
+.profile-theme-pixel-classic .pronouns {
+  background: transparent !important;
+  border: 1px dashed #39ff14 !important;
+  color: #39ff14 !important;
+}
+
+/* 3. Cyberpunk Grid Theme */
+.discord-card.profile-theme-cyberpunk-grid,
+.card.profile-theme-cyberpunk-grid {
+  background: #0a0a10 !important;
+  background-image:
+    linear-gradient(rgba(249, 227, 15, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(249, 227, 15, 0.04) 1px, transparent 1px) !important;
+  background-size: 10px 10px !important;
+  border: 2px solid #f9e30f !important;
+  border-radius: 4px !important;
+  box-shadow:
+    0 0 15px rgba(249, 227, 15, 0.25),
+    inset 0 0 10px rgba(0, 255, 255, 0.15) !important;
+  position: relative;
+}
+
+.profile-theme-cyberpunk-grid::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: repeating-linear-gradient(
+    -45deg,
+    #f9e30f,
+    #f9e30f 8px,
+    #000 8px,
+    #000 16px
+  ) !important;
+  z-index: 10;
+}
+
+.profile-theme-cyberpunk-grid h3 {
+  color: #f9e30f !important;
+  text-shadow: 0 0 8px rgba(249, 227, 15, 0.5) !important;
+}
+
+.profile-theme-cyberpunk-grid .custom-status {
+  background: rgba(0, 255, 255, 0.08) !important;
+  border: 1px solid #00ffff !important;
+  color: #00ffff !important;
+}
+
+.profile-theme-cyberpunk-grid .pill,
+.profile-theme-cyberpunk-grid .pronouns {
+  background: #f9e30f !important;
+  color: #000000 !important;
+  font-weight: bold !important;
+  border-radius: 2px !important;
 }

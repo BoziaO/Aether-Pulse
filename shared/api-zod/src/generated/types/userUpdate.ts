@@ -5,18 +5,21 @@
  * AetherPulse API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { UserUpdateStatus } from './userUpdateStatus';
+import type { UserUpdateStatus } from './userUpdateStatus'
 
 export interface UserUpdate {
-  displayName?: string;
-  bio?: string | null;
-  pronouns?: string | null;
-  website?: string | null;
-  location?: string | null;
-  customStatus?: string | null;
-  accentColor?: string;
-  profileGradient?: string | null;
-  avatarUrl?: string | null;
-  bannerUrl?: string | null;
-  status?: UserUpdateStatus;
+  displayName?: string
+  bio?: string | null
+  pronouns?: string | null
+  website?: string | null
+  location?: string | null
+  customStatus?: string | null
+  accentColor?: string
+  profileGradient?: string | null
+  avatarFrame?: string | null
+  profileTheme?: string | null
+  customTheme?: string | null
+  avatarUrl?: string | null
+  bannerUrl?: string | null
+  status?: UserUpdateStatus
 }

@@ -10,13 +10,16 @@ import type { DmConversation, DmMessage } from '@/types/dm.types'
 let globalDmListenerBound = false
 
 export const useDmStore = defineStore('dm', () => {
+  const auth = useAuthStore()
   const conversations = ref<DmConversation[]>([])
   const messages = ref<DmMessage[]>([])
   const currentConversationId = ref<string | null>(null)
   const loading = ref(false)
   const loadingMessages = ref(false)
+  const uploading = ref(false)
   const hasMore = ref(true)
   const replyTo = ref<DmMessage | null>(null)
+  const typingUsers = ref<Set<number>>(new Set())
 
   function bindGlobalDmListener() {
     if (globalDmListenerBound) return
@@ -24,15 +27,46 @@ export const useDmStore = defineStore('dm', () => {
     socket.on('new-dm-message', (msg: DmMessage) => {
       updateConversationPreview(msg)
       if (msg.conversationId === currentConversationId.value) {
-        if (!messages.value.find(m => m.id === msg.id)) {
+        if (!messages.value.find((m) => m.id === msg.id)) {
           messages.value.push(msg)
         }
       }
-      const auth = useAuthStore()
       if (msg.user && msg.userId !== auth.user?.id) {
         notifyNewMessage(msg.user.displayName, previewText(msg))
       }
     })
+
+    socket.on('dm-message-updated', (msg: DmMessage) => {
+      if (msg.conversationId === currentConversationId.value) {
+        const idx = messages.value.findIndex((m) => m.id === msg.id)
+        if (idx >= 0) {
+          messages.value[idx] = msg
+        }
+      }
+      updateConversationPreview(msg)
+    })
+
+    socket.on(
+      'dm-typing',
+      ({
+        conversationId,
+        userId,
+        isTyping,
+      }: {
+        conversationId: string
+        userId: number
+        isTyping: boolean
+      }) => {
+        if (conversationId === currentConversationId.value) {
+          if (isTyping) {
+            addTypingUser(userId)
+          } else {
+            removeTypingUser(userId)
+          }
+        }
+      }
+    )
+
     globalDmListenerBound = true
   }
 
@@ -44,7 +78,7 @@ export const useDmStore = defineStore('dm', () => {
   async function fetchConversations() {
     loading.value = true
     try {
-      conversations.value = await dmApi.list()
+      conversations.value = await auth.authRequest(() => dmApi.list())
     } catch (e) {
       useToastStore().error(e instanceof Error ? e.message : 'Failed to load messages')
     } finally {
@@ -53,19 +87,24 @@ export const useDmStore = defineStore('dm', () => {
   }
 
   async function openWith(userId: number) {
-    const conv = await dmApi.openWith(userId)
-    const existing = conversations.value.find(c => c.id === conv.id)
-    if (!existing) {
-      conversations.value.unshift({
-        id: conv.id,
-        otherUser: conv.otherUser,
-        lastMessage: null,
-        updatedAt: new Date().toISOString(),
-      })
-    } else if (conv.otherUser) {
-      existing.otherUser = conv.otherUser
+    try {
+      const conv = await auth.authRequest(() => dmApi.openWith(userId))
+      const existing = conversations.value.find((c) => c.id === conv.id)
+      if (!existing) {
+        conversations.value.unshift({
+          id: conv.id,
+          otherUser: conv.otherUser,
+          lastMessage: null,
+          updatedAt: new Date().toISOString(),
+        })
+      } else if (conv.otherUser) {
+        existing.otherUser = conv.otherUser
+      }
+      return conv
+    } catch (e) {
+      useToastStore().error(e instanceof Error ? e.message : 'Failed to start DM conversation')
+      throw e
     }
-    return conv
   }
 
   async function loadMessages(conversationId: string) {
@@ -73,7 +112,7 @@ export const useDmStore = defineStore('dm', () => {
     loadingMessages.value = true
     hasMore.value = true
     try {
-      const msgs = await dmApi.messages(conversationId, { limit: 50 })
+      const msgs = await auth.authRequest(() => dmApi.messages(conversationId, { limit: 50 }))
       messages.value = msgs
       hasMore.value = msgs.length >= 50
     } catch (e) {
@@ -84,20 +123,32 @@ export const useDmStore = defineStore('dm', () => {
   }
 
   async function loadMore() {
-    if (!currentConversationId.value || loadingMessages.value || !hasMore.value || messages.value.length === 0) {
+    if (
+      !currentConversationId.value ||
+      loadingMessages.value ||
+      !hasMore.value ||
+      messages.value.length === 0
+    ) {
       return
     }
     loadingMessages.value = true
     try {
       const oldest = messages.value[0]?.id
       if (!oldest) return
-      const older = await dmApi.messages(currentConversationId.value, { before: oldest, limit: 50 })
+      const older = await auth.authRequest(() =>
+        dmApi.messages(currentConversationId.value!, {
+          before: oldest,
+          limit: 50,
+        })
+      )
       if (older.length === 0) {
         hasMore.value = false
       } else {
         messages.value = [...older, ...messages.value]
         hasMore.value = older.length >= 50
       }
+    } catch (e) {
+      useToastStore().error(e instanceof Error ? e.message : 'Failed to load older messages')
     } finally {
       loadingMessages.value = false
     }
@@ -115,10 +166,11 @@ export const useDmStore = defineStore('dm', () => {
     messages.value = []
     replyTo.value = null
     currentConversationId.value = null
+    typingUsers.value = new Set()
   }
 
   function updateConversationPreview(msg: DmMessage) {
-    let conv = conversations.value.find(c => c.id === msg.conversationId)
+    let conv = conversations.value.find((c) => c.id === msg.conversationId)
     if (!conv) {
       conv = {
         id: msg.conversationId,
@@ -136,7 +188,9 @@ export const useDmStore = defineStore('dm', () => {
       userId: msg.userId,
     }
     conv.updatedAt = msg.createdAt
-    conversations.value.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    conversations.value.sort(
+      (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    )
   }
 
   function sendMessage(conversationId: string, content: string) {
@@ -149,14 +203,72 @@ export const useDmStore = defineStore('dm', () => {
     replyTo.value = null
   }
 
-  async function uploadFile(conversationId: string, dataUrl: string, fileName: string, caption?: string) {
-    const msg = await dmApi.upload(conversationId, dataUrl, fileName, caption)
-    if (!messages.value.find(m => m.id === msg.id)) {
-      messages.value.push(msg)
+  async function uploadFile(
+    conversationId: string,
+    dataUrl: string,
+    fileName: string,
+    caption?: string
+  ) {
+    uploading.value = true
+    try {
+      const msg = await auth.authRequest(() =>
+        dmApi.upload(conversationId, dataUrl, fileName, caption)
+      )
+      if (!messages.value.find((m) => m.id === msg.id)) {
+        messages.value.push(msg)
+      }
+      updateConversationPreview(msg)
+      replyTo.value = null
+      return msg
+    } catch (e) {
+      useToastStore().error(e instanceof Error ? e.message : 'File upload failed')
+      throw e
+    } finally {
+      uploading.value = false
     }
-    updateConversationPreview(msg)
-    replyTo.value = null
-    return msg
+  }
+
+  function addTypingUser(userId: number) {
+    typingUsers.value = new Set([...typingUsers.value, userId])
+  }
+
+  function removeTypingUser(userId: number) {
+    const next = new Set(typingUsers.value)
+    next.delete(userId)
+    typingUsers.value = next
+  }
+
+  function setTyping(conversationId: string, isTyping: boolean) {
+    const socket = getSocket()
+    socket.emit('dm-typing', { conversationId, isTyping })
+  }
+
+  async function editMessage(conversationId: string, messageId: number, content: string) {
+    try {
+      const updated = await auth.authRequest(() => dmApi.edit(conversationId, messageId, content))
+      const idx = messages.value.findIndex((m) => m.id === messageId)
+      if (idx >= 0) {
+        messages.value[idx] = updated
+      }
+      updateConversationPreview(updated)
+    } catch (e) {
+      useToastStore().error(e instanceof Error ? e.message : 'Failed to edit message')
+      throw e
+    }
+  }
+
+  async function deleteMessage(conversationId: string, messageId: number) {
+    try {
+      const updated = await auth.authRequest(() => dmApi.delete(conversationId, messageId))
+      const idx = messages.value.findIndex((m) => m.id === messageId)
+      if (idx >= 0) {
+        messages.value[idx] = updated
+      }
+      updateConversationPreview(updated)
+    } catch (e) {
+      useToastStore().error(e instanceof Error ? e.message : 'Failed to delete message')
+      throw e
+    }
   }
 
   function setReply(message: DmMessage | null) {
@@ -174,8 +286,10 @@ export const useDmStore = defineStore('dm', () => {
     currentConversationId,
     loading,
     loadingMessages,
+    uploading,
     hasMore,
     replyTo,
+    typingUsers,
     bindGlobalDmListener,
     fetchConversations,
     openWith,
@@ -186,6 +300,9 @@ export const useDmStore = defineStore('dm', () => {
     sendMessage,
     uploadFile,
     setReply,
+    setTyping,
+    editMessage,
+    deleteMessage,
     clear,
   }
 })

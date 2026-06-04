@@ -1,0 +1,7 @@
+node_modules
+dist
+build
+*.d.ts
+pnpm-lock.yaml
+package.json
+!.prettierrc.cjs
