@@ -18,17 +18,39 @@ export class PeerManager {
   private onStream: (userId: number, stream: MediaStream) => void
   private onClose: (userId: number) => void
 
-  private onOffer = ({ from, fromUserId, offer }: { from: string; fromUserId?: number; offer: SimplePeer.SignalData }) => {
+  private onOffer = ({
+    from,
+    fromUserId,
+    offer,
+  }: {
+    from: string
+    fromUserId?: number
+    offer: SimplePeer.SignalData
+  }) => {
     this.handleOffer(from, fromUserId ?? 0, offer)
   }
-  private onAnswer = ({ from, fromUserId, answer }: { from: string; fromUserId?: number; answer: SimplePeer.SignalData }) => {
+  private onAnswer = ({
+    from,
+    fromUserId,
+    answer,
+  }: {
+    from: string
+    fromUserId?: number
+    answer: SimplePeer.SignalData
+  }) => {
     const conn = this.peers.get(from)
     if (conn) {
       if (!conn.userId && fromUserId) conn.userId = fromUserId
       conn.peer.signal(answer)
     }
   }
-  private onIceCandidate = ({ from, candidate }: { from: string; candidate: SimplePeer.SignalData }) => {
+  private onIceCandidate = ({
+    from,
+    candidate,
+  }: {
+    from: string
+    candidate: SimplePeer.SignalData
+  }) => {
     const conn = this.peers.get(from)
     if (conn) conn.peer.signal(candidate)
   }
@@ -37,7 +59,7 @@ export class PeerManager {
     socket: Socket,
     localUserId: number,
     onStream: (userId: number, stream: MediaStream) => void,
-    onClose: (userId: number) => void,
+    onClose: (userId: number) => void
   ) {
     this.socket = socket
     this.localUserId = localUserId
@@ -72,7 +94,11 @@ export class PeerManager {
     peer.signal(signal)
   }
 
-  private createPeer(initiator: boolean, userId: number, socketId: string): InstanceType<typeof SimplePeer> {
+  private createPeer(
+    initiator: boolean,
+    userId: number,
+    socketId: string
+  ): InstanceType<typeof SimplePeer> {
     const peer = new SimplePeer({
       initiator,
       stream: this.localStream || undefined,
@@ -129,13 +155,17 @@ export class PeerManager {
 
   addTrack(track: MediaStreamTrack, stream: MediaStream) {
     this.peers.forEach(({ peer }) => {
-      try { peer.addTrack(track, stream) } catch {}
+      try {
+        peer.addTrack(track, stream)
+      } catch {}
     })
   }
 
   removeTrack(track: MediaStreamTrack, stream: MediaStream) {
     this.peers.forEach(({ peer }) => {
-      try { peer.removeTrack(track, stream) } catch {}
+      try {
+        peer.removeTrack(track, stream)
+      } catch {}
     })
   }
 

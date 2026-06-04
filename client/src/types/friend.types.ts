@@ -1,6 +1,11 @@
 import type { User } from './user.types'
 
-export type FriendshipStatus = 'none' | 'friends' | 'pending_outgoing' | 'pending_incoming' | 'blocked'
+export type FriendshipStatus =
+  | 'none'
+  | 'friends'
+  | 'pending_outgoing'
+  | 'pending_incoming'
+  | 'blocked'
 
 export interface FriendEntry {
   user: User

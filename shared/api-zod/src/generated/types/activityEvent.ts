@@ -7,9 +7,9 @@
  */
 
 export interface ActivityEvent {
-  type: string;
-  description: string;
+  type: string
+  description: string
   /** @nullable */
-  userId?: number | null;
-  createdAt: string;
+  userId?: number | null
+  createdAt: string
 }

@@ -62,7 +62,11 @@ function openDm(userId: number) {
 
     <div class="search-box">
       <Search :size="16" />
-      <input v-model="searchQuery" placeholder="Search by username or display name..." @input="handleSearch" />
+      <input
+        v-model="searchQuery"
+        placeholder="Search by username or display name..."
+        @input="handleSearch"
+      />
     </div>
 
     <div v-if="searchQuery.trim().length >= 2" class="section">
@@ -83,7 +87,9 @@ function openDm(userId: number) {
           <UserPlus :size="14" /> Add Friend
         </button>
         <span v-else-if="result.status === 'friends'" class="badge friends">Friends</span>
-        <span v-else-if="result.status === 'pending_outgoing'" class="badge pending"><Clock :size="12" /> Pending</span>
+        <span v-else-if="result.status === 'pending_outgoing'" class="badge pending"
+          ><Clock :size="12" /> Pending</span
+        >
         <button
           v-else-if="result.status === 'pending_incoming'"
           class="btn-primary small"
@@ -103,7 +109,9 @@ function openDm(userId: number) {
           <span>@{{ req.user.username }}</span>
         </div>
         <span class="badge pending"><Clock :size="12" /> Pending</span>
-        <button class="btn-ghost small danger" @click="friendsStore.remove(req.user.id)">Cancel</button>
+        <button class="btn-ghost small danger" @click="friendsStore.remove(req.user.id)">
+          Cancel
+        </button>
       </div>
     </div>
 
@@ -115,14 +123,18 @@ function openDm(userId: number) {
           <strong>{{ req.user.displayName }}</strong>
           <span>@{{ req.user.username }}</span>
         </div>
-        <button class="btn-primary small" @click="accept(req.user.id)"><Check :size="14" /> Accept</button>
+        <button class="btn-primary small" @click="accept(req.user.id)">
+          <Check :size="14" /> Accept
+        </button>
         <button class="btn-ghost small" @click="reject(req.user.id)"><X :size="14" /></button>
       </div>
     </div>
 
     <div class="section">
       <h2>All friends ({{ friendsStore.friends.length }})</h2>
-      <div v-if="friendsStore.friends.length === 0" class="empty">No friends yet. Search above to add someone!</div>
+      <div v-if="friendsStore.friends.length === 0" class="empty">
+        No friends yet. Search above to add someone!
+      </div>
       <div v-for="entry in friendsStore.friends" :key="entry.user.id" class="user-row">
         <UserAvatar :user="entry.user" :size="40" />
         <div class="user-info">
@@ -130,7 +142,9 @@ function openDm(userId: number) {
           <span>@{{ entry.user.username }}</span>
         </div>
         <button class="btn-ghost small" @click="openDm(entry.user.id)">Message</button>
-        <button class="btn-ghost small danger" @click="friendsStore.remove(entry.user.id)">Remove</button>
+        <button class="btn-ghost small danger" @click="friendsStore.remove(entry.user.id)">
+          Remove
+        </button>
       </div>
     </div>
   </div>
@@ -217,15 +231,20 @@ function openDm(userId: number) {
   padding: 4px 10px;
   border-radius: 999px;
 }
-.badge.friends { background: rgba(34,197,94,0.12); color: var(--success); }
+.badge.friends {
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--success);
+}
 .badge.pending {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: rgba(245,158,11,0.12);
+  background: rgba(245, 158, 11, 0.12);
   color: var(--warning);
 }
-.danger { color: var(--danger) !important; }
+.danger {
+  color: var(--danger) !important;
+}
 .empty {
   color: var(--text-muted);
   font-size: 14px;

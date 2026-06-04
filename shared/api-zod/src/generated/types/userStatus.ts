@@ -6,12 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type UserStatus = typeof UserStatus[keyof typeof UserStatus];
-
+export type UserStatus = (typeof UserStatus)[keyof typeof UserStatus]
 
 export const UserStatus = {
   online: 'online',
   away: 'away',
   busy: 'busy',
   offline: 'offline',
-} as const;
+} as const

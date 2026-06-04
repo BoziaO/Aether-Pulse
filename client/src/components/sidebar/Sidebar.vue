@@ -64,10 +64,16 @@ onMounted(() => {
 
     <div class="sidebar-section-label">Direct Messages</div>
     <div class="sidebar-dms">
-      <button class="room-item friends-link" :class="{ active: route.path === '/friends' }" @click="router.push('/friends')">
+      <button
+        class="room-item friends-link"
+        :class="{ active: route.path === '/friends' }"
+        @click="router.push('/friends')"
+      >
         <Users :size="16" />
         <span>Friends</span>
-        <span v-if="friendsStore.pendingCount" class="pending-badge">{{ friendsStore.pendingCount }}</span>
+        <span v-if="friendsStore.pendingCount" class="pending-badge">{{
+          friendsStore.pendingCount
+        }}</span>
       </button>
       <button
         v-for="conv in dmStore.conversations"
@@ -111,7 +117,11 @@ onMounted(() => {
         <span>Voice Connected</span>
       </div>
       <div class="call-controls">
-        <button class="call-btn" @click="rtcStore.toggleMute()" :title="rtcStore.isMuted ? 'Unmute' : 'Mute'">
+        <button
+          class="call-btn"
+          @click="rtcStore.toggleMute()"
+          :title="rtcStore.isMuted ? 'Unmute' : 'Mute'"
+        >
           <MicOff v-if="rtcStore.isMuted" :size="14" />
           <Mic v-else :size="14" />
         </button>
@@ -119,7 +129,7 @@ onMounted(() => {
     </div>
 
     <div class="sidebar-user">
-      <div class="user-info" @click="router.push('/profile')" style="cursor:pointer">
+      <div class="user-info" @click="router.push('/profile')" style="cursor: pointer">
         <UserAvatar :user="auth.user" :size="32" />
         <div class="user-details">
           <div class="user-name">{{ auth.user?.displayName }}</div>
@@ -158,7 +168,11 @@ onMounted(() => {
   padding: 16px 16px 12px;
   border-bottom: 1px solid var(--border);
 }
-.sidebar-logo { width: 28px; height: 28px; object-fit: contain; }
+.sidebar-logo {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
 .sidebar-brand {
   font-size: 15px;
   font-weight: 700;
@@ -181,7 +195,10 @@ onMounted(() => {
   padding: 0 8px;
   max-height: 180px;
 }
-.sidebar-rooms { flex: 1; max-height: none; }
+.sidebar-rooms {
+  flex: 1;
+  max-height: none;
+}
 .room-item {
   width: 100%;
   display: flex;
@@ -198,9 +215,17 @@ onMounted(() => {
   text-align: left;
   position: relative;
 }
-.room-item:hover { background: var(--bg-hover); color: var(--text-primary); }
-.room-item.active { background: rgba(139, 92, 246, 0.15); color: var(--text-primary); }
-.room-item.active .room-icon { color: var(--accent-violet); }
+.room-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.room-item.active {
+  background: rgba(139, 92, 246, 0.15);
+  color: var(--text-primary);
+}
+.room-item.active .room-icon {
+  color: var(--accent-violet);
+}
 .dm-label {
   flex: 1;
   min-width: 0;
@@ -208,7 +233,11 @@ onMounted(() => {
   flex-direction: column;
   gap: 2px;
 }
-.room-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.room-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .dm-preview {
   font-size: 11px;
   color: var(--text-muted);
@@ -216,10 +245,15 @@ onMounted(() => {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.room-item .room-name { flex: 1; }
+.room-item .room-name {
+  flex: 1;
+}
 .room-active-dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--success); flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+  flex-shrink: 0;
 }
 .pending-badge {
   font-size: 11px;
@@ -239,7 +273,11 @@ onMounted(() => {
   color: var(--accent-violet);
   background: rgba(139, 92, 246, 0.08);
 }
-.sidebar-spacer { flex: 1; min-height: 8px; max-height: 32px; }
+.sidebar-spacer {
+  flex: 1;
+  min-height: 8px;
+  max-height: 32px;
+}
 .call-status {
   margin: 0 8px 8px;
   background: rgba(34, 197, 94, 0.1);
@@ -255,10 +293,19 @@ onMounted(() => {
   color: var(--success);
   font-weight: 600;
 }
-.call-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
-.call-controls { display: flex; gap: 4px; margin-top: 6px; }
+.call-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+}
+.call-controls {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
 .call-btn {
-  background: rgba(255,255,255,0.08);
+  background: rgba(255, 255, 255, 0.08);
   border: none;
   border-radius: 6px;
   padding: 4px 8px;
@@ -266,7 +313,10 @@ onMounted(() => {
   cursor: pointer;
   display: flex;
 }
-.call-btn:hover { background: rgba(255,255,255,0.15); color: var(--text-primary); }
+.call-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--text-primary);
+}
 .sidebar-user {
   border-top: 1px solid var(--border);
   padding: 10px 12px;
@@ -274,21 +324,51 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
 }
-.user-info { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
-.user-details { min-width: 0; }
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+.user-details {
+  min-width: 0;
+}
 .user-name {
-  font-size: 13px; font-weight: 600; color: var(--text-primary);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .user-status {
-  font-size: 11px; color: var(--text-muted); text-transform: capitalize;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: capitalize;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.user-actions { display: flex; gap: 2px; }
+.user-actions {
+  display: flex;
+  gap: 2px;
+}
 .icon-btn {
-  background: transparent; border: none; color: var(--text-muted);
-  cursor: pointer; padding: 6px; border-radius: 6px; display: flex;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
 }
-.icon-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
-.icon-btn.danger:hover { background: rgba(239,68,68,0.1); color: var(--danger); }
+.icon-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.icon-btn.danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+}
 </style>

@@ -5,13 +5,13 @@
  * AetherPulse API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { RoomInputQuality } from './roomInputQuality';
+import type { RoomInputQuality } from './roomInputQuality'
 
 export interface RoomInput {
   /**
-     * @minLength 1
-     * @maxLength 64
-     */
-  name: string;
-  quality?: RoomInputQuality;
+   * @minLength 1
+   * @maxLength 64
+   */
+  name: string
+  quality?: RoomInputQuality
 }

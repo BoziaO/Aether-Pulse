@@ -24,7 +24,9 @@ const color2 = ref('#3b82f6')
 const angle = ref(135)
 const customMode = ref(false)
 
-const customGradient = computed(() => `linear-gradient(${angle.value}deg, ${color1.value}, ${color2.value})`)
+const customGradient = computed(
+  () => `linear-gradient(${angle.value}deg, ${color1.value}, ${color2.value})`
+)
 
 function selectPreset(value: string) {
   emit('update:modelValue', value)

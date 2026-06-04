@@ -6,7 +6,9 @@ class SpatialAudioService {
   private gains = new Map<number, GainNode>()
   private _enabled = false
 
-  get enabled() { return this._enabled }
+  get enabled() {
+    return this._enabled
+  }
 
   init() {
     if (!this.audioCtx) {
@@ -110,9 +112,9 @@ class SpatialAudioService {
   }
 
   cleanup() {
-    this.sources.forEach(s => s.disconnect())
-    this.panners.forEach(p => p.disconnect())
-    this.gains.forEach(g => g.disconnect())
+    this.sources.forEach((s) => s.disconnect())
+    this.panners.forEach((p) => p.disconnect())
+    this.gains.forEach((g) => g.disconnect())
     this.sources.clear()
     this.panners.clear()
     this.gains.clear()

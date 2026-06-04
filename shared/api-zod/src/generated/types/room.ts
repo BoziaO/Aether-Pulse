@@ -5,17 +5,17 @@
  * AetherPulse API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { RoomQuality } from './roomQuality';
-import type { User } from './user';
+import type { RoomQuality } from './roomQuality'
+import type { User } from './user'
 
 export interface Room {
-  id: string;
-  name: string;
-  inviteCode: string;
-  ownerId: number;
-  memberCount: number;
-  members?: User[];
-  quality?: RoomQuality;
-  isActive?: boolean;
-  createdAt: string;
+  id: string
+  name: string
+  inviteCode: string
+  ownerId: number
+  memberCount: number
+  members?: User[]
+  quality?: RoomQuality
+  isActive?: boolean
+  createdAt: string
 }

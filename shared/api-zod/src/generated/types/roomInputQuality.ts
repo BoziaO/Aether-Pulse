@@ -6,8 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type RoomInputQuality = typeof RoomInputQuality[keyof typeof RoomInputQuality];
-
+export type RoomInputQuality = (typeof RoomInputQuality)[keyof typeof RoomInputQuality]
 
 export const RoomInputQuality = {
   '360p': '360p',
@@ -15,4 +14,4 @@ export const RoomInputQuality = {
   '720p': '720p',
   '1080p': '1080p',
   '1440p': '1440p',
-} as const;
+} as const

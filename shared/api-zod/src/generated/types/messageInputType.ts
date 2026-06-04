@@ -6,10 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type MessageInputType = typeof MessageInputType[keyof typeof MessageInputType];
-
+export type MessageInputType = (typeof MessageInputType)[keyof typeof MessageInputType]
 
 export const MessageInputType = {
   text: 'text',
   file: 'file',
-} as const;
+} as const

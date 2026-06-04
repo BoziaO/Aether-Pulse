@@ -1,6 +1,16 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Mic, MicOff, Video, VideoOff, Monitor, MonitorOff, PhoneOff, Headphones, Volume2 } from 'lucide-vue-next'
+import {
+  Mic,
+  MicOff,
+  Video,
+  VideoOff,
+  Monitor,
+  MonitorOff,
+  PhoneOff,
+  Headphones,
+  Volume2,
+} from 'lucide-vue-next'
 import { useRtcStore } from '@/stores/rtc.store'
 import { useSettingsStore } from '@/stores/settings.store'
 import type { ScreenShareQuality } from '@/services/rtc/screen-share'
@@ -10,8 +20,8 @@ const settings = useSettingsStore()
 const showShareMenu = ref(false)
 
 const shareOptions: { quality: ScreenShareQuality; label: string; icon: string }[] = [
-  { quality: 'gaming',   label: '🎮 Gaming (1080p 60fps)', icon: '🎮' },
-  { quality: 'movie',    label: '🎬 Movie (1080p 30fps)',  icon: '🎬' },
+  { quality: 'gaming', label: '🎮 Gaming (1080p 60fps)', icon: '🎮' },
+  { quality: 'movie', label: '🎬 Movie (1080p 30fps)', icon: '🎬' },
   { quality: 'standard', label: '🖥️ Standard (720p 30fps)', icon: '🖥️' },
 ]
 
@@ -51,7 +61,7 @@ async function handleShare(quality: ScreenShareQuality) {
         <Video v-else :size="20" />
       </button>
 
-      <div class="share-wrap" style="position:relative">
+      <div class="share-wrap" style="position: relative">
         <button
           v-if="!rtc.isScreenSharing"
           class="ctrl-btn"
@@ -60,12 +70,7 @@ async function handleShare(quality: ScreenShareQuality) {
         >
           <Monitor :size="20" />
         </button>
-        <button
-          v-else
-          class="ctrl-btn danger"
-          @click="rtc.stopScreenShare()"
-          title="Stop sharing"
-        >
+        <button v-else class="ctrl-btn danger" @click="rtc.stopScreenShare()" title="Stop sharing">
           <MonitorOff :size="20" />
         </button>
 
@@ -109,11 +114,28 @@ async function handleShare(quality: ScreenShareQuality) {
   background: var(--bg-surface);
   border-top: 1px solid var(--border);
 }
-.controls-center { display: flex; align-items: center; gap: 8px; }
-.controls-left, .controls-right { flex: 1; }
-.controls-right { text-align: right; }
-.call-label { font-size: 12px; font-weight: 700; color: var(--danger); letter-spacing: 0.5px; }
-.peers-count { font-size: 12px; color: var(--text-muted); }
+.controls-center {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.controls-left,
+.controls-right {
+  flex: 1;
+}
+.controls-right {
+  text-align: right;
+}
+.call-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--danger);
+  letter-spacing: 0.5px;
+}
+.peers-count {
+  font-size: 12px;
+  color: var(--text-muted);
+}
 .ctrl-btn {
   width: 44px;
   height: 44px;
@@ -127,11 +149,25 @@ async function handleShare(quality: ScreenShareQuality) {
   justify-content: center;
   transition: all 0.15s;
 }
-.ctrl-btn:hover { background: rgba(255,255,255,0.12); color: var(--text-primary); }
-.ctrl-btn.active { background: rgba(139, 92, 246, 0.2); color: var(--accent-violet); }
-.ctrl-btn.danger { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
-.ctrl-btn.end-call { background: var(--danger); color: white; }
-.ctrl-btn.end-call:hover { background: #dc2626; }
+.ctrl-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-primary);
+}
+.ctrl-btn.active {
+  background: rgba(139, 92, 246, 0.2);
+  color: var(--accent-violet);
+}
+.ctrl-btn.danger {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--danger);
+}
+.ctrl-btn.end-call {
+  background: var(--danger);
+  color: white;
+}
+.ctrl-btn.end-call:hover {
+  background: #dc2626;
+}
 .share-menu {
   position: absolute;
   bottom: calc(100% + 8px);
@@ -143,7 +179,7 @@ async function handleShare(quality: ScreenShareQuality) {
   padding: 6px;
   min-width: 200px;
   z-index: 100;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 .share-option {
   width: 100%;
@@ -156,5 +192,8 @@ async function handleShare(quality: ScreenShareQuality) {
   border-radius: 6px;
   cursor: pointer;
 }
-.share-option:hover { background: var(--bg-hover); color: var(--text-primary); }
+.share-option:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
 </style>

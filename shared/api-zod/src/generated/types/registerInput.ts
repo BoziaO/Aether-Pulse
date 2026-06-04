@@ -8,15 +8,15 @@
 
 export interface RegisterInput {
   /**
-     * @minLength 3
-     * @maxLength 20
-     */
-  username: string;
+   * @minLength 3
+   * @maxLength 20
+   */
+  username: string
   /** @minLength 6 */
-  password: string;
+  password: string
   /**
-     * @minLength 1
-     * @maxLength 32
-     */
-  displayName: string;
+   * @minLength 1
+   * @maxLength 32
+   */
+  displayName: string
 }

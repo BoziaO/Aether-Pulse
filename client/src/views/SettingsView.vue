@@ -61,7 +61,13 @@ const sections = [
               <div class="setting-desc">Microphone sensitivity</div>
             </div>
             <div class="slider-wrap">
-              <input type="range" v-model.number="settings.inputVolume" min="0" max="200" class="range" />
+              <input
+                type="range"
+                v-model.number="settings.inputVolume"
+                min="0"
+                max="200"
+                class="range"
+              />
               <span class="slider-val">{{ settings.inputVolume }}%</span>
             </div>
           </div>
@@ -72,7 +78,13 @@ const sections = [
               <div class="setting-desc">Speaker volume for calls</div>
             </div>
             <div class="slider-wrap">
-              <input type="range" v-model.number="settings.outputVolume" min="0" max="200" class="range" />
+              <input
+                type="range"
+                v-model.number="settings.outputVolume"
+                min="0"
+                max="200"
+                class="range"
+              />
               <span class="slider-val">{{ settings.outputVolume }}%</span>
             </div>
           </div>
@@ -87,12 +99,16 @@ const sections = [
             <div class="setting-info">
               <div class="setting-title">🔊 Spatial Audio (HRTF)</div>
               <div class="setting-desc">
-                Uses Head-Related Transfer Function to position the other person's voice in 3D space.
-                Creates an immersive experience during calls.
+                Uses Head-Related Transfer Function to position the other person's voice in 3D
+                space. Creates an immersive experience during calls.
               </div>
             </div>
             <label class="toggle">
-              <input type="checkbox" :checked="settings.spatialAudioEnabled" @change="settings.toggleSpatialAudio()" />
+              <input
+                type="checkbox"
+                :checked="settings.spatialAudioEnabled"
+                @change="settings.toggleSpatialAudio()"
+              />
               <span class="toggle-slider" />
             </label>
           </div>
@@ -104,43 +120,45 @@ const sections = [
                 <div class="spatial-you">You</div>
                 <div class="spatial-other">Other</div>
               </div>
-              <p class="spatial-hint">The other person's voice will appear to come from the right side</p>
+              <p class="spatial-hint">
+                The other person's voice will appear to come from the right side
+              </p>
             </div>
           </div>
         </div>
       </template>
 
-       <template v-if="activeSection === 'appearance'">
-         <div class="settings-section">
-           <h2>Appearance</h2>
-           <div class="setting-item">
-             <div class="setting-info">
-               <div class="setting-title">Theme</div>
-               <div class="setting-desc">Change the interface color scheme</div>
-             </div>
-           </div>
-           <div class="themes-grid">
-             <button
-               v-for="themeOption in settings.AVAILABLE_THEMES"
-               :key="themeOption.id"
-               class="theme-card"
-               :class="{ active: settings.theme === themeOption.id }"
-               @click="settings.setTheme(themeOption.id)"
-               :title="themeOption.name"
-             >
-               <div class="theme-preview">
-                 <div
-                   v-for="(color, idx) in themeOption.colors"
-                   :key="idx"
-                   class="color-swatch"
-                   :style="{ backgroundColor: color }"
-                 />
-               </div>
-               <span class="theme-name">{{ themeOption.name }}</span>
-             </button>
-           </div>
-         </div>
-       </template>
+      <template v-if="activeSection === 'appearance'">
+        <div class="settings-section">
+          <h2>Appearance</h2>
+          <div class="setting-item">
+            <div class="setting-info">
+              <div class="setting-title">Theme</div>
+              <div class="setting-desc">Change the interface color scheme</div>
+            </div>
+          </div>
+          <div class="themes-grid">
+            <button
+              v-for="themeOption in settings.AVAILABLE_THEMES"
+              :key="themeOption.id"
+              class="theme-card"
+              :class="{ active: settings.theme === themeOption.id }"
+              @click="settings.setTheme(themeOption.id)"
+              :title="themeOption.name"
+            >
+              <div class="theme-preview">
+                <div
+                  v-for="(color, idx) in themeOption.colors"
+                  :key="idx"
+                  class="color-swatch"
+                  :style="{ backgroundColor: color }"
+                />
+              </div>
+              <span class="theme-name">{{ themeOption.name }}</span>
+            </button>
+          </div>
+        </div>
+      </template>
 
       <template v-if="activeSection === 'notifications'">
         <div class="settings-section">
@@ -148,10 +166,16 @@ const sections = [
           <div class="setting-item">
             <div class="setting-info">
               <div class="setting-title">Message Notifications</div>
-              <div class="setting-desc">Desktop alerts when you receive messages while the tab is in background</div>
+              <div class="setting-desc">
+                Desktop alerts when you receive messages while the tab is in background
+              </div>
             </div>
             <label class="toggle">
-              <input type="checkbox" v-model="settings.messageNotifications" @change="onNotificationsToggle" />
+              <input
+                type="checkbox"
+                v-model="settings.messageNotifications"
+                @change="onNotificationsToggle"
+              />
               <span class="toggle-slider" />
             </label>
           </div>
@@ -163,11 +187,17 @@ const sections = [
           <h2>Privacy & Safety</h2>
           <div class="info-card">
             <h3>🔒 End-to-End Encrypted Voice</h3>
-            <p>All voice and video calls use WebRTC peer-to-peer connections. Your media streams never pass through our servers.</p>
+            <p>
+              All voice and video calls use WebRTC peer-to-peer connections. Your media streams
+              never pass through our servers.
+            </p>
           </div>
           <div class="info-card">
             <h3>🍪 Session Authentication</h3>
-            <p>Your session is stored in a secure, HttpOnly cookie. It cannot be accessed by JavaScript.</p>
+            <p>
+              Your session is stored in a secure, HttpOnly cookie. It cannot be accessed by
+              JavaScript.
+            </p>
           </div>
         </div>
       </template>
@@ -214,11 +244,32 @@ const sections = [
   transition: all 0.15s;
   text-align: left;
 }
-.nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
-.nav-item.active { background: rgba(139, 92, 246, 0.15); color: var(--accent-violet); font-weight: 600; }
-.settings-content { flex: 1; overflow-y: auto; padding: 32px; }
-.settings-section { max-width: 600px; display: flex; flex-direction: column; gap: 16px; }
-.settings-section h2 { font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
+.nav-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.nav-item.active {
+  background: rgba(139, 92, 246, 0.15);
+  color: var(--accent-violet);
+  font-weight: 600;
+}
+.settings-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px;
+}
+.settings-section {
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.settings-section h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
 .setting-item {
   display: flex;
   align-items: center;
@@ -229,12 +280,37 @@ const sections = [
   border: 1px solid var(--border);
   border-radius: 10px;
 }
-.setting-item.highlight { border-color: var(--border-accent); background: rgba(139, 92, 246, 0.04); }
-.setting-info { flex: 1; }
-.setting-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
-.setting-desc { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
-.toggle { position: relative; width: 44px; height: 24px; flex-shrink: 0; cursor: pointer; }
-.toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.setting-item.highlight {
+  border-color: var(--border-accent);
+  background: rgba(139, 92, 246, 0.04);
+}
+.setting-info {
+  flex: 1;
+}
+.setting-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 3px;
+}
+.setting-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+.toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
 .toggle-slider {
   position: absolute;
   inset: 0;
@@ -254,12 +330,32 @@ const sections = [
   background: var(--text-muted);
   transition: all 0.2s;
 }
-.toggle input:checked + .toggle-slider { background: rgba(139, 92, 246, 0.3); border-color: var(--accent-violet); }
-.toggle input:checked + .toggle-slider::before { transform: translateX(20px); background: var(--accent-violet); }
-.slider-wrap { display: flex; align-items: center; gap: 10px; }
-.range { width: 120px; accent-color: var(--accent-violet); }
-.slider-val { font-size: 13px; color: var(--text-secondary); min-width: 40px; text-align: right; }
-.spatial-info { margin-top: -8px; }
+.toggle input:checked + .toggle-slider {
+  background: rgba(139, 92, 246, 0.3);
+  border-color: var(--accent-violet);
+}
+.toggle input:checked + .toggle-slider::before {
+  transform: translateX(20px);
+  background: var(--accent-violet);
+}
+.slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.range {
+  width: 120px;
+  accent-color: var(--accent-violet);
+}
+.slider-val {
+  font-size: 13px;
+  color: var(--text-secondary);
+  min-width: 40px;
+  text-align: right;
+}
+.spatial-info {
+  margin-top: -8px;
+}
 .spatial-demo {
   padding: 20px;
   background: var(--bg-surface);
@@ -267,7 +363,14 @@ const sections = [
   border-radius: 10px;
   text-align: center;
 }
-.spatial-label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px; }
+.spatial-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
 .spatial-ring {
   width: 120px;
   height: 120px;
@@ -299,7 +402,10 @@ const sections = [
   padding: 4px 8px;
   border-radius: 20px;
 }
-.spatial-hint { font-size: 12px; color: var(--text-muted); }
+.spatial-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+}
 .themes-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -317,7 +423,9 @@ const sections = [
   cursor: pointer;
   transition: transform 0.2s;
 }
-.theme-card:hover { transform: translateY(-2px); }
+.theme-card:hover {
+  transform: translateY(-2px);
+}
 .theme-card.active {
   border-color: var(--border-accent);
   background: rgba(139, 92, 246, 0.14);
@@ -346,12 +454,27 @@ const sections = [
   border: 1px solid var(--border);
   border-radius: 10px;
 }
-.info-card h3 { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
-.info-card p { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+.info-card h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+.info-card p {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
 
 @media (max-width: 640px) {
-  .settings-nav { width: 160px; }
-  .settings-content { padding: 24px; }
-  .themes-grid { grid-template-columns: repeat(2, 1fr); }
+  .settings-nav {
+    width: 160px;
+  }
+  .settings-content {
+    padding: 24px;
+  }
+  .themes-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 </style>

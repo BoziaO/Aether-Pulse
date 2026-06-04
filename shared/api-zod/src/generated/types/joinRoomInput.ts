@@ -7,5 +7,5 @@
  */
 
 export interface JoinRoomInput {
-  inviteCode: string;
+  inviteCode: string
 }

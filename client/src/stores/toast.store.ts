@@ -29,7 +29,7 @@ export const useToastStore = defineStore('toast', () => {
   }
 
   function dismiss(id: number) {
-    toasts.value = toasts.value.filter(t => t.id !== id)
+    toasts.value = toasts.value.filter((t) => t.id !== id)
   }
 
   return { toasts, push, success, error, dismiss }

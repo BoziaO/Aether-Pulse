@@ -4,7 +4,7 @@ services:
       context: ..
       dockerfile: docker/client/Dockerfile
     ports:
-      - "80:80"
+      - '80:80'
     depends_on:
       - server
 
@@ -13,7 +13,7 @@ services:
       context: ..
       dockerfile: docker/server/Dockerfile
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - DATABASE_URL=postgres://user:password@db:5432/aetherpulse
       - SESSION_SECRET=your-secret
@@ -28,7 +28,7 @@ services:
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=aetherpulse
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - db-data:/var/lib/postgresql/data
 

@@ -55,6 +55,7 @@ pnpm start:server
 
 1. Copy `.env.example` to `.env` in the `shared/db` or root (depending on your setup).
 2. Run migrations:
+
 ```bash
 pnpm --filter @workspace/db migrate
 ```

@@ -26,7 +26,9 @@
   background: var(--bg-hover);
   animation: pulse 1.5s infinite;
 }
-.skeleton-info { flex: 1; }
+.skeleton-info {
+  flex: 1;
+}
 .skeleton-name {
   height: 16px;
   width: 60%;
@@ -51,7 +53,12 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 </style>

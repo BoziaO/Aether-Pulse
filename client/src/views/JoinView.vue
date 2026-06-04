@@ -101,8 +101,11 @@ async function joinRoom() {
 .join-bg {
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(ellipse 50% 50% at 50% 40%, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+  background: radial-gradient(
+    ellipse 50% 50% at 50% 40%,
+    rgba(59, 130, 246, 0.1) 0%,
+    transparent 70%
+  );
 }
 .join-container {
   display: flex;
@@ -119,7 +122,11 @@ async function joinRoom() {
   align-items: center;
   gap: 8px;
 }
-.join-logo { width: 44px; height: 44px; object-fit: contain; }
+.join-logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+}
 .join-header h1 {
   font-size: 22px;
   font-weight: 800;
@@ -152,13 +159,45 @@ async function joinRoom() {
   color: var(--accent-blue);
   margin-bottom: 4px;
 }
-.join-card h2 { font-size: 20px; font-weight: 700; color: var(--text-primary); }
-.join-card p { font-size: 14px; color: var(--text-muted); }
-.form-group { width: 100%; text-align: left; margin-top: 8px; }
-.code-input { font-family: monospace; font-size: 16px; letter-spacing: 1px; text-align: center; }
-.error-msg { font-size: 13px; color: var(--danger); background: rgba(239,68,68,0.1); border-radius: 8px; padding: 8px 14px; width: 100%; }
-.join-btn { width: 100%; padding: 12px; font-size: 15px; margin-top: 4px; }
-.join-loading { padding: 20px 0; color: var(--text-muted); font-size: 14px; }
+.join-card h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.join-card p {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.form-group {
+  width: 100%;
+  text-align: left;
+  margin-top: 8px;
+}
+.code-input {
+  font-family: monospace;
+  font-size: 16px;
+  letter-spacing: 1px;
+  text-align: center;
+}
+.error-msg {
+  font-size: 13px;
+  color: var(--danger);
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 8px;
+  padding: 8px 14px;
+  width: 100%;
+}
+.join-btn {
+  width: 100%;
+  padding: 12px;
+  font-size: 15px;
+  margin-top: 4px;
+}
+.join-loading {
+  padding: 20px 0;
+  color: var(--text-muted);
+  font-size: 14px;
+}
 .back-link {
   display: flex;
   align-items: center;
@@ -171,5 +210,7 @@ async function joinRoom() {
   margin-top: 8px;
   transition: color 0.15s;
 }
-.back-link:hover { color: var(--text-secondary); }
+.back-link:hover {
+  color: var(--text-secondary);
+}
 </style>

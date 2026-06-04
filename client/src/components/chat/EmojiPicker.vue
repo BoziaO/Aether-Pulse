@@ -9,9 +9,36 @@ const open = ref(false)
 
 const QUICK = ['👍', '❤️', '😂', '😮', '😢', '🔥', '🎉', '👀', '💯', '✨']
 const MORE = [
-  '😀', '😁', '😅', '🤣', '😊', '😍', '🤔', '😎', '🥳', '😴',
-  '👏', '🙌', '🤝', '💪', '🚀', '⭐', '💜', '💙', '💚', '🎯',
-  '🎮', '🎵', '🎧', '📌', '✅', '❌', '⚡', '🌙', '☀️', '🍕',
+  '😀',
+  '😁',
+  '😅',
+  '🤣',
+  '😊',
+  '😍',
+  '🤔',
+  '😎',
+  '🥳',
+  '😴',
+  '👏',
+  '🙌',
+  '🤝',
+  '💪',
+  '🚀',
+  '⭐',
+  '💜',
+  '💙',
+  '💚',
+  '🎯',
+  '🎮',
+  '🎵',
+  '🎧',
+  '📌',
+  '✅',
+  '❌',
+  '⚡',
+  '🌙',
+  '☀️',
+  '🍕',
 ]
 
 function pick(emoji: string) {
@@ -26,11 +53,15 @@ function pick(emoji: string) {
     <div v-if="open" class="panel">
       <div class="section-label">Quick</div>
       <div class="grid">
-        <button v-for="e in QUICK" :key="e" type="button" class="emoji-btn" @click="pick(e)">{{ e }}</button>
+        <button v-for="e in QUICK" :key="e" type="button" class="emoji-btn" @click="pick(e)">
+          {{ e }}
+        </button>
       </div>
       <div class="section-label">More</div>
       <div class="grid">
-        <button v-for="e in MORE" :key="e" type="button" class="emoji-btn" @click="pick(e)">{{ e }}</button>
+        <button v-for="e in MORE" :key="e" type="button" class="emoji-btn" @click="pick(e)">
+          {{ e }}
+        </button>
       </div>
     </div>
   </div>

@@ -9,11 +9,13 @@ interface ShareConfig {
 
 const CONFIGS: Record<ScreenShareQuality, ShareConfig> = {
   gaming: { width: 1920, height: 1080, frameRate: 60, audio: false },
-  movie:  { width: 1920, height: 1080, frameRate: 30, audio: true  },
+  movie: { width: 1920, height: 1080, frameRate: 30, audio: true },
   standard: { width: 1280, height: 720, frameRate: 30, audio: false },
 }
 
-export async function startScreenShare(quality: ScreenShareQuality = 'standard'): Promise<MediaStream> {
+export async function startScreenShare(
+  quality: ScreenShareQuality = 'standard'
+): Promise<MediaStream> {
   const cfg = CONFIGS[quality]
   const stream = await navigator.mediaDevices.getDisplayMedia({
     video: {
@@ -27,5 +29,9 @@ export async function startScreenShare(quality: ScreenShareQuality = 'standard')
 }
 
 export function getShareLabel(quality: ScreenShareQuality): string {
-  return { gaming: '🎮 Gaming (1080p 60fps)', movie: '🎬 Movie (1080p 30fps)', standard: '🖥️ Standard (720p 30fps)' }[quality]
+  return {
+    gaming: '🎮 Gaming (1080p 60fps)',
+    movie: '🎬 Movie (1080p 30fps)',
+    standard: '🖥️ Standard (720p 30fps)',
+  }[quality]
 }

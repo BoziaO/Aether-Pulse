@@ -75,16 +75,12 @@ watch(
   (next) => {
     bindStreamEvents(next ?? null)
     attachStream()
-  },
+  }
 )
 </script>
 
 <template>
-  <div
-    class="video-tile"
-    :class="{ clickable: userId && !isLocal }"
-    @click="handleClick"
-  >
+  <div class="video-tile" :class="{ clickable: userId && !isLocal }" @click="handleClick">
     <video
       ref="videoEl"
       class="video-el"
@@ -122,7 +118,9 @@ watch(
 }
 .video-tile.clickable {
   cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 .video-tile.clickable:hover {
   border-color: var(--border-accent);

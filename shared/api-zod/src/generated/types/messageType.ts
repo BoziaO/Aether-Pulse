@@ -6,11 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type MessageType = typeof MessageType[keyof typeof MessageType];
-
+export type MessageType = (typeof MessageType)[keyof typeof MessageType]
 
 export const MessageType = {
   text: 'text',
   system: 'system',
   file: 'file',
-} as const;
+} as const

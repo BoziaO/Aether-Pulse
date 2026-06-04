@@ -51,10 +51,33 @@ const router = useRouter()
   color: var(--accent-violet);
   flex-shrink: 0;
 }
-.room-info { flex: 1; min-width: 0; }
-.room-name { font-size: 15px; font-weight: 600; color: var(--text-primary); }
-.room-meta { display: flex; align-items: center; gap: 8px; margin-top: 3px; }
-.room-live { font-size: 11px; color: var(--danger); font-weight: 700; }
-.room-code { font-size: 11px; color: var(--text-muted); font-family: monospace; }
-.room-arrow { color: var(--text-muted); flex-shrink: 0; }
+.room-info {
+  flex: 1;
+  min-width: 0;
+}
+.room-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.room-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 3px;
+}
+.room-live {
+  font-size: 11px;
+  color: var(--danger);
+  font-weight: 700;
+}
+.room-code {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+.room-arrow {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
 </style>

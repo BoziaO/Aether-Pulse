@@ -36,12 +36,15 @@ watch(input, () => {
   setTimeout(resizeTextarea, 0)
 })
 
-watch(() => props.initialValue, (v) => {
-  if (v != null) {
-    input.value = v
-    setTimeout(resizeTextarea, 0)
+watch(
+  () => props.initialValue,
+  (v) => {
+    if (v != null) {
+      input.value = v
+      setTimeout(resizeTextarea, 0)
+    }
   }
-})
+)
 
 function handleInput() {
   resizeTextarea()
@@ -103,13 +106,23 @@ async function onFileSelected(e: Event) {
 <template>
   <div class="chat-input-area">
     <div v-if="replyTo" class="reply-bar">
-      <span>Replying to <strong>{{ replyTo.user?.displayName || 'Unknown' }}</strong></span>
-      <button type="button" class="cancel-reply" @click="emit('cancel-reply')"><X :size="14" /></button>
+      <span
+        >Replying to <strong>{{ replyTo.user?.displayName || 'Unknown' }}</strong></span
+      >
+      <button type="button" class="cancel-reply" @click="emit('cancel-reply')">
+        <X :size="14" />
+      </button>
     </div>
     <p v-if="fileError" class="file-error">{{ fileError }}</p>
     <div class="chat-input-wrap">
       <input ref="fileInput" type="file" class="hidden-file" @change="onFileSelected" />
-      <button type="button" class="attach-btn" title="Upload file" :disabled="uploading" @click="fileInput?.click()">
+      <button
+        type="button"
+        class="attach-btn"
+        title="Upload file"
+        :disabled="uploading"
+        @click="fileInput?.click()"
+      >
         <Paperclip :size="16" />
       </button>
       <EmojiPicker @select="insertEmoji" />
@@ -143,7 +156,9 @@ async function onFileSelected(e: Event) {
   font-size: 12px;
   color: var(--text-muted);
 }
-.reply-bar strong { color: var(--accent-violet); }
+.reply-bar strong {
+  color: var(--accent-violet);
+}
 .cancel-reply {
   background: transparent;
   border: none;
@@ -152,13 +167,18 @@ async function onFileSelected(e: Event) {
   padding: 4px;
   border-radius: 4px;
 }
-.cancel-reply:hover { background: var(--bg-hover); color: var(--text-primary); }
+.cancel-reply:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
 .file-error {
   padding: 6px 16px 0;
   font-size: 12px;
   color: var(--danger);
 }
-.hidden-file { display: none; }
+.hidden-file {
+  display: none;
+}
 .chat-input-wrap {
   display: flex;
   align-items: flex-end;
@@ -174,8 +194,14 @@ async function onFileSelected(e: Event) {
   border-radius: 8px;
   display: flex;
 }
-.attach-btn:hover:not(:disabled) { background: var(--bg-hover); color: var(--text-primary); }
-.attach-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.attach-btn:hover:not(:disabled) {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.attach-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 .chat-input {
   flex: 1;
   background: var(--bg-hover);
@@ -195,7 +221,9 @@ async function onFileSelected(e: Event) {
   border-color: var(--accent-violet);
   box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.12);
 }
-.chat-input::placeholder { color: var(--text-muted); }
+.chat-input::placeholder {
+  color: var(--text-muted);
+}
 .send-btn {
   background: linear-gradient(135deg, var(--accent-violet), var(--accent-blue));
   border: none;
@@ -209,8 +237,14 @@ async function onFileSelected(e: Event) {
   transition: all 0.15s;
   flex-shrink: 0;
 }
-.send-btn:hover:not(:disabled) { opacity: 0.9; transform: scale(1.04); }
-.send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.send-btn:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: scale(1.04);
+}
+.send-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 .input-hint {
   padding: 0 16px 10px;
   font-size: 11px;

@@ -14,13 +14,17 @@ const inviteLink = computed(() => roomStore.getInviteLink(props.room))
 async function copyLink() {
   await navigator.clipboard.writeText(inviteLink.value)
   copied.value = true
-  setTimeout(() => { copied.value = false }, 2000)
+  setTimeout(() => {
+    copied.value = false
+  }, 2000)
 }
 
 async function copyCode() {
   await navigator.clipboard.writeText(props.room.inviteCode)
   copied.value = true
-  setTimeout(() => { copied.value = false }, 2000)
+  setTimeout(() => {
+    copied.value = false
+  }, 2000)
 }
 </script>
 
@@ -44,10 +48,12 @@ async function copyCode() {
           </button>
         </div>
 
-        <label class="label" style="margin-top:16px">Invite Code</label>
+        <label class="label" style="margin-top: 16px">Invite Code</label>
         <div class="code-row">
           <span class="code-display">{{ room.inviteCode }}</span>
-          <button class="btn-ghost" style="font-size:12px;padding:6px 12px" @click="copyCode">Copy code</button>
+          <button class="btn-ghost" style="font-size: 12px; padding: 6px 12px" @click="copyCode">
+            Copy code
+          </button>
         </div>
 
         <p class="invite-hint">Share this link or code with the person you want to invite.</p>
@@ -60,7 +66,7 @@ async function copyCode() {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -81,10 +87,27 @@ async function copyCode() {
   align-items: center;
   margin-bottom: 20px;
 }
-.modal-header h2 { font-size: 18px; font-weight: 700; color: var(--text-primary); }
-.close-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 6px; }
-.close-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
-.modal-body { display: flex; flex-direction: column; }
+.modal-header h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+}
+.close-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.modal-body {
+  display: flex;
+  flex-direction: column;
+}
 .link-row {
   display: flex;
   align-items: center;
@@ -101,7 +124,10 @@ async function copyCode() {
   padding: 10px 12px;
   min-width: 0;
 }
-.link-icon { color: var(--text-muted); flex-shrink: 0; }
+.link-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
 .link-text {
   font-size: 12px;
   color: var(--text-secondary);
@@ -120,7 +146,9 @@ async function copyCode() {
   display: flex;
   align-items: center;
 }
-.copy-btn:hover { background: rgba(139, 92, 246, 0.25); }
+.copy-btn:hover {
+  background: rgba(139, 92, 246, 0.25);
+}
 .code-row {
   display: flex;
   align-items: center;
@@ -130,6 +158,16 @@ async function copyCode() {
   border-radius: 8px;
   padding: 8px 12px;
 }
-.code-display { font-family: monospace; font-size: 16px; font-weight: 700; color: var(--text-primary); letter-spacing: 2px; }
-.invite-hint { font-size: 12px; color: var(--text-muted); margin-top: 12px; }
+.code-display {
+  font-family: monospace;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 2px;
+}
+.invite-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 12px;
+}
 </style>

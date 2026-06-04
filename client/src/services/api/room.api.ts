@@ -13,8 +13,7 @@ export const roomApi = {
   update: (roomId: string, data: { name?: string; quality?: string }) =>
     apiFetch<Room>(`/rooms/${roomId}`, { method: 'PATCH', body: JSON.stringify(data) }),
 
-  delete: (roomId: string) =>
-    apiFetch<void>(`/rooms/${roomId}`, { method: 'DELETE' }),
+  delete: (roomId: string) => apiFetch<void>(`/rooms/${roomId}`, { method: 'DELETE' }),
 
   leave: (roomId: string) =>
     apiFetch<{ ok: boolean }>(`/rooms/${roomId}/leave`, { method: 'POST' }),
@@ -54,7 +53,13 @@ export const roomApi = {
       body: JSON.stringify({ emoji }),
     }),
 
-  uploadFile: (roomId: string, dataUrl: string, fileName: string, caption?: string, replyToId?: number) =>
+  uploadFile: (
+    roomId: string,
+    dataUrl: string,
+    fileName: string,
+    caption?: string,
+    replyToId?: number
+  ) =>
     apiFetch<Message>(`/rooms/${roomId}/upload`, {
       method: 'POST',
       body: JSON.stringify({ dataUrl, fileName, caption, replyToId }),

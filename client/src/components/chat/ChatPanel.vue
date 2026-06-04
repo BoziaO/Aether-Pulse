@@ -32,12 +32,10 @@ const editContent = ref('')
 const uploading = ref(false)
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
 
-const typingList = computed(() => [...chatStore.typingUsers].filter(id => id !== auth.user?.id))
+const typingList = computed(() => [...chatStore.typingUsers].filter((id) => id !== auth.user?.id))
 
 const displayMessages = computed(() =>
-  showSearch.value && searchInput.value.trim()
-    ? chatStore.searchResults
-    : chatStore.messages,
+  showSearch.value && searchInput.value.trim() ? chatStore.searchResults : chatStore.messages
 )
 
 function scrollToBottom() {
@@ -107,7 +105,12 @@ async function handleUpload(dataUrl: string, fileName: string, caption: string) 
     <div class="chat-header">
       <span class="chat-title"># {{ roomName || 'chat' }}</span>
       <div class="header-actions">
-        <button class="icon-btn" :class="{ active: showSearch }" title="Search" @click="showSearch = !showSearch">
+        <button
+          class="icon-btn"
+          :class="{ active: showSearch }"
+          title="Search"
+          @click="showSearch = !showSearch"
+        >
           <Search :size="15" />
         </button>
         <button class="icon-btn" title="Members" @click="emit('toggle-members')">
@@ -120,7 +123,15 @@ async function handleUpload(dataUrl: string, fileName: string, caption: string) 
     <div v-if="showSearch" class="search-bar">
       <Search :size="14" />
       <input v-model="searchInput" placeholder="Search messages..." @input="handleSearch" />
-      <button type="button" @click="showSearch = false; searchInput = ''"><X :size="14" /></button>
+      <button
+        type="button"
+        @click="
+          showSearch = false
+          searchInput = ''
+        "
+      >
+        <X :size="14" />
+      </button>
     </div>
 
     <div v-if="editingMessage" class="edit-bar">
@@ -141,7 +152,9 @@ async function handleUpload(dataUrl: string, fileName: string, caption: string) 
         :room-id="roomId"
         :current-user-id="auth.user?.id"
         :is-own="msg.userId === auth.user?.id"
-        :show-avatar="i === 0 || displayMessages[i - 1]?.userId !== msg.userId || msg.type === 'system'"
+        :show-avatar="
+          i === 0 || displayMessages[i - 1]?.userId !== msg.userId || msg.type === 'system'
+        "
         @open-profile="selectedUserId = $event"
         @reply="chatStore.setReply($event)"
         @edit="startEdit"
@@ -150,7 +163,9 @@ async function handleUpload(dataUrl: string, fileName: string, caption: string) 
       />
       <div v-if="typingList.length > 0" class="typing-indicator">
         <span class="typing-dots"><span /><span /><span /></span>
-        <span>{{ typingList.length === 1 ? 'Someone is typing...' : `${typingList.length} people typing...` }}</span>
+        <span>{{
+          typingList.length === 1 ? 'Someone is typing...' : `${typingList.length} people typing...`
+        }}</span>
       </div>
     </div>
 
@@ -282,10 +297,20 @@ async function handleUpload(dataUrl: string, fileName: string, caption: string) 
   background: var(--text-muted);
   animation: bounce 1.4s ease-in-out infinite both;
 }
-.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
-.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+.typing-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.typing-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
 @keyframes bounce {
-  0%, 80%, 100% { transform: scale(0); }
-  40% { transform: scale(1); }
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
 }
 </style>

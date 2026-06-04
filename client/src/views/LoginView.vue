@@ -45,24 +45,46 @@ async function submit() {
       <div class="auth-card">
         <div class="auth-tabs">
           <button :class="{ active: tab === 'login' }" @click="tab = 'login'">Log In</button>
-          <button :class="{ active: tab === 'register' }" @click="tab = 'register'">Register</button>
+          <button :class="{ active: tab === 'register' }" @click="tab = 'register'">
+            Register
+          </button>
         </div>
 
         <div class="auth-form">
           <div class="form-group">
             <label class="label">Username</label>
-            <input v-model="username" class="input" type="text" placeholder="Enter your username" @keydown.enter="submit" autocomplete="username" />
+            <input
+              v-model="username"
+              class="input"
+              type="text"
+              placeholder="Enter your username"
+              @keydown.enter="submit"
+              autocomplete="username"
+            />
           </div>
 
           <div v-if="tab === 'register'" class="form-group">
             <label class="label">Display Name</label>
-            <input v-model="displayName" class="input" type="text" placeholder="Your name (optional)" @keydown.enter="submit" />
+            <input
+              v-model="displayName"
+              class="input"
+              type="text"
+              placeholder="Your name (optional)"
+              @keydown.enter="submit"
+            />
           </div>
 
           <div class="form-group">
             <label class="label">Password</label>
             <div class="pw-wrap">
-              <input v-model="password" class="input" :type="showPw ? 'text' : 'password'" placeholder="Enter your password" @keydown.enter="submit" autocomplete="current-password" />
+              <input
+                v-model="password"
+                class="input"
+                :type="showPw ? 'text' : 'password'"
+                placeholder="Enter your password"
+                @keydown.enter="submit"
+                autocomplete="current-password"
+              />
               <button class="pw-toggle" @click="showPw = !showPw" type="button">
                 <EyeOff v-if="showPw" :size="16" />
                 <Eye v-else :size="16" />
@@ -72,7 +94,11 @@ async function submit() {
 
           <p v-if="error" class="error-msg">{{ error }}</p>
 
-          <button class="btn-primary submit-btn" :disabled="loading || !username || !password" @click="submit">
+          <button
+            class="btn-primary submit-btn"
+            :disabled="loading || !username || !password"
+            @click="submit"
+          >
             <span v-if="loading" class="pulse">Loading...</span>
             <span v-else>{{ tab === 'login' ? 'Enter Workspace' : 'Create Account' }}</span>
           </button>
@@ -131,7 +157,10 @@ async function submit() {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
-.auth-logo p { font-size: 14px; color: var(--text-muted); }
+.auth-logo p {
+  font-size: 14px;
+  color: var(--text-muted);
+}
 .auth-card {
   width: 100%;
   background: var(--bg-surface);
@@ -163,12 +192,24 @@ async function submit() {
   background: var(--bg-surface-2);
   color: var(--text-primary);
   font-weight: 600;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
-.auth-form { display: flex; flex-direction: column; gap: 16px; }
-.form-group { display: flex; flex-direction: column; gap: 6px; }
-.pw-wrap { position: relative; }
-.pw-wrap .input { padding-right: 44px; }
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pw-wrap {
+  position: relative;
+}
+.pw-wrap .input {
+  padding-right: 44px;
+}
 .pw-toggle {
   position: absolute;
   right: 12px;
@@ -182,7 +223,21 @@ async function submit() {
   align-items: center;
   padding: 4px;
 }
-.pw-toggle:hover { color: var(--text-primary); }
-.error-msg { font-size: 13px; color: var(--danger); padding: 8px 12px; background: rgba(239,68,68,0.1); border-radius: 8px; border: 1px solid rgba(239,68,68,0.2); }
-.submit-btn { margin-top: 8px; width: 100%; padding: 12px; font-size: 15px; }
+.pw-toggle:hover {
+  color: var(--text-primary);
+}
+.error-msg {
+  font-size: 13px;
+  color: var(--danger);
+  padding: 8px 12px;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+.submit-btn {
+  margin-top: 8px;
+  width: 100%;
+  padding: 12px;
+  font-size: 15px;
+}
 </style>

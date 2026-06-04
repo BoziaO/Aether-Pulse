@@ -8,12 +8,7 @@ const toast = useToastStore()
 <template>
   <div class="toast-container" aria-live="polite">
     <transition-group name="toast">
-      <div
-        v-for="t in toast.toasts"
-        :key="t.id"
-        class="toast"
-        :class="t.type"
-      >
+      <div v-for="t in toast.toasts" :key="t.id" class="toast" :class="t.type">
         <CheckCircle v-if="t.type === 'success'" :size="16" />
         <AlertCircle v-else-if="t.type === 'error'" :size="16" />
         <Info v-else :size="16" />

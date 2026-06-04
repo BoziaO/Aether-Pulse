@@ -1,13 +1,13 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { createRequire } from "node:module";
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { createRequire } from 'node:module'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const root = path.resolve(__dirname, "..");
-const require = createRequire(path.join(root, "server/package.json"));
-const { createClient } = require("@libsql/client");
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const root = path.resolve(__dirname, '..')
+const require = createRequire(path.join(root, 'server/package.json'))
+const { createClient } = require('@libsql/client')
 
-const client = createClient({ url: `file:${path.join(root, "sqlite.db")}` });
+const client = createClient({ url: `file:${path.join(root, 'sqlite.db')}` })
 
 const stmts = [
   `CREATE TABLE IF NOT EXISTS friendships (
@@ -17,7 +17,7 @@ const stmts = [
     status TEXT NOT NULL DEFAULT 'pending',
     created_at INTEGER NOT NULL DEFAULT (cast(unixepoch('subsecond') * 1000 as integer))
   )`,
-  "CREATE UNIQUE INDEX IF NOT EXISTS friendships_pair_unique ON friendships (requester_id, addressee_id)",
+  'CREATE UNIQUE INDEX IF NOT EXISTS friendships_pair_unique ON friendships (requester_id, addressee_id)',
   `CREATE TABLE IF NOT EXISTS dm_conversations (
     id TEXT PRIMARY KEY NOT NULL,
     created_at INTEGER NOT NULL DEFAULT (cast(unixepoch('subsecond') * 1000 as integer)),
@@ -43,19 +43,19 @@ const stmts = [
     is_deleted INTEGER NOT NULL DEFAULT 0,
     created_at INTEGER NOT NULL DEFAULT (cast(unixepoch('subsecond') * 1000 as integer))
   )`,
-  "ALTER TABLE messages ADD COLUMN attachment_url TEXT",
-  "ALTER TABLE messages ADD COLUMN attachment_name TEXT",
-  "ALTER TABLE messages ADD COLUMN attachment_mime TEXT",
-];
+  'ALTER TABLE messages ADD COLUMN attachment_url TEXT',
+  'ALTER TABLE messages ADD COLUMN attachment_name TEXT',
+  'ALTER TABLE messages ADD COLUMN attachment_mime TEXT',
+]
 
 for (const sql of stmts) {
   try {
-    await client.execute(sql);
-    console.log("OK:", sql.split("\n")[0].slice(0, 70));
+    await client.execute(sql)
+    console.log('OK:', sql.split('\n')[0].slice(0, 70))
   } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    console.log("SKIP:", msg.slice(0, 100));
+    const msg = e instanceof Error ? e.message : String(e)
+    console.log('SKIP:', msg.slice(0, 100))
   }
 }
 
-console.log("Friends/DM migration complete.");
+console.log('Friends/DM migration complete.')

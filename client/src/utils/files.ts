@@ -8,9 +8,16 @@ export function fileToDataUrl(file: File): Promise<string> {
 }
 
 export const ALLOWED_FILE_TYPES = [
-  'image/png', 'image/jpeg', 'image/webp', 'image/gif',
-  'application/pdf', 'text/plain', 'application/zip',
-  'video/mp4', 'audio/mpeg', 'audio/wav',
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+  'image/gif',
+  'application/pdf',
+  'text/plain',
+  'application/zip',
+  'video/mp4',
+  'audio/mpeg',
+  'audio/wav',
 ]
 
 export const MAX_FILE_SIZE = 10 * 1024 * 1024

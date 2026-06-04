@@ -5,11 +5,11 @@
  * AetherPulse API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { ActivityEvent } from './activityEvent';
+import type { ActivityEvent } from './activityEvent'
 
 export interface RoomActivity {
-  roomId: string;
-  memberCount: number;
-  messageCount: number;
-  events: ActivityEvent[];
+  roomId: string
+  memberCount: number
+  messageCount: number
+  events: ActivityEvent[]
 }

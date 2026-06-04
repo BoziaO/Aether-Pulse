@@ -18,7 +18,7 @@ export function renderMarkdown(text: string): string {
   html = html.replace(/~~([^~]+)~~/g, '<s>$1</s>')
   html = html.replace(
     /(https?:\/\/[^\s<]+)/g,
-    '<a href="$1" target="_blank" rel="noreferrer" class="md-link">$1</a>',
+    '<a href="$1" target="_blank" rel="noreferrer" class="md-link">$1</a>'
   )
   html = html.replace(/\n/g, '<br>')
 

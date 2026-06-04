@@ -37,9 +37,7 @@ function hasReacted(reaction: { emoji: string; userIds: number[] }) {
   return props.currentUserId != null && reaction.userIds.includes(props.currentUserId)
 }
 
-const isImage = computed(() =>
-  props.message.attachmentMime?.startsWith('image/') ?? false,
-)
+const isImage = computed(() => props.message.attachmentMime?.startsWith('image/') ?? false)
 </script>
 
 <template>
@@ -47,7 +45,10 @@ const isImage = computed(() =>
     class="message"
     :class="{ own: isOwn, system: message.type === 'system' }"
     @mouseenter="showActions = true"
-    @mouseleave="showActions = false; showReactionPicker = false"
+    @mouseleave="
+      showActions = false
+      showReactionPicker = false
+    "
     @dblclick="isOwn && !message.isDeleted && emit('edit', message)"
   >
     <div v-if="showAvatar !== false && message.type !== 'system'" class="message-avatar">
@@ -111,11 +112,7 @@ const isImage = computed(() =>
           type="text"
         />
       </template>
-      <MessageContent
-        v-else
-        :content="message.content"
-        :type="message.type"
-      />
+      <MessageContent v-else :content="message.content" :type="message.type" />
 
       <div v-if="message.reactions?.length" class="reactions">
         <button
@@ -131,11 +128,22 @@ const isImage = computed(() =>
       </div>
     </div>
 
-    <div v-if="showActions && message.type !== 'system' && !message.isDeleted" class="message-actions">
-      <button type="button" title="Reply" @click="emit('reply', message)"><Reply :size="14" /></button>
-      <button type="button" title="React" @click="showReactionPicker = !showReactionPicker"><SmilePlus :size="14" /></button>
-      <button v-if="isOwn" type="button" title="Edit" @click="emit('edit', message)"><Pencil :size="14" /></button>
-      <button v-if="isOwn" type="button" title="Delete" @click="emit('delete', message.id)"><Trash2 :size="14" /></button>
+    <div
+      v-if="showActions && message.type !== 'system' && !message.isDeleted"
+      class="message-actions"
+    >
+      <button type="button" title="Reply" @click="emit('reply', message)">
+        <Reply :size="14" />
+      </button>
+      <button type="button" title="React" @click="showReactionPicker = !showReactionPicker">
+        <SmilePlus :size="14" />
+      </button>
+      <button v-if="isOwn" type="button" title="Edit" @click="emit('edit', message)">
+        <Pencil :size="14" />
+      </button>
+      <button v-if="isOwn" type="button" title="Delete" @click="emit('delete', message.id)">
+        <Trash2 :size="14" />
+      </button>
     </div>
 
     <div v-if="showReactionPicker" class="reaction-picker">
@@ -143,7 +151,10 @@ const isImage = computed(() =>
         v-for="emoji in QUICK_REACTIONS"
         :key="emoji"
         type="button"
-        @click="emit('react', message.id, emoji); showReactionPicker = false"
+        @click="
+          emit('react', message.id, emoji)
+          showReactionPicker = false
+        "
       >
         {{ emoji }}
       </button>

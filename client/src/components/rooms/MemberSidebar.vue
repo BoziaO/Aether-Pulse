@@ -23,7 +23,7 @@ const sortedMembers = computed(() =>
     const bOnline = presence.isOnlineInRoom(b.id) ? 0 : 1
     if (aOnline !== bOnline) return aOnline - bOnline
     return a.displayName.localeCompare(b.displayName)
-  }),
+  })
 )
 
 function isInCall(userId: number) {
@@ -54,7 +54,9 @@ function isOnline(userId: number) {
         <div class="member-info">
           <span class="member-name">{{ member.displayName }}</span>
           <span class="member-meta">
-            <span v-if="isInCall(member.id)" class="badge in-call"><Mic :size="10" /> In voice</span>
+            <span v-if="isInCall(member.id)" class="badge in-call"
+              ><Mic :size="10" /> In voice</span
+            >
             <span v-else-if="isOnline(member.id)" class="badge online">Online</span>
             <span v-else class="badge offline">{{ member.status }}</span>
           </span>
@@ -134,8 +136,12 @@ function isOnline(userId: number) {
   font-size: 11px;
   text-transform: capitalize;
 }
-.badge.online { color: var(--success); }
-.badge.offline { color: var(--text-muted); }
+.badge.online {
+  color: var(--success);
+}
+.badge.offline {
+  color: var(--text-muted);
+}
 .badge.in-call {
   display: inline-flex;
   align-items: center;

@@ -5,15 +5,15 @@
  * AetherPulse API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { MessageType } from './messageType';
-import type { User } from './user';
+import type { MessageType } from './messageType'
+import type { User } from './user'
 
 export interface Message {
-  id: number;
-  roomId: string;
-  userId: number;
-  content: string;
-  type: MessageType;
-  user?: User;
-  createdAt: string;
+  id: number
+  roomId: string
+  userId: number
+  content: string
+  type: MessageType
+  user?: User
+  createdAt: string
 }

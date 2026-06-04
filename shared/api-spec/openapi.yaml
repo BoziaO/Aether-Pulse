@@ -26,12 +26,12 @@ paths:
       tags: [health]
       summary: Health check
       responses:
-        "200":
+        '200':
           description: Healthy
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HealthStatus"
+                $ref: '#/components/schemas/HealthStatus'
 
   /auth/register:
     post:
@@ -43,17 +43,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RegisterInput"
+              $ref: '#/components/schemas/RegisterInput'
       responses:
-        "201":
+        '201':
           description: User created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthResponse"
-        "400":
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
           description: Validation error
-        "409":
+        '409':
           description: Username already taken
 
   /auth/login:
@@ -66,15 +66,15 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/LoginInput"
+              $ref: '#/components/schemas/LoginInput'
       responses:
-        "200":
+        '200':
           description: Login successful
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthResponse"
-        "401":
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
           description: Invalid credentials
 
   /auth/logout:
@@ -83,7 +83,7 @@ paths:
       tags: [auth]
       summary: Log out
       responses:
-        "200":
+        '200':
           description: Logged out
 
   /auth/me:
@@ -92,13 +92,13 @@ paths:
       tags: [auth]
       summary: Get current user
       responses:
-        "200":
+        '200':
           description: Current user
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
-        "401":
+                $ref: '#/components/schemas/User'
+        '401':
           description: Not authenticated
 
   /users/{userId}:
@@ -113,13 +113,13 @@ paths:
           schema:
             type: integer
       responses:
-        "200":
+        '200':
           description: User profile
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
-        "404":
+                $ref: '#/components/schemas/User'
+        '404':
           description: User not found
     patch:
       operationId: updateUser
@@ -136,15 +136,15 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UserUpdate"
+              $ref: '#/components/schemas/UserUpdate'
       responses:
-        "200":
+        '200':
           description: Updated user
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
-        "403":
+                $ref: '#/components/schemas/User'
+        '403':
           description: Forbidden
 
   /rooms:
@@ -153,14 +153,14 @@ paths:
       tags: [rooms]
       summary: List current user's rooms
       responses:
-        "200":
+        '200':
           description: List of rooms
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Room"
+                  $ref: '#/components/schemas/Room'
     post:
       operationId: createRoom
       tags: [rooms]
@@ -170,14 +170,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RoomInput"
+              $ref: '#/components/schemas/RoomInput'
       responses:
-        "201":
+        '201':
           description: Room created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Room"
+                $ref: '#/components/schemas/Room'
 
   /rooms/{roomId}:
     get:
@@ -191,13 +191,13 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Room details
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Room"
-        "404":
+                $ref: '#/components/schemas/Room'
+        '404':
           description: Room not found
     delete:
       operationId: deleteRoom
@@ -210,7 +210,7 @@ paths:
           schema:
             type: string
       responses:
-        "204":
+        '204':
           description: Deleted
 
   /rooms/{roomId}/join:
@@ -229,17 +229,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/JoinRoomInput"
+              $ref: '#/components/schemas/JoinRoomInput'
       responses:
-        "200":
+        '200':
           description: Joined room
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Room"
-        "403":
+                $ref: '#/components/schemas/Room'
+        '403':
           description: Invalid invite code
-        "404":
+        '404':
           description: Room not found
 
   /rooms/join-by-code:
@@ -252,17 +252,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/JoinRoomInput"
+              $ref: '#/components/schemas/JoinRoomInput'
       responses:
-        "200":
+        '200':
           description: Joined room
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Room"
-        "403":
+                $ref: '#/components/schemas/Room'
+        '403':
           description: Invalid invite code
-        "404":
+        '404':
           description: Room not found
 
   /rooms/{roomId}/leave:
@@ -277,7 +277,7 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Left room
 
   /rooms/{roomId}/messages:
@@ -292,14 +292,14 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: List of messages
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Message"
+                  $ref: '#/components/schemas/Message'
     post:
       operationId: sendMessage
       tags: [messages]
@@ -315,14 +315,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/MessageInput"
+              $ref: '#/components/schemas/MessageInput'
       responses:
-        "201":
+        '201':
           description: Message sent
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Message"
+                $ref: '#/components/schemas/Message'
 
   /rooms/{roomId}/activity:
     get:
@@ -336,12 +336,12 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Room activity
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RoomActivity"
+                $ref: '#/components/schemas/RoomActivity'
 
 components:
   schemas:
@@ -383,7 +383,7 @@ components:
       required: [user]
       properties:
         user:
-          $ref: "#/components/schemas/User"
+          $ref: '#/components/schemas/User'
 
     User:
       type: object
@@ -396,26 +396,26 @@ components:
         displayName:
           type: string
         avatarUrl:
-          type: ["string", "null"]
+          type: ['string', 'null']
         bannerUrl:
-          type: ["string", "null"]
+          type: ['string', 'null']
         bio:
-          type: ["string", "null"]
+          type: ['string', 'null']
         pronouns:
-          type: ["string", "null"]
+          type: ['string', 'null']
         website:
-          type: ["string", "null"]
+          type: ['string', 'null']
         location:
-          type: ["string", "null"]
+          type: ['string', 'null']
         status:
           type: string
           enum: [online, away, busy, offline]
         customStatus:
-          type: ["string", "null"]
+          type: ['string', 'null']
         accentColor:
-          type: ["string", "null"]
+          type: ['string', 'null']
         profileGradient:
-          type: ["string", "null"]
+          type: ['string', 'null']
         badges:
           type: array
           items:
@@ -429,29 +429,29 @@ components:
         displayName:
           type: string
         bio:
-          type: ["string", "null"]
+          type: ['string', 'null']
           maxLength: 190
         pronouns:
-          type: ["string", "null"]
+          type: ['string', 'null']
           maxLength: 40
         website:
-          type: ["string", "null"]
+          type: ['string', 'null']
           maxLength: 120
         location:
-          type: ["string", "null"]
+          type: ['string', 'null']
           maxLength: 40
         customStatus:
-          type: ["string", "null"]
+          type: ['string', 'null']
           maxLength: 128
         accentColor:
           type: string
-          pattern: "^#[0-9A-Fa-f]{6}$"
+          pattern: '^#[0-9A-Fa-f]{6}$'
         profileGradient:
-          type: ["string", "null"]
+          type: ['string', 'null']
         avatarUrl:
-          type: ["string", "null"]
+          type: ['string', 'null']
         bannerUrl:
-          type: ["string", "null"]
+          type: ['string', 'null']
         status:
           type: string
           enum: [online, away, busy, offline]
@@ -473,7 +473,7 @@ components:
         members:
           type: array
           items:
-            $ref: "#/components/schemas/User"
+            $ref: '#/components/schemas/User'
         quality:
           type: string
           enum: [360p, 480p, 720p, 1080p, 1440p]
@@ -517,7 +517,7 @@ components:
           type: string
           enum: [text, system, file]
         user:
-          $ref: "#/components/schemas/User"
+          $ref: '#/components/schemas/User'
         createdAt:
           type: string
 
@@ -546,7 +546,7 @@ components:
         events:
           type: array
           items:
-            $ref: "#/components/schemas/ActivityEvent"
+            $ref: '#/components/schemas/ActivityEvent'
 
     ActivityEvent:
       type: object
@@ -557,6 +557,6 @@ components:
         description:
           type: string
         userId:
-          type: ["integer", "null"]
+          type: ['integer', 'null']
         createdAt:
           type: string

@@ -65,7 +65,7 @@ async function create() {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -86,10 +86,37 @@ async function create() {
   align-items: center;
   margin-bottom: 20px;
 }
-.modal-header h2 { font-size: 18px; font-weight: 700; color: var(--text-primary); }
-.close-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 6px; }
-.close-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
-.modal-body { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
-.modal-footer { display: flex; gap: 8px; justify-content: flex-end; }
-.error-msg { font-size: 13px; color: var(--danger); margin-top: 4px; }
+.modal-header h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+}
+.close-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+.modal-footer {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.error-msg {
+  font-size: 13px;
+  color: var(--danger);
+  margin-top: 4px;
+}
 </style>

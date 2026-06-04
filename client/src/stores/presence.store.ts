@@ -32,5 +32,14 @@ export const usePresenceStore = defineStore('presence', () => {
     return onlineInRoom.value.has(userId)
   }
 
-  return { statuses, onlineInRoom, setStatus, setRoomOnline, userJoined, userLeft, getStatus, isOnlineInRoom }
+  return {
+    statuses,
+    onlineInRoom,
+    setStatus,
+    setRoomOnline,
+    userJoined,
+    userLeft,
+    getStatus,
+    isOnlineInRoom,
+  }
 })

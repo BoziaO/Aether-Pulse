@@ -6,82 +6,79 @@
  * OpenAPI spec version: 0.1.0
  */
 export interface HealthStatus {
-  status: string;
+  status: string
 }
 
 export interface RegisterInput {
   /**
-     * @minLength 3
-     * @maxLength 20
-     */
-  username: string;
+   * @minLength 3
+   * @maxLength 20
+   */
+  username: string
   /** @minLength 6 */
-  password: string;
+  password: string
   /**
-     * @minLength 1
-     * @maxLength 32
-     */
-  displayName: string;
+   * @minLength 1
+   * @maxLength 32
+   */
+  displayName: string
 }
 
 export interface LoginInput {
-  username: string;
-  password: string;
+  username: string
+  password: string
 }
 
-export type UserStatus = typeof UserStatus[keyof typeof UserStatus];
-
+export type UserStatus = (typeof UserStatus)[keyof typeof UserStatus]
 
 export const UserStatus = {
   online: 'online',
   away: 'away',
   busy: 'busy',
   offline: 'offline',
-} as const;
+} as const
 
 export interface User {
-  id: number;
-  username: string;
-  displayName: string;
+  id: number
+  username: string
+  displayName: string
   /** @nullable */
-  avatarUrl?: string | null;
+  avatarUrl?: string | null
   /** @nullable */
-  bannerUrl?: string | null;
+  bannerUrl?: string | null
   /** @nullable */
-  bio?: string | null;
-  status: UserStatus;
+  bio?: string | null
+  status: UserStatus
   /** @nullable */
-  customStatus?: string | null;
+  customStatus?: string | null
   /** @nullable */
-  accentColor?: string | null;
-  badges?: string[];
-  createdAt: string;
+  accentColor?: string | null
+  badges?: string[]
+  createdAt: string
 }
 
 export interface AuthResponse {
-  user: User;
+  user: User
 }
 
-export type UserUpdateStatus = typeof UserUpdateStatus[keyof typeof UserUpdateStatus];
-
+export type UserUpdateStatus = (typeof UserUpdateStatus)[keyof typeof UserUpdateStatus]
 
 export const UserUpdateStatus = {
   online: 'online',
   away: 'away',
   busy: 'busy',
   offline: 'offline',
-} as const;
+} as const
 
 export interface UserUpdate {
-  displayName?: string;
-  bio?: string;
-  customStatus?: string;
-  accentColor?: string;
-  status?: UserUpdateStatus;
+  displayName?: string
+  bio?: string
+  customStatus?: string
+  accentColor?: string
+  status?: UserUpdateStatus
 }
 
-export type RoomQuality = typeof RoomQuality[keyof typeof RoomQuality];
-
+export type RoomQuality = (typeof RoomQuality)[keyof typeof RoomQuality]
 
 export const RoomQuality = {
   '360p': '360p',
@@ -89,22 +86,21 @@ export const RoomQuality = {
   '720p': '720p',
   '1080p': '1080p',
   '1440p': '1440p',
-} as const;
+} as const
 
 export interface Room {
-  id: string;
-  name: string;
-  inviteCode: string;
-  ownerId: number;
-  memberCount: number;
-  members?: User[];
-  quality?: RoomQuality;
-  isActive?: boolean;
-  createdAt: string;
+  id: string
+  name: string
+  inviteCode: string
+  ownerId: number
+  memberCount: number
+  members?: User[]
+  quality?: RoomQuality
+  isActive?: boolean
+  createdAt: string
 }
 
-export type RoomInputQuality = typeof RoomInputQuality[keyof typeof RoomInputQuality];
-
+export type RoomInputQuality = (typeof RoomInputQuality)[keyof typeof RoomInputQuality]
 
 export const RoomInputQuality = {
   '360p': '360p',
@@ -112,69 +108,66 @@ export const RoomInputQuality = {
   '720p': '720p',
   '1080p': '1080p',
   '1440p': '1440p',
-} as const;
+} as const
 
 export interface RoomInput {
   /**
-     * @minLength 1
-     * @maxLength 64
-     */
-  name: string;
-  quality?: RoomInputQuality;
+   * @minLength 1
+   * @maxLength 64
+   */
+  name: string
+  quality?: RoomInputQuality
 }
 
 export interface JoinRoomInput {
-  inviteCode: string;
+  inviteCode: string
 }
 
-export type MessageType = typeof MessageType[keyof typeof MessageType];
-
+export type MessageType = (typeof MessageType)[keyof typeof MessageType]
 
 export const MessageType = {
   text: 'text',
   system: 'system',
   file: 'file',
-} as const;
+} as const
 
 export interface Message {
-  id: number;
-  roomId: string;
-  userId: number;
-  content: string;
-  type: MessageType;
-  user?: User;
-  createdAt: string;
+  id: number
+  roomId: string
+  userId: number
+  content: string
+  type: MessageType
+  user?: User
+  createdAt: string
 }
 
-export type MessageInputType = typeof MessageInputType[keyof typeof MessageInputType];
-
+export type MessageInputType = (typeof MessageInputType)[keyof typeof MessageInputType]
 
 export const MessageInputType = {
   text: 'text',
   file: 'file',
-} as const;
+} as const
 
 export interface MessageInput {
   /**
-     * @minLength 1
-     * @maxLength 4000
-     */
-  content: string;
-  type?: MessageInputType;
+   * @minLength 1
+   * @maxLength 4000
+   */
+  content: string
+  type?: MessageInputType
 }
 
 export interface ActivityEvent {
-  type: string;
-  description: string;
+  type: string
+  description: string
   /** @nullable */
-  userId?: number | null;
-  createdAt: string;
+  userId?: number | null
+  createdAt: string
 }
 
 export interface RoomActivity {
-  roomId: string;
-  memberCount: number;
-  messageCount: number;
-  events: ActivityEvent[];
+  roomId: string
+  memberCount: number
+  messageCount: number
+  events: ActivityEvent[]
 }
-

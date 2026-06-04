@@ -28,8 +28,7 @@ export const friendsApi = {
       body: JSON.stringify({ userId }),
     }),
 
-  remove: (userId: number) =>
-    apiFetch<{ ok: boolean }>(`/friends/${userId}`, { method: 'DELETE' }),
+  remove: (userId: number) => apiFetch<{ ok: boolean }>(`/friends/${userId}`, { method: 'DELETE' }),
 
   block: (userId: number) =>
     apiFetch<{ ok: boolean }>('/friends/block', {

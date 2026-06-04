@@ -13,7 +13,9 @@
     "start:client": "pnpm --filter aetherpulse-client dev",
     "start:server": "pnpm --filter aetherpulse-server dev",
     "build:client": "pnpm --filter aetherpulse-client build",
-    "build:server": "pnpm --filter aetherpulse-server build"
+    "build:server": "pnpm --filter aetherpulse-server build",
+    "lint:check": "prettier --check .",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.10",
