@@ -78,6 +78,11 @@ function handleSearch() {
   }, 300)
 }
 
+function closeSearch() {
+  showSearch.value = false
+  searchInput.value = ''
+}
+
 function startEdit(message: Message) {
   editingMessage.value = message
   editContent.value = message.content
@@ -123,13 +128,7 @@ async function handleUpload(dataUrl: string, fileName: string, caption: string) 
     <div v-if="showSearch" class="search-bar">
       <Search :size="14" />
       <input v-model="searchInput" placeholder="Search messages..." @input="handleSearch" />
-      <button
-        type="button"
-        @click="
-          showSearch = false
-          searchInput = ''
-        "
-      >
+      <button type="button" @click="closeSearch">
         <X :size="14" />
       </button>
     </div>

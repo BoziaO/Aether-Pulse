@@ -38,6 +38,16 @@ function hasReacted(reaction: { emoji: string; userIds: number[] }) {
 }
 
 const isImage = computed(() => props.message.attachmentMime?.startsWith('image/') ?? false)
+
+function hideActions() {
+  showActions.value = false
+  showReactionPicker.value = false
+}
+
+function selectReaction(emoji: string) {
+  emit('react', props.message.id, emoji)
+  showReactionPicker.value = false
+}
 </script>
 
 <template>
@@ -45,10 +55,7 @@ const isImage = computed(() => props.message.attachmentMime?.startsWith('image/'
     class="message"
     :class="{ own: isOwn, system: message.type === 'system' }"
     @mouseenter="showActions = true"
-    @mouseleave="
-      showActions = false
-      showReactionPicker = false
-    "
+    @mouseleave="hideActions"
     @dblclick="isOwn && !message.isDeleted && emit('edit', message)"
   >
     <div v-if="showAvatar !== false && message.type !== 'system'" class="message-avatar">
@@ -151,10 +158,7 @@ const isImage = computed(() => props.message.attachmentMime?.startsWith('image/'
         v-for="emoji in QUICK_REACTIONS"
         :key="emoji"
         type="button"
-        @click="
-          emit('react', message.id, emoji)
-          showReactionPicker = false
-        "
+        @click="selectReaction(emoji)"
       >
         {{ emoji }}
       </button>
