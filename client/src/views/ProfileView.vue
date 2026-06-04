@@ -50,6 +50,15 @@ const emptyUser: User = {
   profileTheme: null,
   customTheme: null,
   badges: [],
+  socialLinks: [],
+  timezone: null,
+  profilePrivacy: 'public',
+  showTimezone: true,
+  showLastSeen: true,
+  showProfileViews: true,
+  preferredTheme: null,
+  lastSeenAt: null,
+  profileViews: null,
   createdAt: new Date().toISOString(),
 }
 

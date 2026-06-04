@@ -25,6 +25,17 @@ export const usersTable = sqliteTable(
     profileTheme: text('profile_theme'),
     customTheme: text('custom_theme'),
     badges: text('badges').notNull().default('[]'), // Store as JSON string
+    socialLinks: text('social_links').notNull().default('[]'),
+    timezone: text('timezone'),
+    profilePrivacy: text('profile_privacy', { enum: ['public', 'friends', 'private'] })
+      .notNull()
+      .default('public'),
+    showTimezone: integer('show_timezone', { mode: 'boolean' }).notNull().default(true),
+    showLastSeen: integer('show_last_seen', { mode: 'boolean' }).notNull().default(true),
+    preferredTheme: text('preferred_theme'),
+    lastSeenAt: integer('last_seen_at', { mode: 'timestamp_ms' }),
+    profileViews: integer('profile_views').notNull().default(0),
+    showProfileViews: integer('show_profile_views', { mode: 'boolean' }).notNull().default(true),
     createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().defaultNow(),
     updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
       .notNull()

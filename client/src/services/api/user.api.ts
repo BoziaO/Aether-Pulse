@@ -1,7 +1,15 @@
 import { apiFetch } from './client'
 import type { User } from '@/types/user.types'
 
+export interface UserStats {
+  messageCount: number
+  friendCount: number
+  topReactions: { emoji: string; count: number }[]
+  activityByDay: { date: string; count: number }[]
+}
+
 export const userApi = {
+  getStats: (userId: number) => apiFetch<UserStats>(`/users/${userId}/stats`),
   update: (
     userId: number,
     data: Partial<
