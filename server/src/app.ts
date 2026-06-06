@@ -73,8 +73,8 @@ app.use(
   })
 )
 
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+app.use(express.json({ limit: '10mb' }))
+app.use(express.urlencoded({ limit: '10mb', extended: true }))
 app.use(cookieParser())
 
 // Rate limiting for API routes
@@ -124,7 +124,7 @@ app.use('/api/auth/', authLimiter)
 
 const uploadsDir = path.resolve(process.cwd(), 'uploads')
 fs.mkdirSync(uploadsDir, { recursive: true })
-app.use('/api/uploads', express.static(uploadsDir))
+app.use('/api/uploads', express.static(uploadsDir, { maxAge: '30d', immutable: true }))
 
 // Apply optional JWT to all API routes first
 app.use('/api', optionalJwtMiddleware)

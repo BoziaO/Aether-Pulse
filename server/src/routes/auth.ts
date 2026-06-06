@@ -2,7 +2,7 @@ import { Router, type IRouter } from 'express'
 import bcrypt from 'bcryptjs'
 import { eq } from 'drizzle-orm'
 import { db, usersTable } from '@workspace/db'
-import { RegisterBody, LoginBody, RefreshTokenBody } from '@workspace/api-zod'
+import { RegisterBody, LoginBody, RefreshBody } from '@workspace/api-zod'
 import { serializeUser } from '../utils/serialize-user'
 import { generateTokens, verifyRefreshToken, type JwtPayload } from '../middleware/auth'
 
@@ -105,7 +105,7 @@ router.get('/auth/me', async (req, res): Promise<void> => {
 
 // JWT token refresh endpoint
 router.post('/auth/refresh', async (req, res): Promise<void> => {
-  const parsed = RefreshTokenBody.safeParse(req.body)
+  const parsed = RefreshBody.safeParse(req.body)
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message })
     return

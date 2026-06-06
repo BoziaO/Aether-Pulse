@@ -65,6 +65,8 @@ export function serializeUser(
     status: canViewFull ? safe.status : ('offline' as const),
     customStatus: canViewFull ? (safe.customStatus ?? null) : null,
     accentColor: safe.accentColor ?? null,
+    primaryColor: safe.primaryColor ?? null,
+    displayNameStyle: safe.displayNameStyle ?? null,
     profileGradient: safe.profileGradient ?? null,
     avatarFrame: safe.avatarFrame ?? null,
     profileTheme: safe.profileTheme ?? null,

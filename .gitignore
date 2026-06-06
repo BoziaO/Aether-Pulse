@@ -2,11 +2,21 @@
 
 # compiled output
 dist
+dist-*
 tmp
 out-tsc
 *.tsbuildinfo
 .expo
 .expo-shared
+
+# Electron
+dist-electron
+*.exe
+*.dmg
+*.AppImage
+*.deb
+*.rpm
+*.zip
 
 # dependencies
 node_modules
@@ -20,6 +30,14 @@ node_modules
 *.launch
 .settings/
 *.sublime-workspace
+*.sublime-project
+*.swp
+*.swo
+*~
+.netvsrc
+.njsproj
+.sln
+.suo
 
 # IDE - VSCode
 .vscode/*
@@ -42,8 +60,13 @@ testem.log
 
 # System Files
 .DS_Store
+.DS_Store?
+._*
 Thumbs.db
+ehthumbs.db
+Desktop.ini
 
+# Cursor/Next.js
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 
@@ -56,6 +79,7 @@ Thumbs.db
 *.env
 .env.*
 !.env.example
+*.local
 
 # Turborepo
 .turbo
@@ -73,6 +97,14 @@ logs
 # Uploads
 uploads/
 .uploads/
+
+# Android / Capacitor
+client/android/app/build
+client/android/.gradle
+client/android/local.properties
+client/android/app/src/main/assets/public
+client/android/app/src/main/assets/capacitor.config.json
+client/android/app/src/main/assets/capacitor.plugins.json
 
 .agents/
 

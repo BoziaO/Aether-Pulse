@@ -32,6 +32,28 @@ function dmRoom(conversationId: string) {
   return `dm:${conversationId}`
 }
 
+async function emitDmEvent(req: any, conversationId: string, event: string, payload: any) {
+  try {
+    const io = req.app.get('io')
+    if (!io) return
+
+    // Emit to conversation room (for those who have it open)
+    io.to(dmRoom(conversationId)).emit(event, payload)
+
+    // Emit to user-specific channels of both participants
+    const participants = await db
+      .select()
+      .from(dmParticipantsTable)
+      .where(eq(dmParticipantsTable.conversationId, conversationId))
+
+    for (const p of participants) {
+      io.to(`user:${p.userId}`).emit(event, payload)
+    }
+  } catch (err) {
+    console.error('Error emitting DM event:', err)
+  }
+}
+
 router.get('/dms', async (req, res): Promise<void> => {
   const userId = requireAuth(req, res)
   if (!userId) return
@@ -174,7 +196,7 @@ router.post('/dms/:conversationId/messages', async (req, res): Promise<void> => 
 
   const payload = await buildDmMessagePayload(msg.id)
   if (payload) {
-    req.app.get('io')?.to(dmRoom(conversationId)).emit('new-dm-message', payload)
+    await emitDmEvent(req, conversationId, 'new-dm-message', payload)
   }
   res.status(201).json(payload)
 })
@@ -222,7 +244,7 @@ router.post('/dms/:conversationId/upload', async (req, res): Promise<void> => {
 
   const payload = await buildDmMessagePayload(msg.id)
   if (payload) {
-    req.app.get('io')?.to(dmRoom(conversationId)).emit('new-dm-message', payload)
+    await emitDmEvent(req, conversationId, 'new-dm-message', payload)
   }
   res.status(201).json(payload)
 })
@@ -271,7 +293,7 @@ router.patch('/dms/:conversationId/messages/:messageId', async (req, res): Promi
 
   const result = await buildDmMessagePayload(messageId)
   if (result) {
-    req.app.get('io')?.to(dmRoom(conversationId)).emit('dm-message-updated', result)
+    await emitDmEvent(req, conversationId, 'dm-message-updated', result)
   }
   res.json(result)
 })
@@ -310,7 +332,7 @@ router.delete('/dms/:conversationId/messages/:messageId', async (req, res): Prom
 
   const result = await buildDmMessagePayload(messageId)
   if (result) {
-    req.app.get('io')?.to(dmRoom(conversationId)).emit('dm-message-updated', result)
+    await emitDmEvent(req, conversationId, 'dm-message-updated', result)
   }
   res.json(result)
 })

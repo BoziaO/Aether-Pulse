@@ -6,31 +6,75 @@ services:
     ports:
       - '80:80'
     depends_on:
-      - server
+      server:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
 
   server:
     build:
       context: ..
       dockerfile: docker/server/Dockerfile
-    ports:
-      - '3000:3000'
+    # Note: Exposing port 3000 is not required since Nginx (client) proxies all /api requests internally.
+    # This secures the Node.js server from direct public internet scans.
     environment:
-      - DATABASE_URL=postgres://user:password@db:5432/aetherpulse
-      - SESSION_SECRET=your-secret
+      - DATABASE_URL=/app/data/sqlite.db
+      - SESSION_SECRET=your-32-chars-session-secret-change-this-for-production
+      - JWT_SECRET=your-super-jwt-secret-change-this-for-production
+      - REDIS_URL=redis://redis:6379
       - PORT=3000
-    depends_on:
-      - db
-
-  db:
-    image: postgres:15-alpine
-    environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=aetherpulse
-    ports:
-      - '5432:5432'
+      - NODE_ENV=production
+      - CLIENT_URL=http://localhost
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - db-data:/app/data
+      - uploads-data:/app/uploads
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
+    # Redis is only accessible internally within the docker network. No public ports exposed.
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
 
 volumes:
   db-data:
+    name: aetherpulse_db_data
+  uploads-data:
+    name: aetherpulse_uploads_data

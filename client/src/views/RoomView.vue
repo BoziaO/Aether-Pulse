@@ -5,6 +5,7 @@ import { Phone, ArrowLeft, Link2, Settings, Users } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth.store'
 import { useRoomStore } from '@/stores/room.store'
 import { useRtcStore } from '@/stores/rtc.store'
+import { useSettingsStore } from '@/stores/settings.store'
 
 // Lazy-loaded components for performance
 const VideoTile = defineAsyncComponent(() => import('@/components/call/VideoTile.vue'))
@@ -24,12 +25,14 @@ const router = useRouter()
 const auth = useAuthStore()
 const roomStore = useRoomStore()
 const rtc = useRtcStore()
+const settings = useSettingsStore()
 
 const showInvite = ref(false)
 const showSettings = ref(false)
 const showMembers = ref(true)
 const callError = ref('')
 const selectedUserId = ref<number | null>(null)
+const activeTab = ref<'voice' | 'chat'>('voice')
 
 const roomId = computed(() => route.params.roomId as string)
 const room = computed(() => roomStore.currentRoom)
@@ -81,7 +84,7 @@ function handleDeletedRoom() {
 
 <template>
   <div class="room-view">
-    <div class="room-main">
+    <div class="room-main" :class="{ 'mobile-hidden': activeTab !== 'voice' }">
       <div class="room-header">
         <button class="back-btn" @click="goBack">
           <ArrowLeft :size="16" />
@@ -94,13 +97,21 @@ function handleDeletedRoom() {
           <span v-if="inVoiceCount > 0" class="voice-badge">{{ inVoiceCount }} in voice</span>
         </div>
         <div class="room-actions">
-          <button class="btn-ghost header-btn" @click="showMembers = !showMembers">
+          <!-- Mobile tab toggle button -->
+          <button
+            class="btn-primary header-btn mobile-tab-btn"
+            @click="activeTab = activeTab === 'voice' ? 'chat' : 'voice'"
+          >
+            {{ activeTab === 'voice' ? 'Chat' : 'Voice' }}
+          </button>
+
+          <button class="btn-ghost header-btn desktop-only" @click="showMembers = !showMembers">
             <Users :size="14" />
           </button>
           <button class="btn-ghost header-btn" @click="showSettings = true">
             <Settings :size="14" />
           </button>
-          <button class="btn-ghost header-btn" @click="showInvite = true">
+          <button class="btn-ghost header-btn desktop-only" @click="showInvite = true">
             <Link2 :size="14" />
             Invite
           </button>
@@ -151,12 +162,14 @@ function handleDeletedRoom() {
       :room-id="roomId"
       :room-name="room?.name"
       :members="members"
+      :class="{ 'mobile-hidden': activeTab !== 'chat' }"
       @toggle-members="showMembers = !showMembers"
     />
 
     <MemberSidebar
       v-if="showMembers && members.length"
       :members="members"
+      class="desktop-only"
       @open-profile="openUserProfile"
     />
   </div>
@@ -275,6 +288,8 @@ function handleDeletedRoom() {
     rgba(139, 92, 246, 0.08) 0%,
     transparent 70%
   );
+  position: relative;
+  overflow: hidden;
 }
 .join-card {
   text-align: center;
@@ -283,6 +298,8 @@ function handleDeletedRoom() {
   border: 1px solid var(--border);
   border-radius: 20px;
   max-width: 420px;
+  position: relative;
+  z-index: 3;
 }
 .join-icon {
   font-size: 48px;
@@ -348,5 +365,42 @@ function handleDeletedRoom() {
   border-radius: 6px;
   padding: 8px 12px;
   margin-top: 8px;
+}
+
+/* Responsiveness overrides */
+.mobile-tab-btn {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .mobile-tab-btn {
+    display: inline-flex !important;
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+
+  .desktop-only {
+    display: none !important;
+  }
+
+  .mobile-hidden {
+    display: none !important;
+  }
+
+  .room-view {
+    flex-direction: column;
+  }
+
+  :deep(.chat-panel) {
+    width: 100% !important;
+    min-width: 100% !important;
+    border-left: none !important;
+    flex: 1 !important;
+  }
+
+  .join-card {
+    padding: 24px !important;
+    margin: 16px;
+  }
 }
 </style>

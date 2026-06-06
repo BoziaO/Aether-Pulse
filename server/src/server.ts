@@ -401,11 +401,16 @@ io.on('connection', (socket) => {
       return
     }
     try {
-      await db
+      const [updated] = await db
         .update(usersTable)
         .set({ status: status as any })
         .where(eq(usersTable.id, userId))
-      socket.broadcast.emit('user-status-changed', { userId, status })
+        .returning()
+      if (updated) {
+        const serialized = serializeUser(updated, { viewerId: userId })
+        socket.broadcast.emit('user-status-changed', { userId, status })
+        io.emit('user-profile-updated', serialized)
+      }
     } catch (e) {
       logger.error({ err: e, userId }, 'Error updating status')
     }

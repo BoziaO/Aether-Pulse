@@ -81,12 +81,23 @@ function selectReaction(emoji: string) {
         <button
           v-if="message.user?.id"
           class="author-btn"
+          :class="
+            message.user?.displayNameStyle ? `name-style-${message.user.displayNameStyle}` : ''
+          "
           type="button"
           @click="emit('open-profile', message.user!.id)"
         >
           {{ displayName }}
         </button>
-        <span v-else class="message-author">{{ displayName }}</span>
+        <span
+          v-else
+          class="message-author"
+          :class="
+            message.user?.displayNameStyle ? `name-style-${message.user.displayNameStyle}` : ''
+          "
+        >
+          {{ displayName }}
+        </span>
         <span class="message-time">{{ formatTime(message.createdAt) }}</span>
         <span v-if="message.editedAt" class="edited-tag">edited</span>
       </div>

@@ -3,35 +3,17 @@ import { ref, watch } from 'vue'
 import { spatialAudio } from '@/services/rtc/spatial-audio'
 import { useAuthStore } from './auth.store'
 
-export type ThemeMode =
-  | 'dark'
-  | 'light'
-  | 'nord'
-  | 'dracula'
-  | 'solarized-dark'
-  | 'cyberpunk'
-  | 'monokai'
-  | 'maximalism-beauty'
-  | 'minimalism-pixel'
+export type ThemeMode = 'dark' | 'light' | 'mistral' | 'apple-music' | 'neon-cyber' | 'sakura'
+
+export type LayoutMode = 'maximalist' | 'minimalist'
 
 export const AVAILABLE_THEMES: Array<{ id: ThemeMode; name: string; colors: string[] }> = [
   { id: 'dark', name: 'Dark (Default)', colors: ['#070a13', '#8b5cf6', '#e2e8f0'] },
   { id: 'light', name: 'Light', colors: ['#f6f7fb', '#6d28d9', '#0f172a'] },
-  { id: 'nord', name: 'Nord', colors: ['#2e3440', '#b48ead', '#eceff4'] },
-  { id: 'dracula', name: 'Dracula', colors: ['#282a36', '#bd93f9', '#f8f8f2'] },
-  { id: 'solarized-dark', name: 'Solarized Dark', colors: ['#002b36', '#6c71c4', '#fdf6e3'] },
-  { id: 'cyberpunk', name: 'Cyberpunk', colors: ['#0a0a12', '#ff00ff', '#f0f0ff'] },
-  { id: 'monokai', name: 'Monokai', colors: ['#272822', '#ae81ff', '#f8f8f2'] },
-  {
-    id: 'maximalism-beauty',
-    name: 'Maximalism Beauty ✨',
-    colors: ['#0c061d', '#d946ef', '#00ffff'],
-  },
-  {
-    id: 'minimalism-pixel',
-    name: 'Minimalism Pixel 👾',
-    colors: ['#080c08', '#39ff14', '#ffffff'],
-  },
+  { id: 'mistral', name: 'Mistral AI', colors: ['#111111', '#ff5a1f', '#f5f5f7'] },
+  { id: 'apple-music', name: 'Apple Music', colors: ['#0d0d0d', '#fa2356', '#ffffff'] },
+  { id: 'neon-cyber', name: 'Neon Cyber', colors: ['#05050d', '#00f0ff', '#ff007f'] },
+  { id: 'sakura', name: 'Midnight Sakura', colors: ['#0f0913', '#ff75a0', '#a5f3fc'] },
 ]
 
 const VALID_THEMES = new Set<ThemeMode>(AVAILABLE_THEMES.map((t) => t.id))
@@ -43,7 +25,22 @@ function readStoredTheme(): ThemeMode {
 
 export const useSettingsStore = defineStore('settings', () => {
   const theme = ref<ThemeMode>(readStoredTheme())
+  const mobileSidebarOpen = ref(false)
+  const layout = ref<LayoutMode>((localStorage.getItem('layout') as LayoutMode) || 'maximalist')
   const spatialAudioEnabled = ref(false)
+  const spatialAudioDistance = ref<number>(
+    localStorage.getItem('spatialAudioDistance')
+      ? Number(localStorage.getItem('spatialAudioDistance'))
+      : 5
+  )
+  const spatialAudioDirectionMode = ref<'alternating' | 'left' | 'right' | 'center'>(
+    (localStorage.getItem('spatialAudioDirectionMode') as any) || 'alternating'
+  )
+  const spatialAudioSpreadAngle = ref<number>(
+    localStorage.getItem('spatialAudioSpreadAngle')
+      ? Number(localStorage.getItem('spatialAudioSpreadAngle'))
+      : 45
+  )
   const inputVolume = ref(100)
   const outputVolume = ref(100)
   const noiseSuppressionEnabled = ref(localStorage.getItem('noiseSuppression') !== 'false')
@@ -87,6 +84,39 @@ export const useSettingsStore = defineStore('settings', () => {
   )
 
   watch(
+    layout,
+    (v) => {
+      localStorage.setItem('layout', v)
+      document.documentElement.dataset.layout = v
+    },
+    { immediate: true }
+  )
+
+  watch(
+    spatialAudioDistance,
+    (v) => {
+      localStorage.setItem('spatialAudioDistance', String(v))
+    },
+    { immediate: true }
+  )
+
+  watch(
+    spatialAudioDirectionMode,
+    (v) => {
+      localStorage.setItem('spatialAudioDirectionMode', v)
+    },
+    { immediate: true }
+  )
+
+  watch(
+    spatialAudioSpreadAngle,
+    (v) => {
+      localStorage.setItem('spatialAudioSpreadAngle', String(v))
+    },
+    { immediate: true }
+  )
+
+  watch(
     outputVolume,
     (v) => {
       if (spatialAudio.enabled) spatialAudio.setOutputVolume(v)
@@ -122,9 +152,13 @@ export const useSettingsStore = defineStore('settings', () => {
 
   return {
     theme,
+    layout,
     AVAILABLE_THEMES,
     VALID_THEMES,
     spatialAudioEnabled,
+    spatialAudioDistance,
+    spatialAudioDirectionMode,
+    spatialAudioSpreadAngle,
     inputVolume,
     outputVolume,
     noiseSuppressionEnabled,
@@ -133,5 +167,6 @@ export const useSettingsStore = defineStore('settings', () => {
     setTheme,
     applyUserTheme,
     toggleSpatialAudio,
+    mobileSidebarOpen,
   }
 })

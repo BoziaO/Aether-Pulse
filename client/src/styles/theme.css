@@ -47,375 +47,214 @@
   --glass-border: rgba(15, 23, 42, 0.08);
 }
 
-:root[data-theme='nord'] {
-  --bg-primary: #2e3440;
-  --bg-secondary: #3b4252;
-  --bg-surface: #434c5e;
-  --bg-surface-2: #4c566a;
-  --bg-hover: #525d70;
-  --accent-violet: #b48ead;
-  --accent-blue: #81a1c1;
-  --accent-teal: #88c0d0;
-  --text-primary: #eceff4;
-  --text-secondary: #d8dee9;
-  --text-muted: #a3b1c6;
-  --border: rgba(236, 239, 244, 0.08);
-  --border-accent: rgba(180, 142, 173, 0.35);
+/* Mistral AI theme */
+:root[data-theme='mistral'] {
+  --bg-primary: #111216;
+  --bg-secondary: #18191e;
+  --bg-surface: #1f2128;
+  --bg-surface-2: #2b2d35;
+  --bg-hover: rgba(255, 90, 31, 0.12);
+
+  --accent-violet: #ff5a1f;
+  --accent-blue: #ff6f33;
+  --accent-teal: #e5e7eb;
+
+  --text-primary: #f5f5f7;
+  --text-secondary: #a1a1aa;
+  --text-muted: #52525b;
+
+  --border: rgba(255, 90, 31, 0.15);
+  --border-accent: rgba(255, 90, 31, 0.45);
+
+  --glass: rgba(24, 25, 30, 0.35);
+  --glass-border: rgba(255, 90, 31, 0.15);
 }
 
-:root[data-theme='dracula'] {
-  --bg-primary: #282a36;
-  --bg-secondary: #21222c;
-  --bg-surface: #343746;
-  --bg-surface-2: #3a3d4f;
-  --bg-hover: #44475a;
-  --accent-violet: #bd93f9;
-  --accent-blue: #8be9fd;
-  --accent-teal: #50fa7b;
-  --text-primary: #f8f8f2;
-  --text-secondary: #cfcfd6;
-  --text-muted: #9aa0b5;
-  --border: rgba(248, 248, 242, 0.08);
-  --border-accent: rgba(189, 147, 249, 0.35);
-}
+/* Apple Music theme */
+:root[data-theme='apple-music'] {
+  --bg-primary: #060608;
+  --bg-secondary: #0f0f12;
+  --bg-surface: #16161c;
+  --bg-surface-2: #22222a;
+  --bg-hover: rgba(250, 35, 86, 0.15);
 
-:root[data-theme='solarized-dark'] {
-  --bg-primary: #002b36;
-  --bg-secondary: #073642;
-  --bg-surface: #0a3942;
-  --bg-surface-2: #0f424d;
-  --bg-hover: #124b57;
-  --accent-violet: #6c71c4;
-  --accent-blue: #268bd2;
-  --accent-teal: #2aa198;
-  --text-primary: #fdf6e3;
-  --text-secondary: #cbd5cf;
-  --text-muted: #839496;
-  --border: rgba(253, 246, 227, 0.08);
-  --border-accent: rgba(108, 113, 196, 0.35);
-}
-
-:root[data-theme='cyberpunk'] {
-  --bg-primary: #0a0a12;
-  --bg-secondary: #12121f;
-  --bg-surface: #18182a;
-  --bg-surface-2: #1f1f35;
-  --bg-hover: #262640;
-  --accent-violet: #ff00ff;
-  --accent-blue: #00ffff;
-  --accent-teal: #00ff9f;
-  --text-primary: #f0f0ff;
-  --text-secondary: #b8b8d9;
-  --text-muted: #6b6b8a;
-  --border: rgba(255, 0, 255, 0.12);
-  --border-accent: rgba(0, 255, 255, 0.35);
-}
-
-:root[data-theme='monokai'] {
-  --bg-primary: #272822;
-  --bg-secondary: #1e1f1a;
-  --bg-surface: #2d2e27;
-  --bg-surface-2: #383932;
-  --bg-hover: #41423a;
-  --accent-violet: #ae81ff;
-  --accent-blue: #66d9ef;
-  --accent-teal: #a6e22e;
-  --text-primary: #f8f8f2;
-  --text-secondary: #cfcfc7;
-  --text-muted: #8f908a;
-  --border: rgba(248, 248, 242, 0.08);
-  --border-accent: rgba(174, 129, 255, 0.35);
-}
-
-/* ==========================================================================
-   MAXIMALISM BEAUTY THEME (glowing glassmorphism, floating layouts, gradient flows)
-   ========================================================================== */
-:root[data-theme='maximalism-beauty'] {
-  --bg-primary: #060212;
-  --bg-secondary: rgba(20, 10, 42, 0.5);
-  --bg-surface: rgba(32, 14, 66, 0.45);
-  --bg-surface-2: rgba(48, 22, 98, 0.55);
-  --bg-hover: rgba(217, 70, 239, 0.22);
-
-  --accent-violet: #d946ef;
-  --accent-blue: #3b82f6;
-  --accent-teal: #00ffff;
+  --accent-violet: #fa2356;
+  --accent-blue: #fc3c70;
+  --accent-teal: #00f0ff;
 
   --text-primary: #ffffff;
-  --text-secondary: #f472b6;
-  --text-muted: #a21caf;
+  --text-secondary: #9ca3af;
+  --text-muted: #4b5563;
 
-  --border: rgba(217, 70, 239, 0.18);
-  --border-accent: rgba(0, 255, 255, 0.45);
+  --border: rgba(250, 35, 86, 0.15);
+  --border-accent: rgba(250, 35, 86, 0.45);
 
-  --glass: rgba(255, 255, 255, 0.04);
-  --glass-border: rgba(217, 70, 239, 0.25);
+  --glass: rgba(15, 15, 18, 0.35);
+  --glass-border: rgba(250, 35, 86, 0.15);
 }
 
-/* Maximalism Theme Overrides */
-:root[data-theme='maximalism-beauty'] body {
-  background: radial-gradient(circle at center, #150a30 0%, #03010b 100%) !important;
-  background-size: 200% 200%;
-  animation: beautyGradientFlow 15s ease infinite;
+/* Neon Cyber theme */
+:root[data-theme='neon-cyber'] {
+  --bg-primary: #04040d;
+  --bg-secondary: #090916;
+  --bg-surface: #0f0f22;
+  --bg-surface-2: #171736;
+  --bg-hover: rgba(0, 240, 255, 0.12);
+
+  --accent-violet: #ff007f;
+  --accent-blue: #00f0ff;
+  --accent-teal: #9d4edd;
+
+  --text-primary: #ffffff;
+  --text-secondary: #a5b4fc;
+  --text-muted: #4f46e5;
+
+  --border: rgba(0, 240, 255, 0.15);
+  --border-accent: rgba(255, 0, 127, 0.45);
+
+  --glass: rgba(9, 9, 22, 0.35);
+  --glass-border: rgba(0, 240, 255, 0.15);
 }
 
-@keyframes beautyGradientFlow {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
+/* Midnight Sakura theme */
+:root[data-theme='sakura'] {
+  --bg-primary: #0c0810;
+  --bg-secondary: #130d19;
+  --bg-surface: #1b1424;
+  --bg-surface-2: #271c36;
+  --bg-hover: rgba(255, 117, 160, 0.12);
 
-:root[data-theme='maximalism-beauty'] .card,
-:root[data-theme='maximalism-beauty'] .settings-nav,
-:root[data-theme='maximalism-beauty'] .settings-content,
-:root[data-theme='maximalism-beauty'] .sidebar,
-:root[data-theme='maximalism-beauty'] .chat-panel,
-:root[data-theme='maximalism-beauty'] .room-view,
-:root[data-theme='maximalism-beauty'] .home-view,
-:root[data-theme='maximalism-beauty'] .user-profile-modal,
-:root[data-theme='maximalism-beauty'] .modal-content,
-:root[data-theme='maximalism-beauty'] .dm-view {
-  border-radius: 20px !important;
-  backdrop-filter: blur(25px) !important;
-  -webkit-backdrop-filter: blur(25px) !important;
-  box-shadow:
-    0 10px 40px 0 rgba(217, 70, 239, 0.16),
-    inset 0 0 12px rgba(255, 255, 255, 0.05) !important;
-  border: 1.5px solid rgba(217, 70, 239, 0.25) !important;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
-}
+  --accent-violet: #ff75a0;
+  --accent-blue: #f43f5e;
+  --accent-teal: #a5f3fc;
 
-:root[data-theme='maximalism-beauty'] .btn-primary {
-  background: linear-gradient(135deg, #ec4899, #8b5cf6, #06b6d4) !important;
-  box-shadow: 0 0 15px rgba(217, 70, 239, 0.45) !important;
-  border-radius: 14px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.5px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
-}
+  --text-primary: #fff1f2;
+  --text-secondary: #fda4af;
+  --text-muted: #881337;
 
-:root[data-theme='maximalism-beauty'] .btn-primary:hover {
-  transform: translateY(-3px) scale(1.04) !important;
-  box-shadow:
-    0 0 25px rgba(0, 255, 255, 0.75),
-    0 0 10px rgba(217, 70, 239, 0.5) !important;
-}
+  --border: rgba(255, 117, 160, 0.15);
+  --border-accent: rgba(255, 117, 160, 0.45);
 
-:root[data-theme='maximalism-beauty'] .btn-ghost {
-  border-radius: 12px !important;
-  color: var(--text-secondary) !important;
-}
-
-:root[data-theme='maximalism-beauty'] .btn-ghost:hover {
-  background: rgba(217, 70, 239, 0.15) !important;
-  color: #ffffff !important;
-}
-
-:root[data-theme='maximalism-beauty'] .input {
-  border-radius: 12px !important;
-  border: 1px solid rgba(217, 70, 239, 0.3) !important;
-  background: rgba(13, 8, 30, 0.7) !important;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
-  transition: all 0.2s ease !important;
-}
-
-:root[data-theme='maximalism-beauty'] .input:focus {
-  border-color: var(--accent-teal) !important;
-  box-shadow: 0 0 12px rgba(0, 255, 255, 0.4) !important;
-}
-
-:root[data-theme='maximalism-beauty'] .avatar {
-  border: 2.5px solid rgba(217, 70, 239, 0.5) !important;
-  box-shadow: 0 0 10px rgba(217, 70, 239, 0.3) !important;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-:root[data-theme='maximalism-beauty'] .avatar:hover {
-  transform: scale(1.1) rotate(5deg);
-  box-shadow: 0 0 18px rgba(0, 255, 255, 0.6) !important;
-  border-color: var(--accent-teal) !important;
-}
-
-:root[data-theme='maximalism-beauty'] .status-dot.online {
-  box-shadow:
-    0 0 8px #23a55a,
-    0 0 15px #23a55a !important;
-  animation: pulseNeonGreen 2s infinite alternate;
-}
-
-@keyframes pulseNeonGreen {
-  0% {
-    box-shadow:
-      0 0 4px #23a55a,
-      0 0 8px #23a55a;
-  }
-  100% {
-    box-shadow:
-      0 0 12px #23a55a,
-      0 0 20px #39ff14;
-  }
-}
-
-:root[data-theme='maximalism-beauty'] h1,
-:root[data-theme='maximalism-beauty'] h2,
-:root[data-theme='maximalism-beauty'] h3,
-:root[data-theme='maximalism-beauty'] .nav-label {
-  background: linear-gradient(135deg, #ff00af, #00ffff) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  text-shadow: 0 0 15px rgba(217, 70, 239, 0.15) !important;
-  font-weight: 800 !important;
+  --glass: rgba(19, 13, 25, 0.35);
+  --glass-border: rgba(255, 117, 160, 0.15);
 }
 
 /* ==========================================================================
-   MINIMALISM PIXEL THEME (retro game monospace console aesthetics)
+   GLASSMORPHIC GLOBAL DASHBOARD LAYOUT & CARD STYLING
    ========================================================================== */
-:root[data-theme='minimalism-pixel'] {
-  --bg-primary: #030503;
-  --bg-secondary: #000000;
-  --bg-surface: #070a07;
-  --bg-surface-2: #0b0f0b;
-  --bg-hover: rgba(57, 255, 20, 0.18);
+.app-layout {
+  --bg-primary: transparent !important;
+  --bg-secondary: rgba(13, 16, 23, 0.45) !important;
+  --bg-surface: rgba(20, 24, 32, 0.55) !important;
+  --bg-surface-2: rgba(26, 32, 48, 0.65) !important;
+  --bg-hover: rgba(255, 255, 255, 0.06) !important;
+  --border: rgba(255, 255, 255, 0.05) !important;
 
-  --accent-violet: #39ff14;
-  --accent-blue: #39ff14;
-  --accent-teal: #39ff14;
-
-  --text-primary: #39ff14;
-  --text-secondary: #7aff7a;
-  --text-muted: #165010;
-
-  --border: #39ff14;
-  --border-accent: #39ff14;
-
-  --glass: #000000;
-  --glass-border: #39ff14;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: stretch !important;
+  height: 100vh !important;
+  width: 100vw !important;
+  padding: 12px;
+  gap: 12px;
+  background: radial-gradient(circle at 50% 50%, #0a0c16, #03040a);
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box !important;
 }
 
-/* Minimalism Pixel Overrides */
-:root[data-theme='minimalism-pixel'] * {
-  font-family: 'Courier New', Courier, monospace !important;
-  border-radius: 0px !important;
-  text-transform: uppercase !important;
-  image-rendering: pixelated !important;
-  letter-spacing: 0.5px;
+/* Light mode overrides inside app layout context */
+:root[data-theme='light'] .app-layout {
+  --bg-primary: transparent !important;
+  --bg-secondary: rgba(255, 255, 255, 0.45) !important;
+  --bg-surface: rgba(255, 255, 255, 0.65) !important;
+  --bg-surface-2: rgba(241, 243, 249, 0.75) !important;
+  --bg-hover: rgba(15, 23, 42, 0.05) !important;
+  --border: rgba(15, 23, 42, 0.06) !important;
+
+  background: radial-gradient(circle at 50% 50%, #f3f5fa, #e4e8f1);
 }
 
-:root[data-theme='minimalism-pixel'] .card,
-:root[data-theme='minimalism-pixel'] .settings-nav,
-:root[data-theme='minimalism-pixel'] .settings-content,
-:root[data-theme='minimalism-pixel'] .sidebar,
-:root[data-theme='minimalism-pixel'] .chat-panel,
-:root[data-theme='minimalism-pixel'] .room-view,
-:root[data-theme='minimalism-pixel'] .home-view,
-:root[data-theme='minimalism-pixel'] .user-profile-modal,
-:root[data-theme='minimalism-pixel'] .modal-content,
-:root[data-theme='minimalism-pixel'] .dm-view {
-  border: 3px double #39ff14 !important;
-  box-shadow:
-    5px 5px 0px #000000,
-    5px 5px 0px 1px #39ff14 !important;
-  background: #000000 !important;
-  border-radius: 0px !important;
-  margin: 4px;
+/* Mistral AI mode overrides inside app layout context */
+:root[data-theme='mistral'] .app-layout {
+  --bg-primary: transparent !important;
+  --bg-secondary: rgba(24, 25, 30, 0.45) !important;
+  --bg-surface: rgba(31, 33, 40, 0.55) !important;
+  --bg-surface-2: rgba(43, 45, 53, 0.65) !important;
+  --bg-hover: rgba(255, 90, 31, 0.08) !important;
+  --border: rgba(255, 90, 31, 0.12) !important;
+
+  background: radial-gradient(circle at 50% 50%, #1a1a24, #0d0d12);
 }
 
-:root[data-theme='minimalism-pixel'] .btn-primary {
-  background: #000000 !important;
-  color: #39ff14 !important;
-  border: 2px solid #39ff14 !important;
-  box-shadow: 4px 4px 0px #39ff14 !important;
-  font-weight: 900 !important;
-  border-radius: 0px !important;
-  text-transform: uppercase !important;
-  transition: all 0.1s steps(4) !important;
+/* Apple Music mode overrides inside app layout context */
+:root[data-theme='apple-music'] .app-layout {
+  --bg-primary: transparent !important;
+  --bg-secondary: rgba(15, 15, 18, 0.45) !important;
+  --bg-surface: rgba(22, 22, 28, 0.55) !important;
+  --bg-surface-2: rgba(34, 34, 42, 0.65) !important;
+  --bg-hover: rgba(250, 35, 86, 0.08) !important;
+  --border: rgba(250, 35, 86, 0.12) !important;
+
+  background: radial-gradient(circle at 50% 50%, #1e0912, #050205);
 }
 
-:root[data-theme='minimalism-pixel'] .btn-primary:hover {
-  background: #39ff14 !important;
-  color: #000000 !important;
-  box-shadow: 2px 2px 0px #000000 !important;
-  transform: translate(2px, 2px) !important;
+/* Neon Cyber mode overrides inside app layout context */
+:root[data-theme='neon-cyber'] .app-layout {
+  --bg-primary: transparent !important;
+  --bg-secondary: rgba(9, 9, 22, 0.45) !important;
+  --bg-surface: rgba(15, 15, 34, 0.55) !important;
+  --bg-surface-2: rgba(23, 23, 54, 0.65) !important;
+  --bg-hover: rgba(0, 240, 255, 0.08) !important;
+  --border: rgba(0, 240, 255, 0.12) !important;
+
+  background: radial-gradient(circle at 50% 50%, #0d061f, #020107);
 }
 
-:root[data-theme='minimalism-pixel'] .btn-primary:active {
-  box-shadow: none !important;
-  transform: translate(4px, 4px) !important;
+/* Midnight Sakura mode overrides inside app layout context */
+:root[data-theme='sakura'] .app-layout {
+  --bg-primary: transparent !important;
+  --bg-secondary: rgba(19, 13, 25, 0.45) !important;
+  --bg-surface: rgba(27, 20, 36, 0.55) !important;
+  --bg-surface-2: rgba(39, 28, 54, 0.65) !important;
+  --bg-hover: rgba(255, 117, 160, 0.08) !important;
+  --border: rgba(255, 117, 160, 0.12) !important;
+
+  background: radial-gradient(circle at 50% 50%, #1e111d, #080308);
 }
 
-:root[data-theme='minimalism-pixel'] .btn-ghost {
-  border-radius: 0px !important;
-  border: 1px dashed transparent !important;
-  color: #39ff14 !important;
+/* Float both main views as glass panels */
+.sidebar,
+.app-main {
+  position: relative;
+  z-index: 2;
+  height: 100% !important;
+  backdrop-filter: blur(25px) !important;
+  -webkit-backdrop-filter: blur(25px) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.22) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  box-sizing: border-box !important;
 }
 
-:root[data-theme='minimalism-pixel'] .btn-ghost:hover {
-  background: #000000 !important;
-  border-color: #39ff14 !important;
-  box-shadow: 2px 2px 0px #39ff14 !important;
-  transform: translate(-2px, -2px);
+.app-main {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
 }
 
-:root[data-theme='minimalism-pixel'] .input {
-  border: 2px solid #39ff14 !important;
-  background: #000000 !important;
-  color: #39ff14 !important;
-  box-shadow:
-    3px 3px 0px #000000,
-    inset 1px 1px 3px rgba(57, 255, 20, 0.15) !important;
-  border-radius: 0px !important;
+/* Prevent double-border collisions on sidebars */
+.sidebar {
+  border-right: 1px solid var(--border) !important;
 }
 
-:root[data-theme='minimalism-pixel'] .input:focus {
-  background: #050a05 !important;
-  box-shadow: 3px 3px 0px #39ff14 !important;
-  outline: none !important;
-}
-
-:root[data-theme='minimalism-pixel'] .avatar {
-  border-radius: 0px !important;
-  border: 2px solid #39ff14 !important;
-  background: #000000 !important;
-  box-shadow: 3px 3px 0px #000000 !important;
-}
-
-:root[data-theme='minimalism-pixel'] .status-dot {
-  border-radius: 0px !important;
-  border: 1px solid #000000 !important;
-  width: 12px !important;
-  height: 12px !important;
-}
-
-:root[data-theme='minimalism-pixel'] .status-dot.online {
-  background: #39ff14 !important;
-}
-
-:root[data-theme='minimalism-pixel'] .status-dot.away {
-  background: #ffff00 !important;
-}
-
-:root[data-theme='minimalism-pixel'] .status-dot.busy {
-  background: #ff0000 !important;
-}
-
-:root[data-theme='minimalism-pixel'] .status-dot.offline {
-  background: #444444 !important;
-}
-
-:root[data-theme='minimalism-pixel'] h1,
-:root[data-theme='minimalism-pixel'] h2,
-:root[data-theme='minimalism-pixel'] h3 {
-  border-bottom: 2px dashed #39ff14 !important;
-  padding-bottom: 4px;
-  color: #39ff14 !important;
-  font-weight: bold !important;
+/* Elevate hover effect on active card focus */
+.sidebar:hover,
+.app-main:hover {
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3) !important;
 }
 
 /* ==========================================================================
@@ -533,4 +372,299 @@
   color: #000000 !important;
   font-weight: bold !important;
   border-radius: 2px !important;
+}
+
+/* ==========================================================================
+   DISPLAY NAME EFFECTS
+   ========================================================================== */
+
+/* Glow Effect */
+.name-style-glow {
+  color: #fff !important;
+  text-shadow:
+    0 0 4px #8b5cf6,
+    0 0 10px #8b5cf6,
+    0 0 18px #d946ef !important;
+  animation: glow-pulse-animation 1.5s infinite alternate ease-in-out;
+  font-weight: 700;
+}
+
+@keyframes glow-pulse-animation {
+  from {
+    text-shadow:
+      0 0 4px #8b5cf6,
+      0 0 10px #8b5cf6,
+      0 0 18px #d946ef;
+  }
+  to {
+    text-shadow:
+      0 0 6px #8b5cf6,
+      0 0 16px #c084fc,
+      0 0 28px #d946ef;
+  }
+}
+
+/* Rainbow Effect */
+.name-style-rainbow {
+  background: linear-gradient(
+    to right,
+    #ff007f,
+    #ff7300,
+    #ffeb3b,
+    #00ff9f,
+    #00f2fe,
+    #d946ef,
+    #ff007f
+  );
+  background-size: 400% auto;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  animation: rainbow-shift-animation 6s linear infinite;
+  font-weight: 800;
+}
+
+@keyframes rainbow-shift-animation {
+  to {
+    background-position: 400% center;
+  }
+}
+
+/* Hacker Effect */
+.name-style-hacker {
+  color: #39ff14 !important;
+  font-family: 'Courier New', Courier, monospace !important;
+  font-weight: 700;
+  text-shadow:
+    0 0 2px rgba(57, 255, 20, 0.4),
+    0 0 8px rgba(57, 255, 20, 0.8) !important;
+  letter-spacing: 1px;
+}
+
+/* Glitch Effect */
+.name-style-glitch {
+  position: relative;
+  color: #fff !important;
+  font-weight: 800;
+  text-shadow:
+    0.05em 0 0 #ff00ff,
+    -0.025em -0.05em 0 #00ffff,
+    0.025em 0.05em 0 #ffff00 !important;
+  animation: glitch-animation 1s infinite;
+}
+
+@keyframes glitch-animation {
+  0% {
+    text-shadow:
+      0.05em 0 0 #ff00ff,
+      -0.025em -0.05em 0 #00ffff,
+      0.025em 0.05em 0 #ffff00;
+  }
+  14% {
+    text-shadow:
+      0.05em 0 0 #ff00ff,
+      -0.025em -0.05em 0 #00ffff,
+      0.025em 0.05em 0 #ffff00;
+  }
+  15% {
+    text-shadow:
+      -0.05em -0.025em 0 #ff00ff,
+      0.025em 0.025em 0 #00ffff,
+      -0.05em -0.05em 0 #ffff00;
+  }
+  49% {
+    text-shadow:
+      -0.05em -0.025em 0 #ff00ff,
+      0.025em 0.025em 0 #00ffff,
+      -0.05em -0.05em 0 #ffff00;
+  }
+  50% {
+    text-shadow:
+      0.025em 0.05em 0 #ff00ff,
+      0.05em 0 0 #00ffff,
+      0 -0.05em 0 #ffff00;
+  }
+  99% {
+    text-shadow:
+      0.025em 0.05em 0 #ff00ff,
+      0.05em 0 0 #00ffff,
+      0 -0.05em 0 #ffff00;
+  }
+  100% {
+    text-shadow:
+      -0.025em 0 0 #ff00ff,
+      -0.025em -0.025em 0 #00ffff,
+      -0.025em -0.05em 0 #ffff00;
+  }
+}
+
+/* Sparkle Effect */
+.name-style-sparkle {
+  background: linear-gradient(135deg, #fce882 0%, #f7c844 50%, #b8860b 100%);
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  font-weight: 800;
+  filter: drop-shadow(0 0 2px rgba(252, 232, 130, 0.5)) !important;
+  animation: sparkle-glow-animation 3s ease-in-out infinite alternate;
+}
+
+@keyframes sparkle-glow-animation {
+  0% {
+    filter: drop-shadow(0 0 2px rgba(252, 232, 130, 0.3));
+  }
+  100% {
+    filter: drop-shadow(0 0 6px rgba(252, 232, 130, 0.9));
+  }
+}
+
+/* ==========================================================================
+   MINIMALIST LAYOUT OVERRIDES
+   ========================================================================== */
+[data-layout='minimalist'] .sidebar {
+  width: 175px !important;
+  min-width: 175px !important;
+}
+
+[data-layout='minimalist'] .sidebar-brand {
+  font-size: 13px !important;
+}
+
+[data-layout='minimalist'] .sidebar-header {
+  padding: 10px 10px 8px !important;
+  gap: 6px !important;
+}
+
+[data-layout='minimalist'] .sidebar-logo {
+  width: 22px !important;
+  height: 22px !important;
+}
+
+[data-layout='minimalist'] .sidebar-section-label {
+  padding: 10px 10px 4px !important;
+  font-size: 9px !important;
+}
+
+[data-layout='minimalist'] .sidebar-dms,
+[data-layout='minimalist'] .sidebar-rooms {
+  padding: 0 4px !important;
+}
+
+[data-layout='minimalist'] .room-item {
+  padding: 4px 8px !important;
+  gap: 6px !important;
+  border-radius: 6px !important;
+  font-size: 12.5px !important;
+}
+
+[data-layout='minimalist'] .dm-preview {
+  display: none !important;
+}
+
+[data-layout='minimalist'] .sidebar-user {
+  padding: 6px 8px !important;
+  gap: 6px !important;
+}
+
+[data-layout='minimalist'] .user-status {
+  display: none !important;
+}
+
+[data-layout='minimalist'] .user-name {
+  font-size: 12px !important;
+}
+
+[data-layout='minimalist'] .user-actions {
+  gap: 0px !important;
+}
+
+[data-layout='minimalist'] .icon-btn {
+  padding: 4px !important;
+}
+
+[data-layout='minimalist'] .sidebar-user .avatar,
+[data-layout='minimalist'] .user-info .avatar {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+[data-layout='minimalist'] .chat-panel,
+[data-layout='minimalist'] .chat-messages {
+  padding: 8px !important;
+}
+
+[data-layout='minimalist'] .message-item {
+  padding: 4px 8px !important;
+  margin-bottom: 4px !important;
+}
+
+[data-layout='minimalist'] .message-avatar {
+  width: 28px !important;
+  height: 28px !important;
+}
+
+[data-layout='minimalist'] .message-content {
+  font-size: 13px !important;
+}
+
+[data-layout='minimalist'] .home-view,
+[data-layout='minimalist'] .room-view,
+[data-layout='minimalist'] .settings-content {
+  padding: 16px !important;
+  gap: 16px !important;
+}
+
+[data-layout='minimalist'] .rooms-grid {
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+}
+
+[data-layout='minimalist'] .home-header {
+  gap: 8px !important;
+}
+
+[data-layout='minimalist'] .greeting h1 {
+  font-size: 18px !important;
+}
+
+[data-layout='minimalist'] .greeting p {
+  font-size: 12px !important;
+}
+
+[data-layout='minimalist'] .features-bar {
+  padding: 8px 12px !important;
+  gap: 12px !important;
+}
+
+/* ==========================================================================
+   MOBILE & RESPONSIVE LAYOUT OVERRIDES
+   ========================================================================== */
+@media (max-width: 767px) {
+  .app-layout {
+    padding: 0 !important;
+    gap: 0 !important;
+    flex-direction: column !important;
+    height: 100vh !important;
+    width: 100vw !important;
+    overflow: hidden !important;
+  }
+
+  .sidebar {
+    display: none !important;
+  }
+
+  .app-main {
+    border-radius: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    flex: 1 !important;
+    height: calc(100vh - 56px) !important; /* Subtract mobile header height */
+  }
+
+  .home-view {
+    padding: 16px !important;
+    gap: 20px !important;
+  }
+
+  .features-bar {
+    gap: 12px !important;
+    padding: 12px !important;
+  }
 }

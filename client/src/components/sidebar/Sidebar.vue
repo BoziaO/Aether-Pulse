@@ -7,6 +7,7 @@ import { useRoomStore } from '@/stores/room.store'
 import { useRtcStore } from '@/stores/rtc.store'
 import { useFriendsStore } from '@/stores/friends.store'
 import { useDmStore } from '@/stores/dm.store'
+import { useSettingsStore } from '@/stores/settings.store'
 import UserAvatar from '@/components/profile/UserAvatar.vue'
 import CreateRoomModal from '@/components/rooms/CreateRoomModal.vue'
 
@@ -17,6 +18,7 @@ const roomStore = useRoomStore()
 const rtcStore = useRtcStore()
 const friendsStore = useFriendsStore()
 const dmStore = useDmStore()
+const settings = useSettingsStore()
 
 const showCreateModal = ref(false)
 
@@ -155,7 +157,6 @@ onMounted(() => {
   width: 240px;
   min-width: 240px;
   background: var(--bg-secondary);
-  border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   padding: 0;

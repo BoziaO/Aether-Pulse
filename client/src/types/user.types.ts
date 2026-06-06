@@ -17,6 +17,8 @@ export interface User {
   status: 'online' | 'away' | 'busy' | 'offline'
   customStatus: string | null
   accentColor: string | null
+  primaryColor: string | null
+  displayNameStyle: string | null
   profileGradient: string | null
   avatarFrame: string | null
   profileTheme: string | null

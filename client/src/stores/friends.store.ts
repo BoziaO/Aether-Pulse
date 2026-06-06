@@ -43,6 +43,9 @@ export const useFriendsStore = defineStore('friends', () => {
       toast.success('Friend request accepted!')
       fetchFriends()
     })
+    socket.on('friendship-updated', () => {
+      fetchFriends()
+    })
     socketBound.value = true
   }
 

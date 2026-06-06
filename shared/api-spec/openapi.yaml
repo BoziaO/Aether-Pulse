@@ -101,6 +101,27 @@ paths:
         '401':
           description: Not authenticated
 
+  /auth/refresh:
+    post:
+      operationId: refresh
+      tags: [auth]
+      summary: Refresh JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenBody'
+      responses:
+        '200':
+          description: Token refresh successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid token
+
   /users/{userId}:
     get:
       operationId: getUser
@@ -414,7 +435,19 @@ components:
           type: ['string', 'null']
         accentColor:
           type: ['string', 'null']
+        primaryColor:
+          type: ['string', 'null']
+        displayNameStyle:
+          type: ['string', 'null']
         profileGradient:
+          type: ['string', 'null']
+        avatarFrame:
+          type: ['string', 'null']
+        profileTheme:
+          type: ['string', 'null']
+        customTheme:
+          type: ['string', 'null']
+        preferredTheme:
           type: ['string', 'null']
         badges:
           type: array
@@ -446,7 +479,19 @@ components:
         accentColor:
           type: string
           pattern: '^#[0-9A-Fa-f]{6}$'
+        primaryColor:
+          type: ['string', 'null']
+        displayNameStyle:
+          type: ['string', 'null']
         profileGradient:
+          type: ['string', 'null']
+        avatarFrame:
+          type: ['string', 'null']
+        profileTheme:
+          type: ['string', 'null']
+        customTheme:
+          type: ['string', 'null']
+        preferredTheme:
           type: ['string', 'null']
         avatarUrl:
           type: ['string', 'null']
@@ -455,6 +500,10 @@ components:
         status:
           type: string
           enum: [online, away, busy, offline]
+        badges:
+          type: array
+          items:
+            type: string
 
     Room:
       type: object
@@ -559,4 +608,11 @@ components:
         userId:
           type: ['integer', 'null']
         createdAt:
+          type: string
+
+    RefreshTokenBody:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
           type: string

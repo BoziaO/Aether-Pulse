@@ -1,20 +1,72 @@
-node_modules
-**/node_modules
+# Build artifacts
 dist
 **/dist
-.git
+dist-electron
+**/dist-electron
+out-tsc
+*.tsbuildinfo
 .turbo
+
+# Dependencies
+node_modules
+**/node_modules
+.pnpm-store
+
+# IDEs and Editors
 .idea
 .vscode
-.uploads
-uploads
-logs
-*.db
-*.db-journal
-*.db-shm
-*.db-wal
+.project
+.classpath
+.settings
+*.swp
+*.swo
+.cursor
+
+# Git
+.git
+.github
+.gitattributes
+.gitignore
+.husky
+
+# Android / Mobile (Not needed for Docker builds)
+client/android
+client/ios
+capacitor.config.json
+
+# Documentation
+docs
+*.md
+LICENSE
+
+# Docker files
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Environment and Secrets
 .env
 *.env
 .env.*
-.replit
-.pnpm-store
+!.env.example
+*.local
+
+# Logs and Temp
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+tmp
+
+# Databases and Uploads
+*.db*
+uploads
+.uploads
+
+# Testing
+coverage
+**/tests
+**/*.test.ts
+**/*.spec.ts
+vitest.config.ts

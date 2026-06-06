@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="app_name">AetherPulse</string>
+  <string name="title_activity_main">AetherPulse</string>
+  <string name="package_name">com.aetherpulse.app</string>
+  <string name="custom_url_scheme">com.aetherpulse.app</string>
+</resources>

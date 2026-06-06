@@ -62,7 +62,7 @@ router.get('/users/:userId', async (req, res): Promise<void> => {
     return
   }
 
-  const viewerId = req.session?.userId ?? null
+  const viewerId = req.user?.userId ?? null
   const privacy = user.profilePrivacy ?? 'public'
   const isOwn = viewerId === userId
 
@@ -201,7 +201,9 @@ router.post('/users/:userId/avatar', async (req, res): Promise<void> => {
     res.status(404).json({ error: 'User not found' })
     return
   }
-  res.json({ avatarUrl, user: serializeUser(updated, { viewerId: userId }) })
+  const serialized = serializeUser(updated, { viewerId: userId })
+  req.app.get('io')?.emit('user-profile-updated', serialized)
+  res.json({ avatarUrl, user: serialized })
 })
 
 router.post('/users/:userId/banner', async (req, res): Promise<void> => {
@@ -251,7 +253,9 @@ router.post('/users/:userId/banner', async (req, res): Promise<void> => {
     res.status(404).json({ error: 'User not found' })
     return
   }
-  res.json({ bannerUrl, user: serializeUser(updated, { viewerId: userId }) })
+  const serialized = serializeUser(updated, { viewerId: userId })
+  req.app.get('io')?.emit('user-profile-updated', serialized)
+  res.json({ bannerUrl, user: serialized })
 })
 
 router.patch('/users/:userId', async (req, res): Promise<void> => {
@@ -279,9 +283,24 @@ router.patch('/users/:userId', async (req, res): Promise<void> => {
     return
   }
 
+  const updateData = { ...parsed.data } as any
+  if (updateData.badges) {
+    updateData.badges = JSON.stringify(updateData.badges)
+  }
+
+  if (Object.keys(updateData).length === 0) {
+    const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId))
+    if (!user) {
+      res.status(404).json({ error: 'User not found' })
+      return
+    }
+    res.json(serializeUser(user, { viewerId: userId }))
+    return
+  }
+
   const [updated] = await db
     .update(usersTable)
-    .set(parsed.data as any)
+    .set(updateData)
     .where(eq(usersTable.id, userId))
     .returning()
 
@@ -290,7 +309,9 @@ router.patch('/users/:userId', async (req, res): Promise<void> => {
     return
   }
 
-  res.json(serializeUser(updated, { viewerId: userId }))
+  const serialized = serializeUser(updated, { viewerId: userId })
+  req.app.get('io')?.emit('user-profile-updated', serialized)
+  res.json(serialized)
 })
 
 export default router

@@ -78,6 +78,13 @@ async function logRoomEntry(req: any, roomId: string, userId: number) {
           replyTo: null,
         }
         req.app.get('io')?.to(roomId).emit('new-message', payload)
+        req.app
+          .get('io')
+          ?.to(roomId)
+          .emit('room-member-joined', {
+            roomId,
+            user: serializeUser(user),
+          })
       }
     }
   })
@@ -212,6 +219,11 @@ router.delete('/rooms/:roomId', async (req, res): Promise<void> => {
     res.status(403).json({ error: 'Forbidden' })
     return
   }
+
+  req.app.get('io')?.to(rawId).emit('room-deleted', {
+    roomId: rawId,
+  })
+
   await db.delete(roomsTable).where(eq(roomsTable.id, rawId))
   res.sendStatus(204)
 })
@@ -286,6 +298,11 @@ router.post('/rooms/:roomId/leave', async (req, res): Promise<void> => {
   await db
     .delete(roomMembersTable)
     .where(and(eq(roomMembersTable.roomId, rawId), eq(roomMembersTable.userId, userId)))
+
+  req.app.get('io')?.to(rawId).emit('room-member-left', {
+    roomId: rawId,
+    userId,
+  })
 
   res.json({ ok: true })
 })

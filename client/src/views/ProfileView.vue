@@ -18,6 +18,7 @@ import {
 import { useAuthStore } from '@/stores/auth.store'
 import UserAvatar from '@/components/profile/UserAvatar.vue'
 import GradientPicker from '@/components/profile/GradientPicker.vue'
+import ProfileBadge from '@/components/profile/ProfileBadge.vue'
 import type { User } from '@/types/user.types'
 import { userApi } from '@/services/api/user.api'
 
@@ -45,6 +46,8 @@ const emptyUser: User = {
   status: 'offline',
   customStatus: null,
   accentColor: '#8b5cf6',
+  primaryColor: null,
+  displayNameStyle: null,
   profileGradient: null,
   avatarFrame: null,
   profileTheme: null,
@@ -74,6 +77,9 @@ const form = reactive({
   avatarUrl: '',
   bannerUrl: '',
   accentColor: '#8b5cf6',
+  primaryColor: null as string | null,
+  displayNameStyle: null as string | null,
+  badges: [] as string[],
   profileGradient: null as string | null,
   status: 'offline' as ProfileStatus,
   avatarFrame: null as string | null,
@@ -92,6 +98,9 @@ function syncFormFromUser() {
   form.avatarUrl = user.avatarUrl ?? ''
   form.bannerUrl = user.bannerUrl ?? ''
   form.accentColor = user.accentColor ?? '#8b5cf6'
+  form.primaryColor = user.primaryColor ?? null
+  form.displayNameStyle = user.displayNameStyle ?? null
+  form.badges = [...(user.badges ?? [])]
   form.profileGradient = user.profileGradient
   form.status = user.status
   form.avatarFrame = user.avatarFrame ?? null
@@ -118,6 +127,27 @@ const STATUSES: Array<{
   { value: 'offline', label: 'Invisible', detail: 'Appear offline', icon: EyeOff },
 ]
 
+const AVAILABLE_BADGES = [
+  { id: 'nitro', name: 'Nitro Supporter' },
+  { id: 'booster', name: 'Server Booster' },
+  { id: 'developer', name: 'Active Developer' },
+  { id: 'staff', name: 'Aether-Pulse Staff' },
+  { id: 'bug_hunter', name: 'Bug Hunter' },
+  { id: 'early_supporter', name: 'Early Supporter' },
+  { id: 'hypesquad_balance', name: 'HypeSquad Balance' },
+  { id: 'hypesquad_bravery', name: 'HypeSquad Bravery' },
+  { id: 'hypesquad_brilliance', name: 'HypeSquad Brilliance' },
+]
+
+const DISPLAY_NAME_STYLES = [
+  { value: null, label: 'None (Default)' },
+  { value: 'glow', label: 'Neon Glow' },
+  { value: 'rainbow', label: 'Rainbow' },
+  { value: 'hacker', label: 'Retro Hacker' },
+  { value: 'glitch', label: 'Glitch Effect' },
+  { value: 'sparkle', label: 'Luxury Sparkle' },
+]
+
 const previewUser = computed<User>(() => ({
   ...emptyUser,
   ...initialUser.value,
@@ -130,6 +160,9 @@ const previewUser = computed<User>(() => ({
   location: cleanNullable(form.location),
   customStatus: cleanNullable(form.customStatus),
   accentColor: form.accentColor,
+  primaryColor: form.primaryColor,
+  displayNameStyle: form.displayNameStyle,
+  badges: form.badges,
   profileGradient: form.profileGradient,
   status: form.status,
   avatarFrame: form.avatarFrame,
@@ -151,7 +184,6 @@ const bannerStyle = computed(() => {
   if (form.bannerUrl.trim()) {
     return { backgroundImage: `url(${form.bannerUrl.trim()})` }
   }
-  // Banner: gradient or solid color (Discord-like)
   if (form.profileGradient) return { background: form.profileGradient }
   return { background: form.accentColor }
 })
@@ -168,6 +200,9 @@ const dirty = computed(() => {
     form.avatarUrl !== (user.avatarUrl ?? '') ||
     form.bannerUrl !== (user.bannerUrl ?? '') ||
     form.accentColor !== (user.accentColor ?? '#8b5cf6') ||
+    form.primaryColor !== user.primaryColor ||
+    form.displayNameStyle !== user.displayNameStyle ||
+    JSON.stringify(form.badges) !== JSON.stringify(user.badges ?? []) ||
     form.profileGradient !== user.profileGradient ||
     form.status !== user.status ||
     form.avatarFrame !== user.avatarFrame ||
@@ -178,6 +213,15 @@ const dirty = computed(() => {
 function cleanNullable(value: string) {
   const trimmed = value.trim()
   return trimmed.length ? trimmed : null
+}
+
+function toggleBadge(badgeId: string) {
+  const idx = form.badges.indexOf(badgeId)
+  if (idx >= 0) {
+    form.badges.splice(idx, 1)
+  } else {
+    form.badges.push(badgeId)
+  }
 }
 
 function resetForm() {
@@ -191,6 +235,9 @@ function resetForm() {
   form.avatarUrl = user.avatarUrl ?? ''
   form.bannerUrl = user.bannerUrl ?? ''
   form.accentColor = user.accentColor ?? '#8b5cf6'
+  form.primaryColor = user.primaryColor ?? null
+  form.displayNameStyle = user.displayNameStyle ?? null
+  form.badges = [...(user.badges ?? [])]
   form.profileGradient = user.profileGradient
   form.status = user.status
   form.avatarFrame = user.avatarFrame ?? null
@@ -231,6 +278,9 @@ async function save() {
       avatarUrl: cleanNullable(form.avatarUrl),
       bannerUrl: cleanNullable(form.bannerUrl),
       accentColor: form.accentColor,
+      primaryColor: form.primaryColor,
+      displayNameStyle: form.displayNameStyle,
+      badges: form.badges,
       profileGradient: form.profileGradient,
       status: form.status,
       avatarFrame: form.avatarFrame,
@@ -254,10 +304,9 @@ async function handleAvatarFile(e: Event) {
   uploadingAvatar.value = true
   error.value = ''
   try {
-    const dataUrl = await fileToDataUrl(file)
+    const dataUrl = await compressImageIfNeeded(file)
     const res = await userApi.uploadAvatar(auth.user.id, dataUrl)
     form.avatarUrl = res.avatarUrl
-    // keep auth store in sync so other UI updates immediately
     auth.user.avatarUrl = res.avatarUrl
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : 'Failed to upload avatar.'
@@ -274,7 +323,7 @@ async function handleBannerFile(e: Event) {
   uploadingBanner.value = true
   error.value = ''
   try {
-    const dataUrl = await fileToDataUrl(file)
+    const dataUrl = await compressImageIfNeeded(file)
     const res = await userApi.uploadBanner(auth.user.id, dataUrl)
     form.bannerUrl = res.bannerUrl
     auth.user.bannerUrl = res.bannerUrl
@@ -292,6 +341,52 @@ function fileToDataUrl(file: File): Promise<string> {
     reader.onerror = () => reject(new Error('Failed to read file.'))
     reader.onload = () => resolve(String(reader.result || ''))
     reader.readAsDataURL(file)
+  })
+}
+
+function compressImageIfNeeded(file: File): Promise<string> {
+  if (file.type === 'image/gif') {
+    return fileToDataUrl(file)
+  }
+
+  return new Promise((resolve, reject) => {
+    const img = new window.Image()
+    img.src = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(img.src)
+      const canvas = document.createElement('canvas')
+      let width = img.width
+      let height = img.height
+
+      const MAX_SIZE = 1000
+      if (width > MAX_SIZE || height > MAX_SIZE) {
+        if (width > height) {
+          height = Math.round((height * MAX_SIZE) / width)
+          width = MAX_SIZE
+        } else {
+          width = Math.round((width * MAX_SIZE) / height)
+          height = MAX_SIZE
+        }
+      }
+
+      canvas.width = width
+      canvas.height = height
+
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        reject(new Error('Failed to create canvas context'))
+        return
+      }
+
+      ctx.drawImage(img, 0, 0, width, height)
+      const mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg'
+      const dataUrl = canvas.toDataURL(mimeType, 0.85)
+      resolve(dataUrl)
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(img.src)
+      reject(new Error('Failed to load image for compression.'))
+    }
   })
 }
 
@@ -374,7 +469,7 @@ const PROFILE_THEMES = [
         <div>
           <div class="label-row">
             <label class="label" for="bio">About Me</label>
-            <span>{{ form.bio.length }}/190</span>
+            <span>{{ form.bio ? form.bio.length : 0 }}/190</span>
           </div>
           <textarea
             id="bio"
@@ -406,6 +501,23 @@ const PROFILE_THEMES = [
             </div>
           </div>
         </div>
+
+        <div class="badges-field-container">
+          <label class="label">Platform Badges</label>
+          <div class="badges-selection-grid">
+            <button
+              v-for="badge in AVAILABLE_BADGES"
+              :key="badge.id"
+              class="badge-select-chip"
+              :class="{ active: form.badges.includes(badge.id) }"
+              type="button"
+              @click="toggleBadge(badge.id)"
+            >
+              <ProfileBadge :badge="badge.id" />
+              <span>{{ badge.name }}</span>
+            </button>
+          </div>
+        </div>
       </section>
 
       <section v-if="activeTab === 'appearance'" class="form-section">
@@ -431,7 +543,9 @@ const PROFILE_THEMES = [
               <X :size="15" />
             </button>
           </div>
-          <div class="hint">PNG/JPG/WebP/GIF, max 6MB. Saved on the server.</div>
+          <div class="hint">
+            PNG/JPG/WebP/GIF, max 6MB. Saved on the server. Non-GIFs will be compressed client-side.
+          </div>
         </div>
 
         <div>
@@ -456,11 +570,68 @@ const PROFILE_THEMES = [
           </div>
         </div>
 
-        <div class="color-field">
-          <label class="label" for="accent-color">Accent Color</label>
-          <div class="color-row">
-            <input id="accent-color" v-model="form.accentColor" type="color" class="color-input" />
-            <span>{{ form.accentColor }}</span>
+        <div class="color-fields-row">
+          <div class="color-field">
+            <label class="label" for="accent-color">Accent Color</label>
+            <div class="color-row">
+              <input
+                id="accent-color"
+                v-model="form.accentColor"
+                type="color"
+                class="color-input"
+              />
+              <span>{{ form.accentColor }}</span>
+            </div>
+          </div>
+
+          <div class="color-field">
+            <label class="label" for="primary-color">Card Background (Główny)</label>
+            <div class="color-row">
+              <input
+                id="primary-color"
+                :value="form.primaryColor || '#111318'"
+                @input="form.primaryColor = ($event.target as HTMLInputElement).value"
+                type="color"
+                class="color-input"
+              />
+              <span>{{ form.primaryColor || 'Default (#111318)' }}</span>
+              <button
+                v-if="form.primaryColor"
+                class="reset-color-btn"
+                type="button"
+                @click="form.primaryColor = null"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="label" for="display-name-style">Username Text Effect</label>
+          <div class="name-style-selector-wrap">
+            <select
+              id="display-name-style"
+              v-model="form.displayNameStyle"
+              class="input style-dropdown"
+            >
+              <option
+                v-for="style in DISPLAY_NAME_STYLES"
+                :key="String(style.value)"
+                :value="style.value"
+              >
+                {{ style.label }}
+              </option>
+            </select>
+            <div class="name-style-preview-row">
+              <span class="preview-text-label">Active Preview:</span>
+              <span
+                :class="form.displayNameStyle ? `name-style-${form.displayNameStyle}` : ''"
+                style="font-size: 15px; font-weight: 700"
+              >
+                {{ form.displayName.trim() || 'Aether-Pulse User' }}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -558,20 +729,25 @@ const PROFILE_THEMES = [
             ? `profile-theme-${previewUser.profileTheme}`
             : 'profile-theme-default'
         "
+        :style="previewUser.primaryColor ? { backgroundColor: previewUser.primaryColor } : {}"
       >
         <div class="card-banner" :style="bannerStyle" />
         <div class="card-shell">
           <div class="avatar-row">
             <UserAvatar :user="previewUser" :size="86" />
-            <div v-if="auth.user?.badges?.length" class="badge-row">
-              <span v-for="badge in auth.user.badges" :key="badge" class="badge badge-violet">{{
-                badge
-              }}</span>
+            <div v-if="previewUser.badges?.length" class="badge-row">
+              <ProfileBadge v-for="badge in previewUser.badges" :key="badge" :badge="badge" />
             </div>
           </div>
 
           <div class="name-block">
-            <h3>{{ previewUser.displayName }}</h3>
+            <h3
+              :class="
+                previewUser.displayNameStyle ? `name-style-${previewUser.displayNameStyle}` : ''
+              "
+            >
+              {{ previewUser.displayName }}
+            </h3>
             <p><AtSign :size="13" />{{ previewUser.username }}</p>
           </div>
 
@@ -1147,5 +1323,86 @@ const PROFILE_THEMES = [
   .editor-tabs {
     grid-template-columns: 1fr;
   }
+}
+
+.color-fields-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.reset-color-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  border-radius: 4px;
+  font-size: 11px;
+  padding: 2px 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.reset-color-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+}
+.name-style-selector-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.name-style-preview-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-surface-2);
+  border: 1px dashed var(--border);
+  padding: 10px 14px;
+  border-radius: 8px;
+}
+.preview-text-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+.badges-field-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.badges-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 8px;
+  margin-top: 4px;
+}
+.badge-select-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface-2);
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+.badge-select-chip:hover {
+  background: var(--bg-hover);
+  border-color: var(--text-muted);
+  color: var(--text-primary);
+}
+.badge-select-chip.active {
+  background: rgba(139, 92, 246, 0.1);
+  border-color: var(--accent-violet);
+  color: var(--text-primary);
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.1);
+}
+.badge-select-chip span {
+  font-size: 12.5px;
+  font-weight: 600;
 }
 </style>

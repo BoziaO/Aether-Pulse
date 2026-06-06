@@ -20,6 +20,8 @@ export const usersTable = sqliteTable(
       .default('offline'),
     customStatus: text('custom_status'),
     accentColor: text('accent_color'),
+    primaryColor: text('primary_color'),
+    displayNameStyle: text('display_name_style'),
     profileGradient: text('profile_gradient'),
     avatarFrame: text('avatar_frame'),
     profileTheme: text('profile_theme'),

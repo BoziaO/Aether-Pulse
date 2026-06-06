@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { Headphones, Mic, Shield, Bell, Palette } from 'lucide-vue-next'
 import { useSettingsStore } from '@/stores/settings.store'
 import { requestNotificationPermission } from '@/utils/notifications'
@@ -21,6 +21,58 @@ const sections = [
   { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'privacy', label: 'Privacy', icon: Shield },
 ]
+
+const soundstages = [
+  { id: 'alternating', name: 'Alternating', desc: 'Left & Right' },
+  { id: 'left', name: 'Left only', desc: 'All on the left' },
+  { id: 'right', name: 'Right only', desc: 'All on the right' },
+  { id: 'center', name: 'Center focus', desc: 'Spread around center' },
+] as const
+
+const simulatedCallers = computed(() => {
+  const mode = settings.spatialAudioDirectionMode
+  const spreadAngle = settings.spatialAudioSpreadAngle
+  const distance = settings.spatialAudioDistance
+
+  // Center of visual container is (100, 100)
+  // Scaling radius: map distance (1-15m) to (30-85px)
+  const radiusPx = 30 + ((distance - 1) / 14) * 55
+
+  return [0, 1, 2].map((index) => {
+    let angleRad = 0
+    if (mode === 'center') {
+      if (index > 0) {
+        const step = Math.ceil(index / 2)
+        const sign = index % 2 === 1 ? -1 : 1
+        angleRad = step * ((spreadAngle * Math.PI) / 180) * sign
+      }
+    } else if (mode === 'alternating') {
+      if (index % 2 === 0) {
+        const k = index / 2
+        angleRad = -Math.PI / 2 + k * ((spreadAngle * Math.PI) / 180)
+      } else {
+        const k = (index - 1) / 2
+        angleRad = Math.PI / 2 - k * ((spreadAngle * Math.PI) / 180)
+      }
+    } else if (mode === 'left') {
+      angleRad = -Math.PI / 2 + index * ((spreadAngle * Math.PI) / 180)
+    } else if (mode === 'right') {
+      angleRad = Math.PI / 2 - index * ((spreadAngle * Math.PI) / 180)
+    }
+
+    const x = 100 + Math.sin(angleRad) * radiusPx
+    const y = 100 - Math.cos(angleRad) * radiusPx
+
+    return {
+      id: index,
+      label: `Call ${String.fromCharCode(65 + index)}`,
+      style: {
+        left: `${x}px`,
+        top: `${y}px`,
+      },
+    }
+  })
+})
 </script>
 
 <template>
@@ -99,8 +151,8 @@ const sections = [
             <div class="setting-info">
               <div class="setting-title">🔊 Spatial Audio (HRTF)</div>
               <div class="setting-desc">
-                Uses Head-Related Transfer Function to position the other person's voice in 3D
-                space. Creates an immersive experience during calls.
+                Uses Head-Related Transfer Function to position other participants' voices in 3D
+                space, creating an immersive acoustic experience.
               </div>
             </div>
             <label class="toggle">
@@ -113,15 +165,75 @@ const sections = [
             </label>
           </div>
 
-          <div v-if="settings.spatialAudioEnabled" class="spatial-info">
-            <div class="spatial-demo">
-              <div class="spatial-label">Audio Position Demo</div>
-              <div class="spatial-ring">
-                <div class="spatial-you">You</div>
-                <div class="spatial-other">Other</div>
+          <div v-if="settings.spatialAudioEnabled" class="spatial-info-container">
+            <div class="setting-item">
+              <div class="setting-info">
+                <div class="setting-title">Distance Radius</div>
+                <div class="setting-desc">Virtual space size between you and callers (1–15m)</div>
               </div>
-              <p class="spatial-hint">
-                The other person's voice will appear to come from the right side
+              <div class="slider-wrap">
+                <input
+                  type="range"
+                  v-model.number="settings.spatialAudioDistance"
+                  min="1"
+                  max="15"
+                  class="range"
+                />
+                <span class="slider-val">{{ settings.spatialAudioDistance }}m</span>
+              </div>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <div class="setting-title">Separation Angle</div>
+                <div class="setting-desc">Angle between adjacent callers (15°–90°)</div>
+              </div>
+              <div class="slider-wrap">
+                <input
+                  type="range"
+                  v-model.number="settings.spatialAudioSpreadAngle"
+                  min="15"
+                  max="90"
+                  class="range"
+                />
+                <span class="slider-val">{{ settings.spatialAudioSpreadAngle }}°</span>
+              </div>
+            </div>
+
+            <div class="soundstage-selection">
+              <div class="setting-title" style="margin-bottom: 8px">Soundstage Direction Mode</div>
+              <div class="soundstage-grid">
+                <button
+                  v-for="mode in soundstages"
+                  :key="mode.id"
+                  class="soundstage-card"
+                  :class="{ active: settings.spatialAudioDirectionMode === mode.id }"
+                  @click="settings.spatialAudioDirectionMode = mode.id"
+                >
+                  <div class="soundstage-name">{{ mode.name }}</div>
+                  <div class="soundstage-desc">{{ mode.desc }}</div>
+                </button>
+              </div>
+            </div>
+
+            <div class="spatial-demo-premium">
+              <div class="spatial-label">Acoustic Layout Visualization</div>
+              <div class="spatial-visual-box">
+                <div class="spatial-center-you">
+                  <div class="pulse-ring"></div>
+                  <span>You</span>
+                </div>
+                <div
+                  v-for="caller in simulatedCallers"
+                  :key="caller.id"
+                  class="spatial-caller-dot"
+                  :style="caller.style"
+                >
+                  <div class="caller-inner">{{ caller.label }}</div>
+                </div>
+              </div>
+              <p class="spatial-hint-premium">
+                Drag the sliders above to see callers dynamically reposition.
               </p>
             </div>
           </div>
@@ -131,6 +243,49 @@ const sections = [
       <template v-if="activeSection === 'appearance'">
         <div class="settings-section">
           <h2>Appearance</h2>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <div class="setting-title">Page Layout</div>
+              <div class="setting-desc">
+                Choose between standard density and clean compact layouts
+              </div>
+            </div>
+          </div>
+
+          <div class="layouts-grid">
+            <button
+              class="layout-card"
+              :class="{ active: settings.layout === 'maximalist' }"
+              @click="settings.layout = 'maximalist'"
+            >
+              <div class="layout-preview">
+                <div class="p-sidebar" />
+                <div class="p-main">
+                  <div class="p-line width-large" />
+                  <div class="p-line width-medium" />
+                  <div class="p-line width-small" />
+                </div>
+              </div>
+              <span class="layout-name">Maximalist (Standard)</span>
+            </button>
+
+            <button
+              class="layout-card"
+              :class="{ active: settings.layout === 'minimalist' }"
+              @click="settings.layout = 'minimalist'"
+            >
+              <div class="layout-preview">
+                <div class="p-sidebar compact" />
+                <div class="p-main compact">
+                  <div class="p-line compact width-large" />
+                  <div class="p-line compact width-medium" />
+                </div>
+              </div>
+              <span class="layout-name">Minimalist (Compact)</span>
+            </button>
+          </div>
+
           <div class="setting-item">
             <div class="setting-info">
               <div class="setting-title">Theme</div>
@@ -353,56 +508,126 @@ const sections = [
   min-width: 40px;
   text-align: right;
 }
-.spatial-info {
-  margin-top: -8px;
+.spatial-info-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: fadeIn 0.2s ease-out;
 }
-.spatial-demo {
-  padding: 20px;
+.soundstage-selection {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  padding: 16px;
+  border-radius: 10px;
+}
+.soundstage-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.soundstage-card {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.soundstage-card:hover {
+  background: var(--bg-hover);
+  border-color: var(--text-muted);
+}
+.soundstage-card.active {
+  background: rgba(139, 92, 246, 0.1);
+  border-color: var(--accent-violet);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.15);
+}
+.soundstage-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.soundstage-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.spatial-demo-premium {
+  padding: 24px;
   background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: 10px;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
 }
-.spatial-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-muted);
-  margin-bottom: 16px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-.spatial-ring {
-  width: 120px;
-  height: 120px;
+.spatial-visual-box {
+  width: 200px;
+  height: 200px;
   border-radius: 50%;
-  border: 2px solid var(--border-accent);
-  margin: 0 auto 12px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.03) 0%, rgba(0, 0, 0, 0.15) 100%);
+  border: 2px dashed var(--border);
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: visible;
 }
-.spatial-you {
+.spatial-center-you {
+  position: absolute;
+  z-index: 10;
+  background: var(--accent-violet);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
   font-size: 12px;
   font-weight: 700;
-  color: var(--accent-violet);
-  background: rgba(139, 92, 246, 0.15);
-  padding: 4px 8px;
-  border-radius: 20px;
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.spatial-other {
+.pulse-ring {
   position: absolute;
-  right: -20px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 12px;
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
+  border: 2px solid var(--accent-violet);
+  animation: pulse-ring-animation 2s infinite;
+  opacity: 0.8;
+}
+@keyframes pulse-ring-animation {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+.spatial-caller-dot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 5;
+}
+.caller-inner {
+  font-size: 11px;
   font-weight: 700;
   color: var(--accent-blue);
   background: rgba(59, 130, 246, 0.15);
+  border: 1px solid var(--accent-blue);
   padding: 4px 8px;
-  border-radius: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
 }
-.spatial-hint {
+.spatial-hint-premium {
   font-size: 12px;
   color: var(--text-muted);
 }
@@ -464,6 +689,88 @@ const sections = [
   font-size: 13px;
   color: var(--text-muted);
   line-height: 1.5;
+}
+
+.layouts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.layout-card {
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    border-color 0.2s;
+  gap: 12px;
+}
+.layout-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--text-muted);
+}
+.layout-card.active {
+  border-color: var(--border-accent);
+  background: rgba(139, 92, 246, 0.14);
+}
+.layout-preview {
+  width: 100%;
+  height: 80px;
+  border-radius: 6px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  display: flex;
+  overflow: hidden;
+  padding: 4px;
+  gap: 4px;
+}
+.p-sidebar {
+  width: 30%;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  transition: width 0.3s;
+}
+.p-sidebar.compact {
+  width: 18%;
+}
+.p-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px;
+}
+.p-main.compact {
+  gap: 4px;
+}
+.p-line {
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+}
+.p-line.compact {
+  height: 4px;
+}
+.width-large {
+  width: 90%;
+}
+.width-medium {
+  width: 65%;
+}
+.width-small {
+  width: 40%;
+}
+.layout-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
 }
 
 @media (max-width: 640px) {

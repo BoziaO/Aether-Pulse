@@ -7,11 +7,20 @@ import runtimeErrorOverlay from '@replit/vite-plugin-runtime-error-modal'
 const port = Number(process.env.CLIENT_PORT) || 5174
 const apiTarget = process.env.API_TARGET || `http://localhost:${process.env.PORT || 3000}`
 const basePath = process.env.BASE_PATH || '/'
+const isLocalWrapper = process.env.LOCAL_WRAPPER === 'true'
 
 export default defineConfig({
-  base: basePath,
+  base: isLocalWrapper ? './' : basePath,
   define: {
     global: 'globalThis',
+  },
+
+  optimizeDeps: {
+    include: ['vue', 'vue-router', 'pinia', 'socket.io-client', 'lucide-vue-next', '@vueuse/core'],
+  },
+
+  css: {
+    transformer: 'lightningcss',
   },
 
   plugins: [

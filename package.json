@@ -14,6 +14,10 @@
     "start:server": "pnpm --filter aetherpulse-server dev",
     "build:client": "pnpm --filter aetherpulse-client build",
     "build:server": "pnpm --filter aetherpulse-server build",
+    "electron:dev": "pnpm --filter aetherpulse-client electron:dev",
+    "electron:build": "pnpm --filter aetherpulse-client electron:build",
+    "android:sync": "pnpm --filter aetherpulse-client android:sync",
+    "android:open": "pnpm --filter aetherpulse-client android:open",
     "lint:check": "prettier --check .",
     "format:check": "prettier --check ."
   },
@@ -27,7 +31,7 @@
     "turbo": "^2.9.16",
     "typescript": "~6.0.3"
   },
-  "packageManager": "pnpm@11.5.0",
+  "packageManager": "pnpm@11.5.2",
   "dependencies": {
     "events": "^3.3.0",
     "util": "^0.12.5",

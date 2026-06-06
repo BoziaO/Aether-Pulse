@@ -21,6 +21,7 @@ import { userApi, type UserStats } from '@/services/api/user.api'
 import { useAuthStore } from '@/stores/auth.store'
 import { useFriendsStore } from '@/stores/friends.store'
 import UserAvatar from './UserAvatar.vue'
+import ProfileBadge from './ProfileBadge.vue'
 import type { User } from '@/types/user.types'
 import type { FriendshipStatus } from '@/types/friend.types'
 
@@ -195,12 +196,16 @@ async function blockUser() {
       <div
         class="card"
         :class="user?.profileTheme ? `profile-theme-${user.profileTheme}` : 'profile-theme-default'"
+        :style="user?.primaryColor ? { '--profile-bg': user.primaryColor } : {}"
       >
         <div class="banner" :class="bannerAnimClass" :style="bannerStyle" />
 
         <div class="shell">
           <div class="avatar-row">
             <UserAvatar :user="user" :size="92" />
+            <div v-if="user?.badges?.length" class="badge-row">
+              <ProfileBadge v-for="badge in user.badges" :key="badge" :badge="badge" />
+            </div>
           </div>
 
           <div v-if="loading" class="state">
@@ -211,7 +216,12 @@ async function blockUser() {
 
           <template v-else-if="user">
             <div class="name-block">
-              <h3 id="profile-name">{{ user.displayName }}</h3>
+              <h3
+                id="profile-name"
+                :class="user.displayNameStyle ? `name-style-${user.displayNameStyle}` : ''"
+              >
+                {{ user.displayName }}
+              </h3>
               <p><AtSign :size="13" />{{ user.username }}</p>
             </div>
 
@@ -410,7 +420,7 @@ async function blockUser() {
   overflow: hidden;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  background: #111318;
+  background: var(--profile-bg, #111318);
   box-shadow: 0 18px 52px rgba(0, 0, 0, 0.45);
 }
 .banner {
@@ -425,11 +435,19 @@ async function blockUser() {
   min-height: 56px;
   display: flex;
   align-items: flex-end;
+  justify-content: space-between;
 }
 .avatar-row :deep(.avatar-wrap) {
   margin-top: -52px;
-  border: 6px solid #111318;
+  border: 6px solid var(--profile-bg, #111318);
   border-radius: 50%;
+}
+.badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 5px;
+  padding-bottom: 8px;
 }
 .name-block {
   margin-top: 10px;

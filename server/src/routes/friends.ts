@@ -6,6 +6,17 @@ import { getFriendship, friendshipStatusFor } from '../utils/friend-helpers'
 
 const router: IRouter = Router()
 
+function notifyFriendshipUpdated(req: any, userA: number, userB: number) {
+  try {
+    const io = req.app.get('io')
+    if (!io) return
+    io.to(`user:${userA}`).emit('friendship-updated')
+    io.to(`user:${userB}`).emit('friendship-updated')
+  } catch (err) {
+    console.error('Error emitting friendship updated event:', err)
+  }
+}
+
 function requireAuth(req: any, res: any): number | null {
   const userId = req.user?.userId
   if (!userId) {
@@ -123,6 +134,7 @@ router.post('/friends/request', async (req, res): Promise<void> => {
           .set({ status: 'accepted' })
           .where(eq(friendshipsTable.id, existing.id))
         req.app.get('io')?.to(`user:${targetId}`).emit('friend-accepted', { userId })
+        notifyFriendshipUpdated(req, userId, targetId)
         res.json({ status: 'accepted', user: serializeUser(target) })
         return
       }
@@ -149,6 +161,7 @@ router.post('/friends/request', async (req, res): Promise<void> => {
       .emit('friend-request', {
         user: serializeUser(requester),
       })
+    notifyFriendshipUpdated(req, userId, targetId)
   }
 
   res.status(201).json({ status: 'pending', user: serializeUser(target) })
@@ -172,6 +185,7 @@ router.post('/friends/accept', async (req, res): Promise<void> => {
 
   const [friend] = await db.select().from(usersTable).where(eq(usersTable.id, targetId))
   req.app.get('io')?.to(`user:${targetId}`).emit('friend-accepted', { userId })
+  notifyFriendshipUpdated(req, userId, targetId)
 
   res.json({ status: 'accepted', user: friend ? serializeUser(friend) : null })
 })
@@ -188,6 +202,7 @@ router.post('/friends/reject', async (req, res): Promise<void> => {
   }
 
   await db.delete(friendshipsTable).where(eq(friendshipsTable.id, existing.id))
+  notifyFriendshipUpdated(req, userId, targetId)
   res.json({ ok: true })
 })
 
@@ -205,6 +220,7 @@ router.delete('/friends/:otherUserId', async (req, res): Promise<void> => {
   }
 
   await db.delete(friendshipsTable).where(eq(friendshipsTable.id, existing.id))
+  notifyFriendshipUpdated(req, userId, otherId)
   res.json({ ok: true })
 })
 
@@ -228,6 +244,7 @@ router.post('/friends/block', async (req, res): Promise<void> => {
     addresseeId: targetId,
     status: 'blocked',
   })
+  notifyFriendshipUpdated(req, userId, targetId)
 
   res.json({ ok: true })
 })

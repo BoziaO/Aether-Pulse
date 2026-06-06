@@ -3,6 +3,8 @@ export interface MessageUser {
   displayName: string
   avatarUrl: string | null
   accentColor: string | null
+  primaryColor?: string | null
+  displayNameStyle?: string | null
   profileGradient: string | null
   status?: string
 }

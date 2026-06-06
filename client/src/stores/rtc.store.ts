@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, shallowRef } from 'vue'
+import { ref, shallowRef, watch } from 'vue'
 import { getSocket, connectSocket } from '@/services/socket/socket'
 import { PeerManager } from '@/services/rtc/peer'
 import { spatialAudio } from '@/services/rtc/spatial-audio'
@@ -10,6 +10,7 @@ import { usePresenceStore } from './presence.store'
 import { useRoomStore } from './room.store'
 import { useSettingsStore } from './settings.store'
 import { useToastStore } from './toast.store'
+import { router } from '@/app/router'
 import type { Message } from '@/types/message.types'
 import type { User } from '@/types/user.types'
 
@@ -29,16 +30,83 @@ export const useRtcStore = defineStore('rtc', () => {
   let lastSharedScreenVideoTrack: MediaStreamTrack | null = null
   let lastRemovedCameraTrack: MediaStreamTrack | null = null
 
+  function calculateSpatialPosition(index: number) {
+    const settings = useSettingsStore()
+    const radius = settings.spatialAudioDistance
+    const mode = settings.spatialAudioDirectionMode
+    const spreadAngle = settings.spatialAudioSpreadAngle
+
+    let angleRad = 0
+    if (mode === 'center') {
+      if (index > 0) {
+        const step = Math.ceil(index / 2)
+        const sign = index % 2 === 1 ? -1 : 1
+        angleRad = step * ((spreadAngle * Math.PI) / 180) * sign
+      }
+    } else if (mode === 'alternating') {
+      if (index % 2 === 0) {
+        const k = index / 2
+        angleRad = -Math.PI / 2 + k * ((spreadAngle * Math.PI) / 180)
+      } else {
+        const k = (index - 1) / 2
+        angleRad = Math.PI / 2 - k * ((spreadAngle * Math.PI) / 180)
+      }
+    } else if (mode === 'left') {
+      angleRad = -Math.PI / 2 + index * ((spreadAngle * Math.PI) / 180)
+    } else if (mode === 'right') {
+      angleRad = Math.PI / 2 - index * ((spreadAngle * Math.PI) / 180)
+    }
+
+    const x = Math.sin(angleRad) * radius
+    const z = -Math.cos(angleRad) * radius
+    return { x, y: 0, z }
+  }
+
+  function updateSpatialPositions() {
+    if (!spatialAudio.enabled) return
+    const keys = Array.from(remoteStreams.value.keys())
+    keys.forEach((userId, index) => {
+      const pos = calculateSpatialPosition(index)
+      spatialAudio.updatePosition(userId, pos.x, pos.y, pos.z)
+    })
+  }
+
+  // Watch spatial settings to apply panner updates dynamically
+  const settings = useSettingsStore()
+  watch(
+    [
+      () => settings.spatialAudioDistance,
+      () => settings.spatialAudioDirectionMode,
+      () => settings.spatialAudioSpreadAngle,
+    ],
+    () => {
+      if (spatialAudio.enabled) {
+        updateSpatialPositions()
+      }
+    }
+  )
+
+  watch(
+    () => settings.spatialAudioEnabled,
+    (enabled) => {
+      if (enabled) {
+        remoteStreams.value.forEach((stream, userId) => {
+          const index = Array.from(remoteStreams.value.keys()).indexOf(userId)
+          const pos = calculateSpatialPosition(index)
+          spatialAudio.attachStream(userId, stream, pos)
+        })
+      } else {
+        spatialAudio.cleanup()
+      }
+    }
+  )
+
   function onRemoteStream(userId: number, stream: MediaStream) {
     remoteStreams.value = new Map(remoteStreams.value.set(userId, stream))
     if (spatialAudio.enabled) {
-      // Calculate a position based on number of remote streams to spread them out.
       const index = Array.from(remoteStreams.value.keys()).indexOf(userId)
-      const angle = (index * 45 * Math.PI) / 180 // Spread every 45 degrees
-      const radius = 2
-      const x = Math.sin(angle) * radius
-      const z = -Math.cos(angle) * radius
-      spatialAudio.attachStream(userId, stream, { x, y: 0, z })
+      const pos = calculateSpatialPosition(index)
+      spatialAudio.attachStream(userId, stream, pos)
     }
   }
 
@@ -63,6 +131,9 @@ export const useRtcStore = defineStore('rtc', () => {
     socket.off('user-status-changed')
     socket.off('room-activity-changed')
     socket.off('room-updated')
+    socket.off('room-member-joined')
+    socket.off('room-member-left')
+    socket.off('room-deleted')
     socket.off('call-users')
     socket.off('call-user-joined')
     socket.off('call-user-left')
@@ -130,6 +201,34 @@ export const useRtcStore = defineStore('rtc', () => {
       if (idx >= 0) roomStore.rooms[idx] = room
     })
 
+    socket.on('room-member-joined', ({ roomId: rid, user: u }: { roomId: string; user: any }) => {
+      if (roomStore.currentRoom?.id === rid && roomStore.currentRoom?.members) {
+        const exists = roomStore.currentRoom.members.some((m) => m.id === u.id)
+        if (!exists) {
+          roomStore.currentRoom.members.push(u)
+          roomStore.currentRoom.memberCount = roomStore.currentRoom.members.length
+        }
+      }
+    })
+
+    socket.on(
+      'room-member-left',
+      ({ roomId: rid, userId: uid }: { roomId: string; userId: number }) => {
+        if (roomStore.currentRoom?.id === rid && roomStore.currentRoom?.members) {
+          roomStore.currentRoom.members = roomStore.currentRoom.members.filter((m) => m.id !== uid)
+          roomStore.currentRoom.memberCount = roomStore.currentRoom.members.length
+        }
+      }
+    )
+
+    socket.on('room-deleted', ({ roomId: rid }: { roomId: string }) => {
+      roomStore.rooms = roomStore.rooms.filter((r) => r.id !== rid)
+      if (roomStore.currentRoom?.id === rid) {
+        useToastStore().push('Pokój został usunięty przez właściciela.')
+        router.push('/')
+      }
+    })
+
     // Voice/video call participants (separate from "in room")
     socket.on('call-users', ({ users }: { users: { userId: number; socketId: string }[] }) => {
       const m = new Map<number, string>()
@@ -185,6 +284,9 @@ export const useRtcStore = defineStore('rtc', () => {
       socket.removeAllListeners('user-status-changed')
       socket.removeAllListeners('room-activity-changed')
       socket.removeAllListeners('room-updated')
+      socket.removeAllListeners('room-member-joined')
+      socket.removeAllListeners('room-member-left')
+      socket.removeAllListeners('room-deleted')
       socket.removeAllListeners('call-users')
       socket.removeAllListeners('call-user-joined')
       socket.removeAllListeners('call-user-left')
@@ -359,5 +461,7 @@ export const useRtcStore = defineStore('rtc', () => {
     toggleVideo,
     shareScreen,
     stopScreenShare,
+    calculateSpatialPosition,
+    updateSpatialPositions,
   }
 })
