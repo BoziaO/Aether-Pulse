@@ -1,48 +1,38 @@
-import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core'
-import { createInsertSchema } from 'drizzle-zod'
-import { z } from 'zod/v4'
-import { usersTable } from './users'
-import { roomsTable } from './rooms'
+import mongoose, { Schema, Document, Model } from 'mongoose'
 
-export const messagesTable = sqliteTable(
-  'messages',
+export interface IMessage extends Document {
+  _id: mongoose.Types.ObjectId
+  roomId: mongoose.Types.ObjectId
+  userId: mongoose.Types.ObjectId
+  content: string
+  type: 'text' | 'system' | 'file'
+  replyToId?: mongoose.Types.ObjectId | null
+  editedAt?: Date | null
+  isDeleted: boolean
+  attachmentUrl?: string | null
+  attachmentName?: string | null
+  attachmentMime?: string | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+const MessageSchema = new Schema<IMessage>(
   {
-    id: integer('id').primaryKey({ autoIncrement: true }),
-    roomId: text('room_id')
-      .notNull()
-      .references(() => roomsTable.id, { onDelete: 'cascade' }),
-    userId: integer('user_id')
-      .notNull()
-      .references(() => usersTable.id, { onDelete: 'cascade' }),
-    content: text('content').notNull(),
-    type: text('type', { enum: ['text', 'system', 'file'] })
-      .notNull()
-      .default('text'),
-    replyToId: integer('reply_to_id'),
-    editedAt: integer('edited_at', { mode: 'timestamp_ms' }),
-    isDeleted: integer('is_deleted', { mode: 'boolean' }).notNull().default(false),
-    attachmentUrl: text('attachment_url'),
-    attachmentName: text('attachment_name'),
-    attachmentMime: text('attachment_mime'),
-    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().defaultNow(),
+    roomId: { type: Schema.Types.ObjectId, ref: 'Room', required: true, index: true },
+    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    content: { type: String, required: true },
+    type: { type: String, enum: ['text', 'system', 'file'], default: 'text' },
+    replyToId: { type: Schema.Types.ObjectId, ref: 'Message', default: null, index: true },
+    editedAt: { type: Date, default: null },
+    isDeleted: { type: Boolean, default: false },
+    attachmentUrl: { type: String, default: null },
+    attachmentName: { type: String, default: null },
+    attachmentMime: { type: String, default: null },
   },
-  (table) => ({
-    // Index for room-based message queries
-    roomIdIdx: index('messages_room_id_idx').on(table.roomId),
-    // Index for user-based message queries
-    userIdIdx: index('messages_user_id_idx').on(table.userId),
-    // Index for reply chain lookups
-    replyToIdIdx: index('messages_reply_to_idx').on(table.replyToId),
-    // Index for createdAt (time-based queries, pagination)
-    createdAtIdx: index('messages_created_at_idx').on(table.createdAt),
-    // Composite index for room + createdAt (most common query pattern)
-    roomIdCreatedAtIdx: index('messages_room_created_idx').on(table.roomId, table.createdAt),
-  })
+  { timestamps: true }
 )
 
-export const insertMessageSchema = createInsertSchema(messagesTable).omit({
-  id: true,
-  createdAt: true,
-})
-export type InsertMessage = z.infer<typeof insertMessageSchema>
-export type Message = typeof messagesTable.$inferSelect
+MessageSchema.index({ roomId: 1, createdAt: -1 })
+
+export const Message: Model<IMessage> =
+  mongoose.models.Message ?? mongoose.model<IMessage>('Message', MessageSchema)

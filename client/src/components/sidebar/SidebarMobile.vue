@@ -53,6 +53,26 @@ async function handleLogout() {
   router.push('/auth')
   emit('close')
 }
+
+function goToFriends() {
+  router.push('/friends')
+  emit('close')
+}
+
+function goToProfile() {
+  router.push('/profile')
+  emit('close')
+}
+
+function goToSettings() {
+  router.push('/settings')
+  emit('close')
+}
+
+function handleCreateRoom() {
+  emit('create-room')
+  emit('close')
+}
 </script>
 
 <template>
@@ -72,10 +92,7 @@ async function handleLogout() {
           <button
             class="nav-item"
             :class="{ active: route.path === '/friends' }"
-            @click="
-              router.push('/friends')
-              emit('close')
-            "
+            @click="goToFriends"
           >
             <Users :size="18" />
             <span>Friends</span>
@@ -99,10 +116,7 @@ async function handleLogout() {
           <button
             v-if="dmStore.conversations.length > 5"
             class="nav-item see-all"
-            @click="
-              router.push('/friends')
-              emit('close')
-            "
+            @click="goToFriends"
           >
             <span>See all conversations...</span>
           </button>
@@ -121,13 +135,7 @@ async function handleLogout() {
             <span>{{ room.name }}</span>
             <span v-if="room.isActive" class="active-dot" />
           </button>
-          <button
-            class="nav-item new-room"
-            @click="
-              emit('create-room')
-              emit('close')
-            "
-          >
+          <button class="nav-item new-room" @click="handleCreateRoom">
             <Plus :size="18" />
             <span>New Room</span>
           </button>
@@ -139,13 +147,7 @@ async function handleLogout() {
           <span class="call-dot pulse" />
           <span>Voice Connected</span>
         </div>
-        <div
-          class="user-item"
-          @click="
-            router.push('/profile')
-            emit('close')
-          "
-        >
+        <div class="user-item" @click="goToProfile">
           <UserAvatar :user="auth.user" :size="32" />
           <div class="user-info">
             <span class="user-name">{{ auth.user?.displayName }}</span>
@@ -153,14 +155,7 @@ async function handleLogout() {
           </div>
         </div>
         <div class="footer-actions">
-          <button
-            class="footer-btn"
-            @click="
-              router.push('/settings')
-              emit('close')
-            "
-            title="Settings"
-          >
+          <button class="footer-btn" @click="goToSettings" title="Settings">
             <Settings :size="18" />
           </button>
           <button class="footer-btn" @click="handleLogout" title="Log out">

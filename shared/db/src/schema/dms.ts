@@ -1,87 +1,87 @@
-import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core'
-import { usersTable } from './users'
+import mongoose, { Schema, Document, Model } from 'mongoose'
 
-export const dmConversationsTable = sqliteTable(
-  'dm_conversations',
-  {
-    id: text('id').primaryKey(),
-    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().defaultNow(),
-    updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
-      .notNull()
-      .defaultNow()
-      .$onUpdate(() => new Date()),
+// ─── DmConversation ──────────────────────────────────────────────────────────
+
+export interface IDmConversation extends Document {
+  _id: mongoose.Types.ObjectId
+  createdAt: Date
+  updatedAt: Date
+}
+
+const DmConversationSchema = new Schema<IDmConversation>({}, { timestamps: true })
+
+DmConversationSchema.index({ updatedAt: -1 })
+
+export const DmConversation: Model<IDmConversation> =
+  mongoose.models.DmConversation ??
+  mongoose.model<IDmConversation>('DmConversation', DmConversationSchema)
+
+// ─── DmParticipant ───────────────────────────────────────────────────────────
+
+export interface IDmParticipant extends Document {
+  _id: mongoose.Types.ObjectId
+  conversationId: mongoose.Types.ObjectId
+  userId: mongoose.Types.ObjectId
+  joinedAt: Date
+}
+
+const DmParticipantSchema = new Schema<IDmParticipant>({
+  conversationId: {
+    type: Schema.Types.ObjectId,
+    ref: 'DmConversation',
+    required: true,
+    index: true,
   },
-  (table) => ({
-    // Index for createdAt (time-based queries)
-    createdAtIdx: index('dm_conversations_created_idx').on(table.createdAt),
-    // Index for updatedAt (recent conversations)
-    updatedAtIdx: index('dm_conversations_updated_idx').on(table.updatedAt),
-  })
+  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+  joinedAt: { type: Date, default: Date.now },
+})
+
+DmParticipantSchema.index({ conversationId: 1, userId: 1 }, { unique: true })
+
+export const DmParticipant: Model<IDmParticipant> =
+  mongoose.models.DmParticipant ??
+  mongoose.model<IDmParticipant>('DmParticipant', DmParticipantSchema)
+
+// ─── DmMessage ───────────────────────────────────────────────────────────────
+
+export interface IDmMessage extends Document {
+  _id: mongoose.Types.ObjectId
+  conversationId: mongoose.Types.ObjectId
+  userId: mongoose.Types.ObjectId
+  content: string
+  type: 'text' | 'file'
+  attachmentUrl?: string | null
+  attachmentName?: string | null
+  attachmentMime?: string | null
+  replyToId?: mongoose.Types.ObjectId | null
+  editedAt?: Date | null
+  isDeleted: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+const DmMessageSchema = new Schema<IDmMessage>(
+  {
+    conversationId: {
+      type: Schema.Types.ObjectId,
+      ref: 'DmConversation',
+      required: true,
+      index: true,
+    },
+    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    content: { type: String, required: true },
+    type: { type: String, enum: ['text', 'file'], default: 'text' },
+    attachmentUrl: { type: String, default: null },
+    attachmentName: { type: String, default: null },
+    attachmentMime: { type: String, default: null },
+    replyToId: { type: Schema.Types.ObjectId, ref: 'DmMessage', default: null },
+    editedAt: { type: Date, default: null },
+    isDeleted: { type: Boolean, default: false },
+  },
+  { timestamps: true }
 )
 
-export const dmParticipantsTable = sqliteTable(
-  'dm_participants',
-  {
-    id: integer('id').primaryKey({ autoIncrement: true }),
-    conversationId: text('conversation_id')
-      .notNull()
-      .references(() => dmConversationsTable.id, { onDelete: 'cascade' }),
-    userId: integer('user_id')
-      .notNull()
-      .references(() => usersTable.id, { onDelete: 'cascade' }),
-    joinedAt: integer('joined_at', { mode: 'timestamp_ms' }).notNull().defaultNow(),
-  },
-  (table) => ({
-    // Index for conversation-based participant queries
-    conversationIdIdx: index('dm_participants_conversation_idx').on(table.conversationId),
-    // Index for user-based participant queries
-    userIdIdx: index('dm_participants_user_idx').on(table.userId),
-    // Composite index for conversation + user
-    conversationUserIdx: index('dm_participants_conv_user_idx').on(
-      table.conversationId,
-      table.userId
-    ),
-  })
-)
+DmMessageSchema.index({ conversationId: 1, createdAt: -1 })
 
-export const dmMessagesTable = sqliteTable(
-  'dm_messages',
-  {
-    id: integer('id').primaryKey({ autoIncrement: true }),
-    conversationId: text('conversation_id')
-      .notNull()
-      .references(() => dmConversationsTable.id, { onDelete: 'cascade' }),
-    userId: integer('user_id')
-      .notNull()
-      .references(() => usersTable.id, { onDelete: 'cascade' }),
-    content: text('content').notNull(),
-    type: text('type', { enum: ['text', 'file'] })
-      .notNull()
-      .default('text'),
-    attachmentUrl: text('attachment_url'),
-    attachmentName: text('attachment_name'),
-    attachmentMime: text('attachment_mime'),
-    replyToId: integer('reply_to_id'),
-    editedAt: integer('edited_at', { mode: 'timestamp_ms' }),
-    isDeleted: integer('is_deleted', { mode: 'boolean' }).notNull().default(false),
-    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().defaultNow(),
-  },
-  (table) => ({
-    // Index for conversation-based message queries
-    conversationIdIdx: index('dm_messages_conversation_idx').on(table.conversationId),
-    // Index for user-based message queries
-    userIdIdx: index('dm_messages_user_idx').on(table.userId),
-    // Index for reply chain lookups
-    replyToIdIdx: index('dm_messages_reply_idx').on(table.replyToId),
-    // Index for createdAt (time-based queries, pagination)
-    createdAtIdx: index('dm_messages_created_idx').on(table.createdAt),
-    // Composite index for conversation + createdAt (most common query pattern)
-    conversationCreatedAtIdx: index('dm_messages_conv_created_idx').on(
-      table.conversationId,
-      table.createdAt
-    ),
-  })
-)
-
-export type DmConversation = typeof dmConversationsTable.$inferSelect
-export type DmMessage = typeof dmMessagesTable.$inferSelect
+export const DmMessage: Model<IDmMessage> =
+  mongoose.models.DmMessage ?? mongoose.model<IDmMessage>('DmMessage', DmMessageSchema)

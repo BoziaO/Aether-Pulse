@@ -1,115 +1,91 @@
-import { and, eq, inArray } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
-import {
-  db,
-  dmConversationsTable,
-  dmParticipantsTable,
-  dmMessagesTable,
-  usersTable,
-} from '@workspace/db'
+import { DmConversation, DmParticipant, DmMessage, User } from '@workspace/db'
 import { serializeUser } from './serialize-user'
 
 export async function findConversationBetween(
-  userA: number,
-  userB: number
+  userA: string,
+  userB: string
 ): Promise<string | null> {
-  const participants = await db
-    .select()
-    .from(dmParticipantsTable)
-    .where(inArray(dmParticipantsTable.userId, [userA, userB]))
+  // Find conversations where both users are participants
+  const participationsA = await DmParticipant.find({ userId: userA }).lean()
+  const convIdsA = participationsA.map((p) => p.conversationId.toString())
 
-  const byConversation = new Map<string, Set<number>>()
-  for (const p of participants) {
-    const set = byConversation.get(p.conversationId) ?? new Set()
-    set.add(p.userId)
-    byConversation.set(p.conversationId, set)
-  }
+  if (convIdsA.length === 0) return null
 
-  for (const [convId, users] of byConversation) {
-    if (users.has(userA) && users.has(userB) && users.size === 2) return convId
+  const participationsB = await DmParticipant.find({
+    conversationId: { $in: convIdsA },
+    userId: userB,
+  }).lean()
+
+  if (participationsB.length === 0) return null
+
+  // Find the conversation that has exactly both of them
+  for (const p of participationsB) {
+    const convId = p.conversationId.toString()
+    const allParticipants = await DmParticipant.find({ conversationId: convId }).lean()
+    if (allParticipants.length === 2) return convId
   }
   return null
 }
 
-export async function getOrCreateConversation(userA: number, userB: number): Promise<string> {
+export async function getOrCreateConversation(userA: string, userB: string): Promise<string> {
   const existing = await findConversationBetween(userA, userB)
   if (existing) return existing
 
-  const id = nanoid(12)
-  await db.insert(dmConversationsTable).values({ id })
-  await db.insert(dmParticipantsTable).values([
+  const conv = await DmConversation.create({})
+  const id = conv._id.toString()
+  await DmParticipant.create([
     { conversationId: id, userId: userA },
     { conversationId: id, userId: userB },
   ])
   return id
 }
 
-export async function isDmParticipant(conversationId: string, userId: number): Promise<boolean> {
-  const [row] = await db
-    .select()
-    .from(dmParticipantsTable)
-    .where(
-      and(
-        eq(dmParticipantsTable.conversationId, conversationId),
-        eq(dmParticipantsTable.userId, userId)
-      )
-    )
-    .limit(1)
+export async function isDmParticipant(conversationId: string, userId: string): Promise<boolean> {
+  const row = await DmParticipant.findOne({ conversationId, userId }).lean()
   return Boolean(row)
 }
 
-export async function buildDmMessagePayload(messageId: number) {
-  const [row] = await db
-    .select({ message: dmMessagesTable, user: usersTable })
-    .from(dmMessagesTable)
-    .innerJoin(usersTable, eq(dmMessagesTable.userId, usersTable.id))
-    .where(eq(dmMessagesTable.id, messageId))
-    .limit(1)
+export async function buildDmMessagePayload(messageId: string) {
+  const message = await DmMessage.findById(messageId).lean()
+  if (!message) return null
 
-  if (!row) return null
+  const user = await User.findById(message.userId).lean()
 
   let replyTo = null
-  if (row.message.replyToId) {
-    const [parent] = await db
-      .select()
-      .from(dmMessagesTable)
-      .where(eq(dmMessagesTable.id, row.message.replyToId))
-      .limit(1)
+  if (message.replyToId) {
+    const parent = await DmMessage.findById(message.replyToId).lean()
     if (parent) {
       replyTo = {
-        id: parent.id,
+        id: parent._id.toString(),
         content: parent.isDeleted ? 'Message deleted' : parent.content,
-        userId: parent.userId,
+        userId: parent.userId.toString(),
         isDeleted: parent.isDeleted,
       }
     }
   }
 
   return {
-    id: row.message.id,
-    conversationId: row.message.conversationId,
-    userId: row.message.userId,
-    content: row.message.isDeleted ? '' : row.message.content,
-    type: row.message.type,
-    attachmentUrl: row.message.attachmentUrl,
-    attachmentName: row.message.attachmentName,
-    attachmentMime: row.message.attachmentMime,
-    replyToId: row.message.replyToId ?? null,
-    editedAt: row.message.editedAt?.toISOString() ?? null,
-    isDeleted: row.message.isDeleted,
-    createdAt: row.message.createdAt.toISOString(),
-    user: serializeUser(row.user),
+    id: message._id.toString(),
+    conversationId: message.conversationId.toString(),
+    userId: message.userId.toString(),
+    content: message.isDeleted ? '' : message.content,
+    type: message.type,
+    attachmentUrl: message.attachmentUrl ?? null,
+    attachmentName: message.attachmentName ?? null,
+    attachmentMime: message.attachmentMime ?? null,
+    replyToId: message.replyToId ? message.replyToId.toString() : null,
+    editedAt: message.editedAt ? message.editedAt.toISOString() : null,
+    isDeleted: message.isDeleted,
+    createdAt: message.createdAt.toISOString(),
+    user: user ? serializeUser(user as any) : null,
     replyTo,
   }
 }
 
-export async function getOtherParticipant(conversationId: string, userId: number) {
-  const rows = await db
-    .select({ user: usersTable })
-    .from(dmParticipantsTable)
-    .innerJoin(usersTable, eq(dmParticipantsTable.userId, usersTable.id))
-    .where(eq(dmParticipantsTable.conversationId, conversationId))
-
-  const other = rows.find((r) => r.user.id !== userId)
-  return other?.user ?? null
+export async function getOtherParticipant(conversationId: string, userId: string) {
+  const participants = await DmParticipant.find({ conversationId }).lean()
+  const other = participants.find((p) => p.userId.toString() !== userId)
+  if (!other) return null
+  return User.findById(other.userId).lean()
 }

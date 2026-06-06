@@ -1,10 +1,9 @@
 import { Router, type IRouter } from 'express'
 import bcrypt from 'bcryptjs'
-import { eq } from 'drizzle-orm'
-import { db, usersTable } from '@workspace/db'
+import { User } from '@workspace/db'
 import { RegisterBody, LoginBody, RefreshBody } from '@workspace/api-zod'
 import { serializeUser } from '../utils/serialize-user'
-import { generateTokens, verifyRefreshToken, type JwtPayload } from '../middleware/auth'
+import { generateTokens, verifyRefreshToken } from '../middleware/auth'
 
 const router: IRouter = Router()
 
@@ -17,23 +16,16 @@ router.post('/auth/register', async (req, res): Promise<void> => {
 
   const { username, password, displayName } = parsed.data
 
-  const [existing] = await db.select().from(usersTable).where(eq(usersTable.username, username))
+  const existing = await User.findOne({ username })
   if (existing) {
     res.status(409).json({ error: 'Username already taken' })
     return
   }
 
   const passwordHash = await bcrypt.hash(password, 10)
-  const [user] = await db
-    .insert(usersTable)
-    .values({ username, passwordHash, displayName, status: 'online' })
-    .returning()
+  const user = await User.create({ username, passwordHash, displayName, status: 'online' })
 
-  // Generate JWT tokens
-  const { accessToken, refreshToken } = generateTokens(user.id, user.username)
-
-  // Update user status
-  await db.update(usersTable).set({ status: 'online' }).where(eq(usersTable.id, user.id))
+  const { accessToken, refreshToken } = generateTokens(user._id.toString(), user.username)
 
   res.status(201).json({
     user: { ...serializeUser(user), status: 'online' },
@@ -50,7 +42,7 @@ router.post('/auth/login', async (req, res): Promise<void> => {
   }
 
   const { username, password } = parsed.data
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.username, username))
+  const user = await User.findOne({ username })
   if (!user) {
     res.status(401).json({ error: 'Invalid credentials' })
     return
@@ -62,11 +54,9 @@ router.post('/auth/login', async (req, res): Promise<void> => {
     return
   }
 
-  // Update user status
-  await db.update(usersTable).set({ status: 'online' }).where(eq(usersTable.id, user.id))
+  await User.findByIdAndUpdate(user._id, { status: 'online' })
 
-  // Generate JWT tokens
-  const { accessToken, refreshToken } = generateTokens(user.id, user.username)
+  const { accessToken, refreshToken } = generateTokens(user._id.toString(), user.username)
 
   res.json({
     user: { ...serializeUser(user), status: 'online' },
@@ -76,11 +66,9 @@ router.post('/auth/login', async (req, res): Promise<void> => {
 })
 
 router.post('/auth/logout', async (req, res): Promise<void> => {
-  // For JWT, logout is stateless - client should discard tokens
-  // We can optionally track tokens in a blacklist (Redis) for immediate invalidation
   const userId = (req as any).user?.userId
   if (userId) {
-    await db.update(usersTable).set({ status: 'offline' }).where(eq(usersTable.id, userId))
+    await User.findByIdAndUpdate(userId, { status: 'offline' })
   }
   res.json({ ok: true })
 })
@@ -88,13 +76,11 @@ router.post('/auth/logout', async (req, res): Promise<void> => {
 router.get('/auth/me', async (req, res): Promise<void> => {
   const userId = (req as any).user?.userId
   if (!userId) {
-    // Returning 200 prevents "failed to load resource 401" noise in the browser console
-    // and lets the client treat unauthenticated state as a normal case.
     res.json({ user: null })
     return
   }
 
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId))
+  const user = await User.findById(userId)
   if (!user) {
     res.json({ user: null })
     return
@@ -103,7 +89,6 @@ router.get('/auth/me', async (req, res): Promise<void> => {
   res.json({ user: serializeUser(user) })
 })
 
-// JWT token refresh endpoint
 router.post('/auth/refresh', async (req, res): Promise<void> => {
   const parsed = RefreshBody.safeParse(req.body)
   if (!parsed.success) {
@@ -116,33 +101,23 @@ router.post('/auth/refresh', async (req, res): Promise<void> => {
 
   if (!payload) {
     res.status(401).json({
-      error: {
-        message: 'Invalid or expired refresh token',
-        code: 'INVALID_REFRESH_TOKEN',
-      },
+      error: { message: 'Invalid or expired refresh token', code: 'INVALID_REFRESH_TOKEN' },
     })
     return
   }
 
-  // Verify user still exists
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, payload.userId))
+  const user = await User.findById(payload.userId)
   if (!user) {
-    res.status(401).json({
-      error: {
-        message: 'User not found',
-        code: 'USER_NOT_FOUND',
-      },
-    })
+    res.status(401).json({ error: { message: 'User not found', code: 'USER_NOT_FOUND' } })
     return
   }
 
-  // Generate new token pair
-  const { accessToken, refreshToken: newRefreshToken } = generateTokens(user.id, user.username)
+  const { accessToken, refreshToken: newRefreshToken } = generateTokens(
+    user._id.toString(),
+    user.username
+  )
 
-  res.json({
-    accessToken,
-    refreshToken: newRefreshToken,
-  })
+  res.json({ accessToken, refreshToken: newRefreshToken })
 })
 
 export default router

@@ -1,6 +1,5 @@
 import { Router, type IRouter } from 'express'
-import { eq, desc, and, lt, like, inArray } from 'drizzle-orm'
-import { db, messagesTable, messageReactionsTable, usersTable } from '@workspace/db'
+import { Message, MessageReaction, User } from '@workspace/db'
 import { SendMessageBody } from '@workspace/api-zod'
 import { isRoomMember } from '../utils/room-auth'
 import {
@@ -13,7 +12,7 @@ import { saveUploadedFile } from '../utils/upload'
 
 const router: IRouter = Router()
 
-function requireAuth(req: any, res: any): number | null {
+function requireAuth(req: any, res: any): string | null {
   const userId = req.user?.userId
   if (!userId) {
     res.status(401).json({ error: 'Not authenticated' })
@@ -32,43 +31,42 @@ router.get('/rooms/:roomId/messages', async (req, res): Promise<void> => {
     return
   }
 
-  const before = req.query.before ? Number(req.query.before) : null
+  const before = req.query.before ? String(req.query.before) : null
   const limit = Math.min(Number(req.query.limit) || 50, 100)
 
-  const conditions = [eq(messagesTable.roomId, rawId)]
-  if (before && !Number.isNaN(before)) {
-    conditions.push(lt(messagesTable.id, before))
+  const query: any = { roomId: rawId }
+  if (before) {
+    query._id = { $lt: before }
   }
 
-  const rows = await db
-    .select({ message: messagesTable, user: usersTable })
-    .from(messagesTable)
-    .innerJoin(usersTable, eq(messagesTable.userId, usersTable.id))
-    .where(and(...conditions))
-    .orderBy(desc(messagesTable.createdAt))
-    .limit(limit)
-
+  const rows = await Message.find(query).sort({ createdAt: -1 }).limit(limit).lean()
   const ordered = rows.reverse()
-  const messageIds = ordered.map((r) => r.message.id)
+  const messageIds = ordered.map((r) => r._id.toString())
   const reactionsMap = await getReactionsForMessages(messageIds)
 
-  const replyIds = ordered.map((r) => r.message.replyToId).filter((id): id is number => id != null)
-  const replyRows = replyIds.length
-    ? await db.select().from(messagesTable).where(inArray(messagesTable.id, replyIds))
-    : []
-  const replyMap = new Map(replyRows.map((r) => [r.id, r]))
+  const replyIds = ordered
+    .map((r) => r.replyToId?.toString())
+    .filter((id): id is string => id != null)
+  const replyDocs = replyIds.length ? await Message.find({ _id: { $in: replyIds } }).lean() : []
+  const replyMap = new Map(replyDocs.map((r) => [r._id.toString(), r]))
+
+  const userIds = [...new Set(ordered.map((r) => r.userId.toString()))]
+  const users = await User.find({ _id: { $in: userIds } }).lean()
+  const userMap = new Map(users.map((u) => [u._id.toString(), u]))
 
   const messages = ordered.map((r) => {
-    const parent = r.message.replyToId ? replyMap.get(r.message.replyToId) : null
+    const msgId = r._id.toString()
+    const user = userMap.get(r.userId.toString())
+    const parent = r.replyToId ? replyMap.get(r.replyToId.toString()) : null
     return serializeMessageRow(
-      r.message,
-      r.user,
-      reactionsMap.get(r.message.id) ?? [],
+      r as any,
+      user,
+      reactionsMap.get(msgId) ?? [],
       parent
         ? {
-            id: parent.id,
+            id: parent._id.toString(),
             content: parent.isDeleted ? 'Message deleted' : parent.content,
-            userId: parent.userId,
+            userId: parent.userId.toString(),
             isDeleted: parent.isDeleted,
           }
         : null
@@ -93,28 +91,31 @@ router.get('/rooms/:roomId/messages/search', async (req, res): Promise<void> => 
     return
   }
 
-  const rows = await db
-    .select({ message: messagesTable, user: usersTable })
-    .from(messagesTable)
-    .innerJoin(usersTable, eq(messagesTable.userId, usersTable.id))
-    .where(
-      and(
-        eq(messagesTable.roomId, rawId),
-        eq(messagesTable.isDeleted, false),
-        eq(messagesTable.type, 'text'),
-        like(messagesTable.content, `%${q}%`)
-      )
-    )
-    .orderBy(desc(messagesTable.createdAt))
+  const rows = await Message.find({
+    roomId: rawId,
+    isDeleted: false,
+    type: 'text',
+    content: { $regex: q, $options: 'i' },
+  })
+    .sort({ createdAt: -1 })
     .limit(25)
+    .lean()
 
-  const messageIds = rows.map((r) => r.message.id)
+  const ordered = rows.reverse()
+  const messageIds = ordered.map((r) => r._id.toString())
   const reactionsMap = await getReactionsForMessages(messageIds)
+  const userIds = [...new Set(ordered.map((r) => r.userId.toString()))]
+  const users = await User.find({ _id: { $in: userIds } }).lean()
+  const userMap = new Map(users.map((u) => [u._id.toString(), u]))
 
   res.json(
-    rows
-      .reverse()
-      .map((r) => serializeMessageRow(r.message, r.user, reactionsMap.get(r.message.id) ?? []))
+    ordered.map((r) =>
+      serializeMessageRow(
+        r as any,
+        userMap.get(r.userId.toString()),
+        reactionsMap.get(r._id.toString()) ?? []
+      )
+    )
   )
 })
 
@@ -134,20 +135,17 @@ router.post('/rooms/:roomId/messages', async (req, res): Promise<void> => {
     return
   }
 
-  const replyToId = typeof req.body.replyToId === 'number' ? req.body.replyToId : null
+  const replyToId = typeof req.body.replyToId === 'string' ? req.body.replyToId : null
 
-  const [msg] = await db
-    .insert(messagesTable)
-    .values({
-      roomId: rawId,
-      userId,
-      content: parsed.data.content.trim(),
-      type: (parsed.data.type as any) ?? 'text',
-      replyToId: replyToId ?? undefined,
-    })
-    .returning()
+  const msg = await Message.create({
+    roomId: rawId,
+    userId,
+    content: parsed.data.content.trim(),
+    type: parsed.data.type ?? 'text',
+    replyToId: replyToId || undefined,
+  })
 
-  const result = await buildMessagePayload(msg.id)
+  const result = await buildMessagePayload(msg._id.toString())
   if (result) {
     broadcastMessage(req.app.get('io'), rawId, 'new-message', result)
   }
@@ -160,9 +158,9 @@ router.patch('/rooms/:roomId/messages/:messageId', async (req, res): Promise<voi
   if (!userId) return
 
   const rawId = Array.isArray(req.params.roomId) ? req.params.roomId[0] : req.params.roomId
-  const messageId = Number(
-    Array.isArray(req.params.messageId) ? req.params.messageId[0] : req.params.messageId
-  )
+  const messageId = Array.isArray(req.params.messageId)
+    ? req.params.messageId[0]
+    : req.params.messageId
   const content = String(req.body.content ?? '').trim()
 
   if (!content) {
@@ -170,16 +168,12 @@ router.patch('/rooms/:roomId/messages/:messageId', async (req, res): Promise<voi
     return
   }
 
-  const [existing] = await db
-    .select()
-    .from(messagesTable)
-    .where(and(eq(messagesTable.id, messageId), eq(messagesTable.roomId, rawId)))
-
+  const existing = await Message.findOne({ _id: messageId, roomId: rawId })
   if (!existing) {
     res.status(404).json({ error: 'Message not found' })
     return
   }
-  if (existing.userId !== userId) {
+  if (existing.userId.toString() !== userId) {
     res.status(403).json({ error: 'Forbidden' })
     return
   }
@@ -188,10 +182,7 @@ router.patch('/rooms/:roomId/messages/:messageId', async (req, res): Promise<voi
     return
   }
 
-  await db
-    .update(messagesTable)
-    .set({ content, editedAt: new Date() })
-    .where(eq(messagesTable.id, messageId))
+  await Message.findByIdAndUpdate(messageId, { content, editedAt: new Date() })
 
   const result = await buildMessagePayload(messageId)
   if (result) {
@@ -205,28 +196,21 @@ router.delete('/rooms/:roomId/messages/:messageId', async (req, res): Promise<vo
   if (!userId) return
 
   const rawId = Array.isArray(req.params.roomId) ? req.params.roomId[0] : req.params.roomId
-  const messageId = Number(
-    Array.isArray(req.params.messageId) ? req.params.messageId[0] : req.params.messageId
-  )
+  const messageId = Array.isArray(req.params.messageId)
+    ? req.params.messageId[0]
+    : req.params.messageId
 
-  const [existing] = await db
-    .select()
-    .from(messagesTable)
-    .where(and(eq(messagesTable.id, messageId), eq(messagesTable.roomId, rawId)))
-
+  const existing = await Message.findOne({ _id: messageId, roomId: rawId })
   if (!existing) {
     res.status(404).json({ error: 'Message not found' })
     return
   }
-  if (existing.userId !== userId) {
+  if (existing.userId.toString() !== userId) {
     res.status(403).json({ error: 'Forbidden' })
     return
   }
 
-  await db
-    .update(messagesTable)
-    .set({ isDeleted: true, content: '' })
-    .where(eq(messagesTable.id, messageId))
+  await Message.findByIdAndUpdate(messageId, { isDeleted: true, content: '' })
 
   const result = await buildMessagePayload(messageId)
   if (result) {
@@ -246,9 +230,9 @@ router.post('/rooms/:roomId/messages/:messageId/reactions', async (req, res): Pr
     return
   }
 
-  const messageId = Number(
-    Array.isArray(req.params.messageId) ? req.params.messageId[0] : req.params.messageId
-  )
+  const messageId = Array.isArray(req.params.messageId)
+    ? req.params.messageId[0]
+    : req.params.messageId
   const emoji = String(req.body.emoji ?? '').trim()
 
   if (!emoji) {
@@ -256,31 +240,17 @@ router.post('/rooms/:roomId/messages/:messageId/reactions', async (req, res): Pr
     return
   }
 
-  const [existing] = await db
-    .select()
-    .from(messagesTable)
-    .where(and(eq(messagesTable.id, messageId), eq(messagesTable.roomId, rawId)))
-
+  const existing = await Message.findOne({ _id: messageId, roomId: rawId })
   if (!existing) {
     res.status(404).json({ error: 'Message not found' })
     return
   }
 
-  const [reaction] = await db
-    .select()
-    .from(messageReactionsTable)
-    .where(
-      and(
-        eq(messageReactionsTable.messageId, messageId),
-        eq(messageReactionsTable.userId, userId),
-        eq(messageReactionsTable.emoji, emoji)
-      )
-    )
-
+  const reaction = await MessageReaction.findOne({ messageId, userId, emoji })
   if (reaction) {
-    await db.delete(messageReactionsTable).where(eq(messageReactionsTable.id, reaction.id))
+    await MessageReaction.findByIdAndDelete(reaction._id)
   } else {
-    await db.insert(messageReactionsTable).values({ messageId, userId, emoji })
+    await MessageReaction.create({ messageId, userId, emoji })
   }
 
   const result = await buildMessagePayload(messageId)
@@ -303,7 +273,7 @@ router.post('/rooms/:roomId/upload', async (req, res): Promise<void> => {
   const dataUrl = String(req.body.dataUrl ?? '')
   const fileName = String(req.body.fileName ?? 'file')
   const caption = String(req.body.caption ?? '').trim()
-  const replyToId = typeof req.body.replyToId === 'number' ? req.body.replyToId : null
+  const replyToId = typeof req.body.replyToId === 'string' ? req.body.replyToId : null
 
   const saved = saveUploadedFile(`room-${rawId}`, dataUrl, fileName)
   if (!saved) {
@@ -311,21 +281,18 @@ router.post('/rooms/:roomId/upload', async (req, res): Promise<void> => {
     return
   }
 
-  const [msg] = await db
-    .insert(messagesTable)
-    .values({
-      roomId: rawId,
-      userId,
-      content: caption || saved.name,
-      type: 'file',
-      attachmentUrl: saved.url,
-      attachmentName: saved.name,
-      attachmentMime: saved.mime,
-      replyToId: replyToId ?? undefined,
-    })
-    .returning()
+  const msg = await Message.create({
+    roomId: rawId,
+    userId,
+    content: caption || saved.name,
+    type: 'file',
+    attachmentUrl: saved.url,
+    attachmentName: saved.name,
+    attachmentMime: saved.mime,
+    replyToId: replyToId || undefined,
+  })
 
-  const result = await buildMessagePayload(msg.id)
+  const result = await buildMessagePayload(msg._id.toString())
   if (result) {
     broadcastMessage(req.app.get('io'), rawId, 'new-message', result)
   }

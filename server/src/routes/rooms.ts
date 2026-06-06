@@ -1,6 +1,5 @@
 import { Router, type IRouter } from 'express'
-import { eq, and, count, desc } from 'drizzle-orm'
-import { db, usersTable, roomsTable, roomMembersTable, messagesTable } from '@workspace/db'
+import { User, Room, RoomMember, Message } from '@workspace/db'
 import { CreateRoomBody, JoinRoomBody } from '@workspace/api-zod'
 import { randomBytes } from 'crypto'
 import { nanoid } from 'nanoid'
@@ -10,7 +9,7 @@ import { broadcastMessage } from '../utils/message-helpers'
 
 const router: IRouter = Router()
 
-function requireAuth(req: any, res: any): number | null {
+function requireAuth(req: any, res: any): string | null {
   const userId = req.user?.userId
   if (!userId) {
     res.status(401).json({ error: 'Not authenticated' })
@@ -20,86 +19,69 @@ function requireAuth(req: any, res: any): number | null {
 }
 
 async function getRoomWithMembers(roomId: string) {
-  const room = await db
-    .select()
-    .from(roomsTable)
-    .where(eq(roomsTable.id, roomId))
-    .then((r) => r[0])
+  const room = await Room.findById(roomId).lean()
   if (!room) return null
 
-  const memberRows = await db
-    .select({ user: usersTable })
-    .from(roomMembersTable)
-    .innerJoin(usersTable, eq(roomMembersTable.userId, usersTable.id))
-    .where(eq(roomMembersTable.roomId, roomId))
-
-  const members = memberRows.map((r) => serializeUser(r.user))
+  const memberRows = await RoomMember.find({ roomId }).populate('userId').lean()
+  const members = memberRows
+    .map((r: any) => (r.userId ? serializeUser(r.userId) : null))
+    .filter(Boolean)
 
   return {
-    ...room,
+    id: room._id.toString(),
+    name: room.name,
+    inviteCode: room.inviteCode,
+    ownerId: room.ownerId.toString(),
+    quality: room.quality,
+    isActive: room.isActive,
     memberCount: members.length,
     members,
     createdAt: room.createdAt.toISOString(),
+    updatedAt: room.updatedAt.toISOString(),
   }
 }
 
-async function logRoomEntry(req: any, roomId: string, userId: number) {
-  await db.transaction(async (tx) => {
-    const [existing] = await tx
-      .select()
-      .from(roomMembersTable)
-      .where(and(eq(roomMembersTable.roomId, roomId), eq(roomMembersTable.userId, userId)))
-
-    if (!existing) {
-      await tx.insert(roomMembersTable).values({ roomId, userId })
-      const [user] = await tx.select().from(usersTable).where(eq(usersTable.id, userId))
-      if (user) {
-        const [sysMsg] = await tx
-          .insert(messagesTable)
-          .values({
-            roomId,
-            userId,
-            content: `${user.displayName} joined the room`,
-            type: 'system',
-          })
-          .returning()
-        const payload = {
-          id: sysMsg.id,
-          roomId: sysMsg.roomId,
-          userId: sysMsg.userId,
-          content: sysMsg.content,
-          type: sysMsg.type,
-          replyToId: null,
-          editedAt: null,
-          isDeleted: false,
-          createdAt: sysMsg.createdAt.toISOString(),
-          user: serializeUser(user),
-          reactions: [],
-          replyTo: null,
-        }
-        req.app.get('io')?.to(roomId).emit('new-message', payload)
-        req.app
-          .get('io')
-          ?.to(roomId)
-          .emit('room-member-joined', {
-            roomId,
-            user: serializeUser(user),
-          })
+async function logRoomEntry(req: any, roomId: string, userId: string) {
+  const existing = await RoomMember.findOne({ roomId, userId })
+  if (!existing) {
+    await RoomMember.create({ roomId, userId })
+    const user = await User.findById(userId).lean()
+    if (user) {
+      const sysMsg = await Message.create({
+        roomId,
+        userId,
+        content: `${user.displayName} joined the room`,
+        type: 'system',
+      })
+      const payload = {
+        id: sysMsg._id.toString(),
+        roomId: sysMsg.roomId.toString(),
+        userId: sysMsg.userId.toString(),
+        content: sysMsg.content,
+        type: sysMsg.type,
+        replyToId: null,
+        editedAt: null,
+        isDeleted: false,
+        createdAt: sysMsg.createdAt.toISOString(),
+        user: serializeUser(user as any),
+        reactions: [],
+        replyTo: null,
       }
+      req.app.get('io')?.to(roomId).emit('new-message', payload)
+      req.app
+        .get('io')
+        ?.to(roomId)
+        .emit('room-member-joined', { roomId, user: serializeUser(user as any) })
     }
-  })
+  }
 }
 
 router.get('/rooms', async (req, res): Promise<void> => {
   const userId = requireAuth(req, res)
   if (!userId) return
 
-  const memberRooms = await db
-    .select({ roomId: roomMembersTable.roomId })
-    .from(roomMembersTable)
-    .where(eq(roomMembersTable.userId, userId))
-
-  const roomIds = memberRooms.map((r) => r.roomId)
+  const memberRooms = await RoomMember.find({ userId }).lean()
+  const roomIds = memberRooms.map((r) => r.roomId.toString())
   if (roomIds.length === 0) {
     res.json([])
     return
@@ -119,23 +101,17 @@ router.post('/rooms', async (req, res): Promise<void> => {
     return
   }
 
-  const roomId = nanoid(8)
   const inviteCode = randomBytes(4).toString('hex').toUpperCase()
+  const room = await Room.create({
+    name: parsed.data.name,
+    inviteCode,
+    ownerId: userId,
+    quality: parsed.data.quality ?? '1080p',
+  })
 
-  const [room] = await db
-    .insert(roomsTable)
-    .values({
-      id: roomId,
-      name: parsed.data.name,
-      inviteCode,
-      ownerId: userId,
-      quality: (parsed.data.quality as any) ?? '1080p',
-    })
-    .returning()
+  await RoomMember.create({ roomId: room._id.toString(), userId })
 
-  await db.insert(roomMembersTable).values({ roomId: room.id, userId })
-
-  const result = await getRoomWithMembers(room.id)
+  const result = await getRoomWithMembers(room._id.toString())
   if (!result) {
     res.status(500).json({ error: 'Failed to load newly created room' })
     return
@@ -167,13 +143,13 @@ router.patch('/rooms/:roomId', async (req, res): Promise<void> => {
   if (!userId) return
 
   const rawId = Array.isArray(req.params.roomId) ? req.params.roomId[0] : req.params.roomId
-  const [room] = await db.select().from(roomsTable).where(eq(roomsTable.id, rawId))
+  const room = await Room.findById(rawId)
 
   if (!room) {
     res.status(404).json({ error: 'Room not found' })
     return
   }
-  if (room.ownerId !== userId) {
+  if (room.ownerId.toString() !== userId) {
     res.status(403).json({ error: 'Only the room owner can update settings' })
     return
   }
@@ -192,10 +168,7 @@ router.patch('/rooms/:roomId', async (req, res): Promise<void> => {
     return
   }
 
-  await db
-    .update(roomsTable)
-    .set(updates as any)
-    .where(eq(roomsTable.id, rawId))
+  await Room.findByIdAndUpdate(rawId, updates)
   const result = await getRoomWithMembers(rawId)
   if (!result) {
     res.status(404).json({ error: 'Room not found' })
@@ -210,21 +183,21 @@ router.delete('/rooms/:roomId', async (req, res): Promise<void> => {
   if (!userId) return
 
   const rawId = Array.isArray(req.params.roomId) ? req.params.roomId[0] : req.params.roomId
-  const [room] = await db.select().from(roomsTable).where(eq(roomsTable.id, rawId))
+  const room = await Room.findById(rawId)
   if (!room) {
     res.status(404).json({ error: 'Room not found' })
     return
   }
-  if (room.ownerId !== userId) {
+  if (room.ownerId.toString() !== userId) {
     res.status(403).json({ error: 'Forbidden' })
     return
   }
 
-  req.app.get('io')?.to(rawId).emit('room-deleted', {
-    roomId: rawId,
-  })
+  req.app.get('io')?.to(rawId).emit('room-deleted', { roomId: rawId })
 
-  await db.delete(roomsTable).where(eq(roomsTable.id, rawId))
+  await Room.findByIdAndDelete(rawId)
+  await RoomMember.deleteMany({ roomId: rawId })
+  await Message.deleteMany({ roomId: rawId })
   res.sendStatus(204)
 })
 
@@ -238,19 +211,15 @@ router.post('/rooms/join-by-code', async (req, res): Promise<void> => {
     return
   }
 
-  const [room] = await db
-    .select()
-    .from(roomsTable)
-    .where(eq(roomsTable.inviteCode, parsed.data.inviteCode))
-
+  const room = await Room.findOne({ inviteCode: parsed.data.inviteCode })
   if (!room) {
     res.status(404).json({ error: 'Invalid invite code — room not found' })
     return
   }
 
-  await logRoomEntry(req, room.id, userId)
+  await logRoomEntry(req, room._id.toString(), userId)
 
-  const result = await getRoomWithMembers(room.id)
+  const result = await getRoomWithMembers(room._id.toString())
   if (!result) {
     res.status(404).json({ error: 'Room not found' })
     return
@@ -270,7 +239,7 @@ router.post('/rooms/:roomId/join', async (req, res): Promise<void> => {
     return
   }
 
-  const [room] = await db.select().from(roomsTable).where(eq(roomsTable.id, rawId))
+  const room = await Room.findById(rawId)
   if (!room) {
     res.status(404).json({ error: 'Room not found' })
     return
@@ -295,15 +264,9 @@ router.post('/rooms/:roomId/leave', async (req, res): Promise<void> => {
   if (!userId) return
 
   const rawId = Array.isArray(req.params.roomId) ? req.params.roomId[0] : req.params.roomId
-  await db
-    .delete(roomMembersTable)
-    .where(and(eq(roomMembersTable.roomId, rawId), eq(roomMembersTable.userId, userId)))
+  await RoomMember.deleteOne({ roomId: rawId, userId })
 
-  req.app.get('io')?.to(rawId).emit('room-member-left', {
-    roomId: rawId,
-    userId,
-  })
-
+  req.app.get('io')?.to(rawId).emit('room-member-left', { roomId: rawId, userId })
   res.json({ ok: true })
 })
 
@@ -318,36 +281,21 @@ router.get('/rooms/:roomId/activity', async (req, res): Promise<void> => {
     return
   }
 
-  const [memberCount] = await db
-    .select({ count: count() })
-    .from(roomMembersTable)
-    .where(eq(roomMembersTable.roomId, rawId))
-
-  const [msgCount] = await db
-    .select({ count: count() })
-    .from(messagesTable)
-    .where(eq(messagesTable.roomId, rawId))
-
-  const recentMessages = await db
-    .select({
-      content: messagesTable.content,
-      type: messagesTable.type,
-      userId: messagesTable.userId,
-      createdAt: messagesTable.createdAt,
-    })
-    .from(messagesTable)
-    .where(and(eq(messagesTable.roomId, rawId), eq(messagesTable.type, 'system')))
-    .orderBy(desc(messagesTable.createdAt))
+  const memberCount = await RoomMember.countDocuments({ roomId: rawId })
+  const messageCount = await Message.countDocuments({ roomId: rawId })
+  const recentMessages = await Message.find({ roomId: rawId, type: 'system' })
+    .sort({ createdAt: -1 })
     .limit(10)
+    .lean()
 
   res.json({
     roomId: rawId,
-    memberCount: Number(memberCount?.count ?? 0),
-    messageCount: Number(msgCount?.count ?? 0),
+    memberCount,
+    messageCount,
     events: recentMessages.map((m) => ({
       type: m.type,
       description: m.content,
-      userId: m.userId,
+      userId: m.userId.toString(),
       createdAt: m.createdAt.toISOString(),
     })),
   })

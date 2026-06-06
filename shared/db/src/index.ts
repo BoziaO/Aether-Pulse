@@ -1,46 +1,33 @@
-import { createClient } from '@libsql/client'
-import { drizzle } from 'drizzle-orm/libsql'
-import fs from 'node:fs'
-import path from 'node:path'
-import { fileURLToPath, pathToFileURL } from 'node:url'
-import * as schema from './schema'
+import mongoose from 'mongoose'
 
 if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL must be set. Did you forget to provision a database?')
+  throw new Error(
+    'DATABASE_URL must be set. Did you forget to configure MongoDB connection string?'
+  )
 }
 
-function findWorkspaceRoot(startDir: string): string {
-  let current = startDir
+let isConnected = false
 
-  while (true) {
-    const packageJsonPath = path.join(current, 'package.json')
-    if (fs.existsSync(packageJsonPath)) {
-      try {
-        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')) as {
-          name?: string
-        }
-        if (packageJson.name === 'aetherpulse' || packageJson.name === 'aetherpulse-monorepo')
-          return current
-      } catch {
-        // Keep walking if this package.json is not readable JSON.
-      }
-    }
+export async function connectDb(): Promise<void> {
+  if (isConnected) return
 
-    const parent = path.dirname(current)
-    if (parent === current) return startDir
-    current = parent
+  try {
+    await mongoose.connect(process.env.DATABASE_URL!, {
+      dbName: undefined, // taken from the URI
+    })
+    isConnected = true
+    console.log('[db] Connected to MongoDB')
+  } catch (error: any) {
+    console.error('\n========================================================================')
+    console.error('ERROR: Could not connect to MongoDB!')
+    console.error(`DATABASE_URL: ${process.env.DATABASE_URL}`)
+    console.error(`Details: ${error.message}`)
+    console.error('\nPlease make sure your MongoDB instance is running locally on port 27017,')
+    console.error('or update DATABASE_URL in your .env file with a valid connection string.')
+    console.error('========================================================================\n')
+    throw error
   }
 }
 
-function normalizeDatabaseUrl(url: string): string {
-  if (url.includes(':')) return url
-
-  const currentDir = path.dirname(fileURLToPath(import.meta.url))
-  const workspaceRoot = findWorkspaceRoot(currentDir)
-  return pathToFileURL(path.resolve(workspaceRoot, url)).href
-}
-
-const client = createClient({ url: normalizeDatabaseUrl(process.env.DATABASE_URL) })
-export const db = drizzle(client, { schema })
-
-export * from './schema'
+export { mongoose }
+export * from './schema/index.js'

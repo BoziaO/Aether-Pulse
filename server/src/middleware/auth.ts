@@ -10,7 +10,7 @@ if (!jwtSecret) {
 }
 
 export interface JwtPayload {
-  userId: number
+  userId: string
   username: string
   iat?: number
   exp?: number
@@ -24,7 +24,7 @@ export interface TokenPair {
 /**
  * Generate JWT token pair (access + refresh)
  */
-export function generateTokens(userId: number, username: string): TokenPair {
+export function generateTokens(userId: string, username: string): TokenPair {
   const accessToken = jwt.sign({ userId, username }, jwtSecret!, { expiresIn: jwtExpiresIn } as any)
 
   const refreshToken = jwt.sign({ userId, username }, jwtSecret!, {
@@ -122,7 +122,7 @@ import 'express-session'
 
 declare module 'express-session' {
   interface SessionData {
-    userId: number
+    userId: string
     csrfToken: string
     csrfTokenExpires: number
   }

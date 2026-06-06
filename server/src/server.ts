@@ -1,15 +1,15 @@
 import { createServer } from 'http'
 import { Server as SocketIOServer, type Socket } from 'socket.io'
-import { eq } from 'drizzle-orm'
 import app from './app'
 import { logger } from './utils/logger'
 import {
-  db,
-  messagesTable,
-  roomsTable,
-  usersTable,
-  dmMessagesTable,
-  dmConversationsTable,
+  connectDb,
+  Room,
+  Message,
+  User,
+  DmMessage,
+  DmConversation,
+  DmParticipant,
 } from '@workspace/db'
 import { isRoomMember } from './utils/room-auth'
 import { buildMessagePayload, broadcastMessage } from './utils/message-helpers'
@@ -21,6 +21,9 @@ const rawPort = process.env['PORT']
 if (!rawPort) throw new Error('PORT environment variable is required but was not provided.')
 const port = Number(rawPort)
 if (Number.isNaN(port) || port <= 0) throw new Error(`Invalid PORT value: "${rawPort}"`)
+
+// Connect to MongoDB before starting the HTTP server
+await connectDb()
 
 const httpServer = createServer(app)
 
@@ -52,21 +55,21 @@ if (redisUrl) {
 }
 
 interface RoomUser {
-  userId: number
+  userId: string
   socketId: string
 }
 
 const roomUsers = new Map<string, RoomUser[]>()
 const callUsers = new Map<string, RoomUser[]>()
 
-function addUserSocket(list: RoomUser[], userId: number, socketId: string) {
+function addUserSocket(list: RoomUser[], userId: string, socketId: string) {
   if (!list.some((u) => u.socketId === socketId)) {
     list.push({ userId, socketId })
   }
 }
 
 async function setRoomActive(roomId: string, active: boolean) {
-  await db.update(roomsTable).set({ isActive: active }).where(eq(roomsTable.id, roomId))
+  await Room.findByIdAndUpdate(roomId, { isActive: active })
   io.emit('room-activity-changed', { roomId, isActive: active })
 }
 
@@ -75,23 +78,20 @@ async function updateRoomActiveState(roomId: string) {
   await setRoomActive(roomId, callers.length > 0)
 }
 
-async function insertSystemMessage(roomId: string, userId: number, content: string) {
-  const [msg] = await db
-    .insert(messagesTable)
-    .values({ roomId, userId, content, type: 'system' })
-    .returning()
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId))
+async function insertSystemMessage(roomId: string, userId: string, content: string) {
+  const msg = await Message.create({ roomId, userId, content, type: 'system' })
+  const user = await User.findById(userId).lean()
   const payload = {
-    id: msg.id,
-    roomId: msg.roomId,
-    userId: msg.userId,
+    id: msg._id.toString(),
+    roomId: msg.roomId.toString(),
+    userId: msg.userId.toString(),
     content: msg.content,
     type: msg.type,
     replyToId: null,
     editedAt: null,
     isDeleted: false,
     createdAt: msg.createdAt.toISOString(),
-    user: user ? serializeUser(user) : null,
+    user: user ? serializeUser(user as any) : null,
     reactions: [],
     replyTo: null,
   }
@@ -100,9 +100,9 @@ async function insertSystemMessage(roomId: string, userId: number, content: stri
 
 const socketRateLimits = new Map<string, number[]>()
 
-function getAuthedUserId(socket: Socket): number | null {
+function getAuthedUserId(socket: Socket): string | null {
   const id = socket.data.userId
-  return typeof id === 'number' && !isNaN(id) ? id : null
+  return typeof id === 'string' && id.length > 0 ? id : null
 }
 
 io.use((socket, next) => {
@@ -150,7 +150,7 @@ io.on('connection', (socket) => {
     next()
   })
 
-  socket.on('join-room', async ({ roomId, userId }: { roomId: string; userId: number }) => {
+  socket.on('join-room', async ({ roomId, userId }: { roomId: string; userId: string }) => {
     try {
       if (!roomId || !userId) {
         socket.emit('error', { message: 'Invalid room or user ID' })
@@ -188,7 +188,7 @@ io.on('connection', (socket) => {
     }
   })
 
-  socket.on('leave-room', async ({ roomId, userId }: { roomId: string; userId: number }) => {
+  socket.on('leave-room', async ({ roomId, userId }: { roomId: string; userId: string }) => {
     try {
       if (!roomId || !userId) {
         socket.emit('error', { message: 'Invalid room or user ID' })
@@ -220,7 +220,7 @@ io.on('connection', (socket) => {
     }
   })
 
-  socket.on('join-call', async ({ roomId, userId }: { roomId: string; userId: number }) => {
+  socket.on('join-call', async ({ roomId, userId }: { roomId: string; userId: string }) => {
     try {
       if (!roomId || !userId) {
         socket.emit('error', { message: 'Invalid room or user ID' })
@@ -249,7 +249,7 @@ io.on('connection', (socket) => {
       socket.emit('call-users', { users: callers.filter((u) => u.userId !== userId) })
       if (!wasInCall) {
         socket.to(roomId).emit('call-user-joined', { userId, socketId: socket.id })
-        const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId))
+        const user = await User.findById(userId).lean()
         if (user) {
           await insertSystemMessage(roomId, userId, `${user.displayName} joined the voice channel`)
         }
@@ -260,7 +260,7 @@ io.on('connection', (socket) => {
     }
   })
 
-  socket.on('leave-call', async ({ roomId, userId }: { roomId: string; userId: number }) => {
+  socket.on('leave-call', async ({ roomId, userId }: { roomId: string; userId: string }) => {
     try {
       if (!roomId || !userId) {
         socket.emit('error', { message: 'Invalid room or user ID' })
@@ -285,7 +285,7 @@ io.on('connection', (socket) => {
 
   socket.on(
     'offer',
-    ({ to, offer, fromUserId }: { to: string; offer: unknown; fromUserId?: number }) => {
+    ({ to, offer, fromUserId }: { to: string; offer: unknown; fromUserId?: string }) => {
       if (!fromUserId || fromUserId !== authedUserId) {
         socket.emit('error', { message: 'Unauthorized' })
         return
@@ -296,7 +296,7 @@ io.on('connection', (socket) => {
 
   socket.on(
     'answer',
-    ({ to, answer, fromUserId }: { to: string; answer: unknown; fromUserId?: number }) => {
+    ({ to, answer, fromUserId }: { to: string; answer: unknown; fromUserId?: string }) => {
       if (!fromUserId || fromUserId !== authedUserId) {
         socket.emit('error', { message: 'Unauthorized' })
         return
@@ -307,7 +307,7 @@ io.on('connection', (socket) => {
 
   socket.on(
     'ice-candidate',
-    ({ to, candidate, fromUserId }: { to: string; candidate: unknown; fromUserId?: number }) => {
+    ({ to, candidate, fromUserId }: { to: string; candidate: unknown; fromUserId?: string }) => {
       if (!fromUserId || fromUserId !== authedUserId) {
         socket.emit('error', { message: 'Unauthorized' })
         return
@@ -325,9 +325,9 @@ io.on('connection', (socket) => {
       replyToId,
     }: {
       roomId: string
-      userId: number
+      userId: string
       content: string
-      replyToId?: number
+      replyToId?: string
     }) => {
       if (!roomId || !userId) {
         socket.emit('error', { message: 'Invalid room or user ID' })
@@ -353,18 +353,15 @@ io.on('connection', (socket) => {
       }
 
       try {
-        const [msg] = await db
-          .insert(messagesTable)
-          .values({
-            roomId,
-            userId,
-            content: content.trim(),
-            type: 'text',
-            replyToId: replyToId ?? undefined,
-          })
-          .returning()
+        const msg = await Message.create({
+          roomId,
+          userId,
+          content: content.trim(),
+          type: 'text',
+          replyToId: replyToId || undefined,
+        })
 
-        const payload = await buildMessagePayload(msg.id)
+        const payload = await buildMessagePayload(msg._id.toString())
         if (payload) broadcastMessage(io, roomId, 'new-message', payload)
       } catch (e) {
         logger.error({ err: e }, 'Failed to save chat message')
@@ -374,7 +371,7 @@ io.on('connection', (socket) => {
 
   socket.on(
     'user-typing',
-    async ({ roomId, userId, isTyping }: { roomId: string; userId: number; isTyping: boolean }) => {
+    async ({ roomId, userId, isTyping }: { roomId: string; userId: string; isTyping: boolean }) => {
       if (!roomId || !userId) {
         socket.emit('error', { message: 'Invalid room or user ID' })
         return
@@ -395,19 +392,15 @@ io.on('connection', (socket) => {
     }
   )
 
-  socket.on('user-status', async ({ userId, status }: { userId: number; status: string }) => {
+  socket.on('user-status', async ({ userId, status }: { userId: string; status: string }) => {
     if (!userId || userId !== authedUserId) {
       socket.emit('error', { message: 'Unauthorized' })
       return
     }
     try {
-      const [updated] = await db
-        .update(usersTable)
-        .set({ status: status as any })
-        .where(eq(usersTable.id, userId))
-        .returning()
+      const updated = await User.findByIdAndUpdate(userId, { status }, { new: true }).lean()
       if (updated) {
-        const serialized = serializeUser(updated, { viewerId: userId })
+        const serialized = serializeUser(updated as any, { viewerId: userId })
         socket.broadcast.emit('user-status-changed', { userId, status })
         io.emit('user-profile-updated', serialized)
       }
@@ -473,7 +466,7 @@ io.on('connection', (socket) => {
     }: {
       conversationId: string
       content: string
-      replyToId?: number
+      replyToId?: string
     }) => {
       if (!conversationId || !content?.trim()) {
         socket.emit('error', { message: 'Invalid conversation ID or empty content' })
@@ -494,23 +487,17 @@ io.on('connection', (socket) => {
       }
 
       try {
-        const [msg] = await db
-          .insert(dmMessagesTable)
-          .values({
-            conversationId,
-            userId: authedUserId,
-            content: content.trim(),
-            type: 'text',
-            replyToId: replyToId ?? undefined,
-          })
-          .returning()
+        const msg = await DmMessage.create({
+          conversationId,
+          userId: authedUserId,
+          content: content.trim(),
+          type: 'text',
+          replyToId: replyToId || undefined,
+        })
 
-        await db
-          .update(dmConversationsTable)
-          .set({ updatedAt: new Date() })
-          .where(eq(dmConversationsTable.id, conversationId))
+        await DmConversation.findByIdAndUpdate(conversationId, { updatedAt: new Date() })
 
-        const payload = await buildDmMessagePayload(msg.id)
+        const payload = await buildDmMessagePayload(msg._id.toString())
         if (payload) io.to(`dm:${conversationId}`).emit('new-dm-message', payload)
       } catch (e) {
         logger.error({ err: e }, 'Failed to save DM')

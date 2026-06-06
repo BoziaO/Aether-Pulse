@@ -1,53 +1,51 @@
-import { eq, inArray } from 'drizzle-orm'
 import type { Server as SocketIOServer } from 'socket.io'
-import { db, messagesTable, messageReactionsTable, usersTable } from '@workspace/db'
+import { Message, MessageReaction, User } from '@workspace/db'
+import type { IMessage } from '@workspace/db'
 import { serializeUser } from './serialize-user'
 
 export type ReactionSummary = {
   emoji: string
   count: number
-  userIds: number[]
+  userIds: string[]
 }
 
 export async function getReactionsForMessages(
-  messageIds: number[]
-): Promise<Map<number, ReactionSummary[]>> {
-  const map = new Map<number, ReactionSummary[]>()
+  messageIds: string[]
+): Promise<Map<string, ReactionSummary[]>> {
+  const map = new Map<string, ReactionSummary[]>()
   if (messageIds.length === 0) return map
 
-  const rows = await db
-    .select()
-    .from(messageReactionsTable)
-    .where(inArray(messageReactionsTable.messageId, messageIds))
+  const rows = await MessageReaction.find({ messageId: { $in: messageIds } }).lean()
 
   for (const row of rows) {
-    const list = map.get(row.messageId) ?? []
+    const key = row.messageId.toString()
+    const list = map.get(key) ?? []
     const existing = list.find((r) => r.emoji === row.emoji)
     if (existing) {
       existing.count += 1
-      existing.userIds.push(row.userId)
+      existing.userIds.push(row.userId.toString())
     } else {
-      list.push({ emoji: row.emoji, count: 1, userIds: [row.userId] })
+      list.push({ emoji: row.emoji, count: 1, userIds: [row.userId.toString()] })
     }
-    map.set(row.messageId, list)
+    map.set(key, list)
   }
   return map
 }
 
-export async function serializeMessageRow(
-  message: typeof messagesTable.$inferSelect,
-  user: typeof usersTable.$inferSelect | null,
+export function serializeMessageRow(
+  message: IMessage,
+  user: any,
   reactions?: ReactionSummary[],
-  replyTo?: { id: number; content: string; userId: number; isDeleted: boolean } | null
+  replyTo?: { id: string; content: string; userId: string; isDeleted: boolean } | null
 ) {
   return {
-    id: message.id,
-    roomId: message.roomId,
-    userId: message.userId,
+    id: message._id.toString(),
+    roomId: message.roomId.toString(),
+    userId: message.userId.toString(),
     content: message.isDeleted ? '' : message.content,
     type: message.type,
-    replyToId: message.replyToId ?? null,
-    editedAt: message.editedAt?.toISOString() ?? null,
+    replyToId: message.replyToId ? message.replyToId.toString() : null,
+    editedAt: message.editedAt ? message.editedAt.toISOString() : null,
     isDeleted: message.isDeleted,
     attachmentUrl: message.attachmentUrl ?? null,
     attachmentName: message.attachmentName ?? null,
@@ -59,35 +57,27 @@ export async function serializeMessageRow(
   }
 }
 
-export async function buildMessagePayload(messageId: number) {
-  const [row] = await db
-    .select({ message: messagesTable, user: usersTable })
-    .from(messagesTable)
-    .innerJoin(usersTable, eq(messagesTable.userId, usersTable.id))
-    .where(eq(messagesTable.id, messageId))
-    .limit(1)
+export async function buildMessagePayload(messageId: string) {
+  const message = await Message.findById(messageId).lean()
+  if (!message) return null
 
-  if (!row) return null
+  const user = await User.findById(message.userId).lean()
 
   const reactionsMap = await getReactionsForMessages([messageId])
   let replyTo = null
-  if (row.message.replyToId) {
-    const [parent] = await db
-      .select()
-      .from(messagesTable)
-      .where(eq(messagesTable.id, row.message.replyToId))
-      .limit(1)
+  if (message.replyToId) {
+    const parent = await Message.findById(message.replyToId).lean()
     if (parent) {
       replyTo = {
-        id: parent.id,
+        id: parent._id.toString(),
         content: parent.isDeleted ? 'Message deleted' : parent.content,
-        userId: parent.userId,
+        userId: parent.userId.toString(),
         isDeleted: parent.isDeleted,
       }
     }
   }
 
-  return serializeMessageRow(row.message, row.user, reactionsMap.get(messageId) ?? [], replyTo)
+  return serializeMessageRow(message as any, user, reactionsMap.get(messageId) ?? [], replyTo)
 }
 
 export function broadcastMessage(

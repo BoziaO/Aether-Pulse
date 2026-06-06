@@ -1,12 +1,5 @@
 import { Router, type IRouter } from 'express'
-import { eq, or, and, count, desc, gte, sql } from 'drizzle-orm'
-import {
-  db,
-  usersTable,
-  friendshipsTable,
-  messagesTable,
-  messageReactionsTable,
-} from '@workspace/db'
+import { User, Friendship, Message, MessageReaction, mongoose } from '@workspace/db'
 import { UpdateUserBody } from '@workspace/api-zod'
 import { serializeUser } from '../utils/serialize-user'
 import path from 'node:path'
@@ -27,22 +20,16 @@ function parseImageDataUrl(dataUrl: string): { buffer: Buffer; ext: string } | n
   return { buffer, ext }
 }
 
-async function areFriends(userA: number, userB: number): Promise<boolean> {
+async function areFriendsLocal(userA: string, userB: string): Promise<boolean> {
   try {
-    const rows = await db
-      .select({ id: friendshipsTable.id })
-      .from(friendshipsTable)
-      .where(
-        and(
-          eq(friendshipsTable.status, 'accepted'),
-          or(
-            and(eq(friendshipsTable.requesterId, userA), eq(friendshipsTable.addresseeId, userB)),
-            and(eq(friendshipsTable.requesterId, userB), eq(friendshipsTable.addresseeId, userA))
-          )
-        )
-      )
-      .limit(1)
-    return rows.length > 0
+    const row = await Friendship.findOne({
+      status: 'accepted',
+      $or: [
+        { requesterId: userA, addresseeId: userB },
+        { requesterId: userB, addresseeId: userA },
+      ],
+    }).lean()
+    return Boolean(row)
   } catch {
     return false
   }
@@ -50,92 +37,72 @@ async function areFriends(userA: number, userB: number): Promise<boolean> {
 
 router.get('/users/:userId', async (req, res): Promise<void> => {
   const rawId = Array.isArray(req.params.userId) ? req.params.userId[0] : req.params.userId
-  const userId = parseInt(rawId, 10)
-  if (isNaN(userId)) {
-    res.status(400).json({ error: 'Invalid user ID' })
-    return
-  }
 
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId))
+  const user = await User.findById(rawId).lean()
   if (!user) {
     res.status(404).json({ error: 'User not found' })
     return
   }
 
-  const viewerId = req.user?.userId ?? null
+  const viewerId = (req as any).user?.userId ?? null
   const privacy = user.profilePrivacy ?? 'public'
-  const isOwn = viewerId === userId
+  const isOwn = viewerId === user._id.toString()
 
   if (privacy === 'private' && !isOwn) {
     res.status(403).json({ error: 'This profile is private.' })
     return
   }
 
-  const isFriend = viewerId != null && !isOwn ? await areFriends(viewerId, userId) : false
+  const isFriend =
+    viewerId != null && !isOwn ? await areFriendsLocal(viewerId, user._id.toString()) : false
 
   // Track profile views (not for own profile)
   if (!isOwn && viewerId != null) {
-    db.update(usersTable)
-      .set({ profileViews: (user.profileViews ?? 0) + 1 })
-      .where(eq(usersTable.id, userId))
+    User.findByIdAndUpdate(user._id, { $inc: { profileViews: 1 } })
       .then(() => {})
       .catch(() => {})
   }
 
-  res.json(serializeUser(user, { viewerId, isFriend }))
+  res.json(serializeUser(user as any, { viewerId, isFriend }))
 })
 
 router.get('/users/:userId/stats', async (req, res): Promise<void> => {
   const rawId = Array.isArray(req.params.userId) ? req.params.userId[0] : req.params.userId
-  const userId = parseInt(rawId, 10)
-  if (isNaN(userId)) {
-    res.status(400).json({ error: 'Invalid user ID' })
-    return
-  }
 
   try {
-    const [msgRow] = await db
-      .select({ c: count() })
-      .from(messagesTable)
-      .where(and(eq(messagesTable.userId, userId), eq(messagesTable.isDeleted, false)))
+    const userObjectId = new mongoose.Types.ObjectId(rawId)
+    const msgCount = await Message.countDocuments({ userId: rawId, isDeleted: false })
+    const friendCount = await Friendship.countDocuments({
+      status: 'accepted',
+      $or: [{ requesterId: rawId }, { addresseeId: rawId }],
+    })
 
-    const [friendRow] = await db
-      .select({ c: count() })
-      .from(friendshipsTable)
-      .where(
-        and(
-          eq(friendshipsTable.status, 'accepted'),
-          or(eq(friendshipsTable.requesterId, userId), eq(friendshipsTable.addresseeId, userId))
-        )
-      )
-
-    const topReactions = await db
-      .select({ emoji: messageReactionsTable.emoji, cnt: count() })
-      .from(messageReactionsTable)
-      .where(eq(messageReactionsTable.userId, userId))
-      .groupBy(messageReactionsTable.emoji)
-      .orderBy(desc(count()))
-      .limit(5)
+    const topReactions = await MessageReaction.aggregate([
+      { $match: { userId: userObjectId } },
+      { $group: { _id: '$emoji', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 5 },
+    ])
 
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-    const activity = await db
-      .select({
-        date: sql<string>`strftime('%Y-%m-%d', datetime(created_at/1000, 'unixepoch'))`,
-        cnt: count(),
-      })
-      .from(messagesTable)
-      .where(
-        and(
-          eq(messagesTable.userId, userId),
-          eq(messagesTable.isDeleted, false),
-          gte(messagesTable.createdAt, sevenDaysAgo)
-        )
-      )
-      .groupBy(sql`strftime('%Y-%m-%d', datetime(created_at/1000, 'unixepoch'))`)
-      .orderBy(sql`strftime('%Y-%m-%d', datetime(created_at/1000, 'unixepoch'))`)
+    const activityAgg = await Message.aggregate([
+      {
+        $match: {
+          userId: userObjectId,
+          isDeleted: false,
+          createdAt: { $gte: sevenDaysAgo },
+        },
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          cnt: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ])
 
-    // Fill in missing days with 0
-    const activityMap = new Map(activity.map((a) => [a.date, a.cnt]))
+    const activityMap = new Map(activityAgg.map((a: any) => [a._id, a.cnt]))
     const activityByDay = []
     for (let i = 6; i >= 0; i--) {
       const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000)
@@ -144,9 +111,9 @@ router.get('/users/:userId/stats', async (req, res): Promise<void> => {
     }
 
     res.json({
-      messageCount: msgRow?.c ?? 0,
-      friendCount: friendRow?.c ?? 0,
-      topReactions: topReactions.map((r) => ({ emoji: r.emoji, count: r.cnt })),
+      messageCount: msgCount,
+      friendCount,
+      topReactions: topReactions.map((r: any) => ({ emoji: r._id, count: r.count })),
       activityByDay,
     })
   } catch {
@@ -155,19 +122,14 @@ router.get('/users/:userId/stats', async (req, res): Promise<void> => {
 })
 
 router.post('/users/:userId/avatar', async (req, res): Promise<void> => {
-  const sessionUserId = req.user?.userId
+  const sessionUserId = (req as any).user?.userId
   if (!sessionUserId) {
     res.status(401).json({ error: 'Not authenticated' })
     return
   }
 
   const rawId = Array.isArray(req.params.userId) ? req.params.userId[0] : req.params.userId
-  const userId = parseInt(rawId, 10)
-  if (isNaN(userId)) {
-    res.status(400).json({ error: 'Invalid user ID' })
-    return
-  }
-  if (sessionUserId !== userId) {
+  if (sessionUserId !== rawId) {
     res.status(403).json({ error: 'Forbidden' })
     return
   }
@@ -188,38 +150,29 @@ router.post('/users/:userId/avatar', async (req, res): Promise<void> => {
     return
   }
 
-  const fileName = `user-${userId}-avatar-${Date.now()}.${parsedImage.ext}`
+  const fileName = `user-${rawId}-avatar-${Date.now()}.${parsedImage.ext}`
   fs.writeFileSync(path.join(uploadsDir, fileName), parsedImage.buffer)
   const avatarUrl = `/api/uploads/${fileName}`
-  const [updated] = await db
-    .update(usersTable)
-    .set({ avatarUrl })
-    .where(eq(usersTable.id, userId))
-    .returning()
+  const updated = await User.findByIdAndUpdate(rawId, { avatarUrl }, { new: true }).lean()
 
   if (!updated) {
     res.status(404).json({ error: 'User not found' })
     return
   }
-  const serialized = serializeUser(updated, { viewerId: userId })
+  const serialized = serializeUser(updated as any, { viewerId: rawId })
   req.app.get('io')?.emit('user-profile-updated', serialized)
   res.json({ avatarUrl, user: serialized })
 })
 
 router.post('/users/:userId/banner', async (req, res): Promise<void> => {
-  const sessionUserId = req.user?.userId
+  const sessionUserId = (req as any).user?.userId
   if (!sessionUserId) {
     res.status(401).json({ error: 'Not authenticated' })
     return
   }
 
   const rawId = Array.isArray(req.params.userId) ? req.params.userId[0] : req.params.userId
-  const userId = parseInt(rawId, 10)
-  if (isNaN(userId)) {
-    res.status(400).json({ error: 'Invalid user ID' })
-    return
-  }
-  if (sessionUserId !== userId) {
+  if (sessionUserId !== rawId) {
     res.status(403).json({ error: 'Forbidden' })
     return
   }
@@ -240,39 +193,30 @@ router.post('/users/:userId/banner', async (req, res): Promise<void> => {
     return
   }
 
-  const fileName = `user-${userId}-banner-${Date.now()}.${parsedImage.ext}`
+  const fileName = `user-${rawId}-banner-${Date.now()}.${parsedImage.ext}`
   fs.writeFileSync(path.join(uploadsDir, fileName), parsedImage.buffer)
   const bannerUrl = `/api/uploads/${fileName}`
-  const [updated] = await db
-    .update(usersTable)
-    .set({ bannerUrl })
-    .where(eq(usersTable.id, userId))
-    .returning()
+  const updated = await User.findByIdAndUpdate(rawId, { bannerUrl }, { new: true }).lean()
 
   if (!updated) {
     res.status(404).json({ error: 'User not found' })
     return
   }
-  const serialized = serializeUser(updated, { viewerId: userId })
+  const serialized = serializeUser(updated as any, { viewerId: rawId })
   req.app.get('io')?.emit('user-profile-updated', serialized)
   res.json({ bannerUrl, user: serialized })
 })
 
 router.patch('/users/:userId', async (req, res): Promise<void> => {
-  const sessionUserId = req.user?.userId
+  const sessionUserId = (req as any).user?.userId
   if (!sessionUserId) {
     res.status(401).json({ error: 'Not authenticated' })
     return
   }
 
   const rawId = Array.isArray(req.params.userId) ? req.params.userId[0] : req.params.userId
-  const userId = parseInt(rawId, 10)
-  if (isNaN(userId)) {
-    res.status(400).json({ error: 'Invalid user ID' })
-    return
-  }
 
-  if (sessionUserId !== userId) {
+  if (sessionUserId !== rawId) {
     res.status(403).json({ error: 'Forbidden' })
     return
   }
@@ -284,32 +228,24 @@ router.patch('/users/:userId', async (req, res): Promise<void> => {
   }
 
   const updateData = { ...parsed.data } as any
-  if (updateData.badges) {
-    updateData.badges = JSON.stringify(updateData.badges)
-  }
 
   if (Object.keys(updateData).length === 0) {
-    const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId))
+    const user = await User.findById(rawId).lean()
     if (!user) {
       res.status(404).json({ error: 'User not found' })
       return
     }
-    res.json(serializeUser(user, { viewerId: userId }))
+    res.json(serializeUser(user as any, { viewerId: rawId }))
     return
   }
 
-  const [updated] = await db
-    .update(usersTable)
-    .set(updateData)
-    .where(eq(usersTable.id, userId))
-    .returning()
-
+  const updated = await User.findByIdAndUpdate(rawId, updateData, { new: true }).lean()
   if (!updated) {
     res.status(404).json({ error: 'User not found' })
     return
   }
 
-  const serialized = serializeUser(updated, { viewerId: userId })
+  const serialized = serializeUser(updated as any, { viewerId: rawId })
   req.app.get('io')?.emit('user-profile-updated', serialized)
   res.json(serialized)
 })

@@ -1,42 +1,37 @@
-import { and, eq, or } from 'drizzle-orm'
-import { db, friendshipsTable } from '@workspace/db'
+import { Friendship } from '@workspace/db'
+import type { IFriendship } from '@workspace/db'
+import mongoose from 'mongoose'
 
-export async function getFriendship(userId: number, otherId: number) {
-  const [row] = await db
-    .select()
-    .from(friendshipsTable)
-    .where(
-      or(
-        and(eq(friendshipsTable.requesterId, userId), eq(friendshipsTable.addresseeId, otherId)),
-        and(eq(friendshipsTable.requesterId, otherId), eq(friendshipsTable.addresseeId, userId))
-      )
-    )
-    .limit(1)
+export async function getFriendship(userId: string, otherId: string): Promise<IFriendship | null> {
+  const row = await Friendship.findOne({
+    $or: [
+      { requesterId: userId, addresseeId: otherId },
+      { requesterId: otherId, addresseeId: userId },
+    ],
+  })
   return row ?? null
 }
 
-export async function areFriends(userId: number, otherId: number): Promise<boolean> {
+export async function areFriends(userId: string, otherId: string): Promise<boolean> {
   const row = await getFriendship(userId, otherId)
   return row?.status === 'accepted'
 }
 
-export async function isBlocked(userId: number, otherId: number): Promise<boolean> {
+export async function isBlocked(userId: string, otherId: string): Promise<boolean> {
   const row = await getFriendship(userId, otherId)
   if (!row) return false
-  if (row.status !== 'blocked') return false
-  // blocked by either party blocks interaction
-  return true
+  return row.status === 'blocked'
 }
 
 export function friendshipStatusFor(
-  row: typeof friendshipsTable.$inferSelect | null,
-  currentUserId: number
+  row: IFriendship | null,
+  currentUserId: string
 ): 'none' | 'friends' | 'pending_outgoing' | 'pending_incoming' | 'blocked' {
   if (!row) return 'none'
   if (row.status === 'accepted') return 'friends'
   if (row.status === 'blocked') return 'blocked'
   if (row.status === 'pending') {
-    return row.requesterId === currentUserId ? 'pending_outgoing' : 'pending_incoming'
+    return row.requesterId.toString() === currentUserId ? 'pending_outgoing' : 'pending_incoming'
   }
   return 'none'
 }

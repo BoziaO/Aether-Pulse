@@ -27,7 +27,7 @@ services:
     # Note: Exposing port 3000 is not required since Nginx (client) proxies all /api requests internally.
     # This secures the Node.js server from direct public internet scans.
     environment:
-      - DATABASE_URL=/app/data/sqlite.db
+      - DATABASE_URL=mongodb://mongodb:27017/aetherpulse
       - SESSION_SECRET=your-32-chars-session-secret-change-this-for-production
       - JWT_SECRET=your-super-jwt-secret-change-this-for-production
       - REDIS_URL=redis://redis:6379
@@ -35,10 +35,11 @@ services:
       - NODE_ENV=production
       - CLIENT_URL=http://localhost
     volumes:
-      - db-data:/app/data
       - uploads-data:/app/uploads
     depends_on:
       redis:
+        condition: service_healthy
+      mongodb:
         condition: service_healthy
     restart: unless-stopped
     deploy:
@@ -73,8 +74,32 @@ services:
         max-size: '10m'
         max-file: '3'
 
+  mongodb:
+    image: mongo:7.0-alpine
+    restart: unless-stopped
+    # Exposing ports locally is optional, but useful for GUI management tools.
+    # ports:
+    #   - '27017:27017'
+    volumes:
+      - mongodb-data:/data/db
+    healthcheck:
+      test: ['CMD', 'mongosh', '--eval', "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+
 volumes:
-  db-data:
-    name: aetherpulse_db_data
+  mongodb-data:
+    name: aetherpulse_mongodb_data
   uploads-data:
     name: aetherpulse_uploads_data

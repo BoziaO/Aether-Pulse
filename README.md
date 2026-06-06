@@ -1,6 +1,6 @@
 # 🌌 AetherPulse
 
-AetherPulse is a state-of-the-art, real-time communication and collaboration platform designed for seamless instant messaging, high-fidelity video calling, and immersive spatial audio. 
+AetherPulse is a state-of-the-art, real-time communication and collaboration platform designed for seamless instant messaging, high-fidelity video calling, and immersive spatial audio.
 
 Built as a high-performance TypeScript monorepo, the platform combines a premium, highly responsive user interface with a robust, secure, and production-ready backend architecture.
 

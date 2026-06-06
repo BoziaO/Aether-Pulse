@@ -1,11 +1,6 @@
-import { and, eq } from 'drizzle-orm'
-import { db, roomMembersTable } from '@workspace/db'
+import { RoomMember } from '@workspace/db'
 
-export async function isRoomMember(roomId: string, userId: number): Promise<boolean> {
-  const [row] = await db
-    .select({ id: roomMembersTable.id })
-    .from(roomMembersTable)
-    .where(and(eq(roomMembersTable.roomId, roomId), eq(roomMembersTable.userId, userId)))
-    .limit(1)
+export async function isRoomMember(roomId: string, userId: string): Promise<boolean> {
+  const row = await RoomMember.findOne({ roomId, userId }).lean()
   return Boolean(row)
 }

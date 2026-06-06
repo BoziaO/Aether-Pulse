@@ -1,17 +1,4 @@
-import type { usersTable } from '@workspace/db'
-
-export function parseBadges(value: string | string[] | null | undefined): string[] {
-  if (Array.isArray(value)) return value
-  if (!value) return []
-  try {
-    const parsed = JSON.parse(value)
-    return Array.isArray(parsed)
-      ? parsed.filter((badge): badge is string => typeof badge === 'string')
-      : []
-  } catch {
-    return []
-  }
-}
+import type { IUser } from '@workspace/db'
 
 export interface SocialLink {
   platform: string
@@ -19,68 +6,49 @@ export interface SocialLink {
   label?: string
 }
 
-export function parseSocialLinks(value: string | null | undefined): SocialLink[] {
-  if (!value) return []
-  try {
-    const parsed = JSON.parse(value)
-    if (!Array.isArray(parsed)) return []
-    return parsed.filter(
-      (item): item is SocialLink =>
-        typeof item === 'object' &&
-        item !== null &&
-        typeof item.platform === 'string' &&
-        typeof item.url === 'string'
-    )
-  } catch {
-    return []
-  }
-}
-
 export function serializeUser(
-  user: typeof usersTable.$inferSelect,
-  options: { viewerId?: number | null; isFriend?: boolean } = {}
+  user: IUser,
+  options: { viewerId?: string | null; isFriend?: boolean } = {}
 ) {
-  const { passwordHash: _, ...safe } = user
-  const privacy = safe.profilePrivacy ?? 'public'
-  const isOwn = options.viewerId != null && options.viewerId === safe.id
+  const privacy = user.profilePrivacy ?? 'public'
+  const isOwn = options.viewerId != null && options.viewerId === user._id.toString()
   const isFriend = options.isFriend ?? false
 
   const canViewFull = isOwn || privacy === 'public' || (privacy === 'friends' && isFriend)
+  const canViewViews = user.showProfileViews ?? true
 
-  const socialLinks = parseSocialLinks(safe.socialLinks)
-  const lastSeenAt = safe.lastSeenAt ? safe.lastSeenAt.toISOString() : null
-
-  const canViewViews = safe.showProfileViews ?? true
+  const socialLinks: SocialLink[] = Array.isArray(user.socialLinks) ? user.socialLinks : []
+  const lastSeenAt = user.lastSeenAt ? user.lastSeenAt.toISOString() : null
 
   return {
-    id: safe.id,
-    username: safe.username,
-    displayName: safe.displayName,
-    avatarUrl: safe.avatarUrl ?? null,
-    bannerUrl: canViewFull ? (safe.bannerUrl ?? null) : null,
-    bio: canViewFull ? (safe.bio ?? null) : null,
-    pronouns: canViewFull ? (safe.pronouns ?? null) : null,
-    website: canViewFull ? (safe.website ?? null) : null,
-    location: canViewFull ? (safe.location ?? null) : null,
-    status: canViewFull ? safe.status : ('offline' as const),
-    customStatus: canViewFull ? (safe.customStatus ?? null) : null,
-    accentColor: safe.accentColor ?? null,
-    primaryColor: safe.primaryColor ?? null,
-    displayNameStyle: safe.displayNameStyle ?? null,
-    profileGradient: safe.profileGradient ?? null,
-    avatarFrame: safe.avatarFrame ?? null,
-    profileTheme: safe.profileTheme ?? null,
-    customTheme: safe.customTheme ?? null,
-    badges: parseBadges(safe.badges),
+    id: user._id.toString(),
+    username: user.username,
+    displayName: user.displayName,
+    avatarUrl: user.avatarUrl ?? null,
+    bannerUrl: canViewFull ? (user.bannerUrl ?? null) : null,
+    bio: canViewFull ? (user.bio ?? null) : null,
+    pronouns: canViewFull ? (user.pronouns ?? null) : null,
+    website: canViewFull ? (user.website ?? null) : null,
+    location: canViewFull ? (user.location ?? null) : null,
+    status: canViewFull ? user.status : ('offline' as const),
+    customStatus: canViewFull ? (user.customStatus ?? null) : null,
+    accentColor: user.accentColor ?? null,
+    primaryColor: user.primaryColor ?? null,
+    displayNameStyle: user.displayNameStyle ?? null,
+    profileGradient: user.profileGradient ?? null,
+    avatarFrame: user.avatarFrame ?? null,
+    profileTheme: user.profileTheme ?? null,
+    customTheme: user.customTheme ?? null,
+    badges: Array.isArray(user.badges) ? user.badges : [],
     socialLinks: canViewFull ? socialLinks : [],
-    timezone: canViewFull && safe.showTimezone ? (safe.timezone ?? null) : null,
-    profilePrivacy: safe.profilePrivacy ?? 'public',
-    showTimezone: safe.showTimezone ?? true,
-    showLastSeen: safe.showLastSeen ?? true,
-    showProfileViews: safe.showProfileViews ?? true,
-    preferredTheme: isOwn ? (safe.preferredTheme ?? null) : null,
-    lastSeenAt: canViewFull && safe.showLastSeen ? lastSeenAt : null,
-    profileViews: isOwn || canViewViews ? (safe.profileViews ?? 0) : null,
-    createdAt: safe.createdAt.toISOString(),
+    timezone: canViewFull && user.showTimezone ? (user.timezone ?? null) : null,
+    profilePrivacy: user.profilePrivacy ?? 'public',
+    showTimezone: user.showTimezone ?? true,
+    showLastSeen: user.showLastSeen ?? true,
+    showProfileViews: user.showProfileViews ?? true,
+    preferredTheme: isOwn ? (user.preferredTheme ?? null) : null,
+    lastSeenAt: canViewFull && user.showLastSeen ? lastSeenAt : null,
+    profileViews: isOwn || canViewViews ? (user.profileViews ?? 0) : null,
+    createdAt: user.createdAt.toISOString(),
   }
 }

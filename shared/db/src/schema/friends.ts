@@ -1,32 +1,29 @@
-import { sqliteTable, text, integer, uniqueIndex, index } from 'drizzle-orm/sqlite-core'
-import { usersTable } from './users'
+import mongoose, { Schema, Document, Model } from 'mongoose'
 
-export const friendshipsTable = sqliteTable(
-  'friendships',
+export interface IFriendship extends Document {
+  _id: mongoose.Types.ObjectId
+  requesterId: mongoose.Types.ObjectId
+  addresseeId: mongoose.Types.ObjectId
+  status: 'pending' | 'accepted' | 'blocked'
+  createdAt: Date
+  updatedAt: Date
+}
+
+const FriendshipSchema = new Schema<IFriendship>(
   {
-    id: integer('id').primaryKey({ autoIncrement: true }),
-    requesterId: integer('requester_id')
-      .notNull()
-      .references(() => usersTable.id, { onDelete: 'cascade' }),
-    addresseeId: integer('addressee_id')
-      .notNull()
-      .references(() => usersTable.id, { onDelete: 'cascade' }),
-    status: text('status', { enum: ['pending', 'accepted', 'blocked'] })
-      .notNull()
-      .default('pending'),
-    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().defaultNow(),
+    requesterId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    addresseeId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    status: {
+      type: String,
+      enum: ['pending', 'accepted', 'blocked'],
+      default: 'pending',
+      index: true,
+    },
   },
-  (table) => ({
-    uniquePair: uniqueIndex('friendships_pair_unique').on(table.requesterId, table.addresseeId),
-    // Index for requester-based queries
-    requesterIdIdx: index('friendships_requester_idx').on(table.requesterId),
-    // Index for addressee-based queries
-    addresseeIdIdx: index('friendships_addressee_idx').on(table.addresseeId),
-    // Index for status queries
-    statusIdx: index('friendships_status_idx').on(table.status),
-    // Index for createdAt (time-based queries)
-    createdAtIdx: index('friendships_created_idx').on(table.createdAt),
-  })
+  { timestamps: true }
 )
 
-export type Friendship = typeof friendshipsTable.$inferSelect
+FriendshipSchema.index({ requesterId: 1, addresseeId: 1 }, { unique: true })
+
+export const Friendship: Model<IFriendship> =
+  mongoose.models.Friendship ?? mongoose.model<IFriendship>('Friendship', FriendshipSchema)
