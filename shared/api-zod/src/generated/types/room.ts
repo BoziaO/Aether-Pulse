@@ -12,7 +12,7 @@ export interface Room {
   id: string
   name: string
   inviteCode: string
-  ownerId: number
+  ownerId: string
   memberCount: number
   members?: User[]
   quality?: RoomQuality

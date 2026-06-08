@@ -4,7 +4,7 @@ export interface Room {
   id: string
   name: string
   inviteCode: string
-  ownerId: number
+  ownerId: string
   quality: string
   isActive: boolean
   createdAt: string

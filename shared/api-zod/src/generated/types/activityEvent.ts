@@ -10,6 +10,6 @@ export interface ActivityEvent {
   type: string
   description: string
   /** @nullable */
-  userId?: number | null
+  userId?: string | null
   createdAt: string
 }

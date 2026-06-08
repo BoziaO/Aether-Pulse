@@ -1,5 +1,5 @@
 export interface MessageUser {
-  id: number
+  id: string
   displayName: string
   avatarUrl: string | null
   accentColor: string | null
@@ -12,29 +12,29 @@ export interface MessageUser {
 export interface MessageReaction {
   emoji: string
   count: number
-  userIds: number[]
+  userIds: string[]
 }
 
 export interface MessageReplyPreview {
-  id: number
+  id: string
   content: string
-  userId: number
+  userId: string
   isDeleted: boolean
 }
 
 /** Minimal shape for reply bar in ChatInput */
 export interface ReplyTarget {
-  id: number
+  id: string
   user?: { displayName?: string } | null
 }
 
 export interface Message {
-  id: number
+  id: string
   roomId: string
-  userId: number
+  userId: string
   content: string
   type: 'text' | 'system' | 'file'
-  replyToId?: number | null
+  replyToId?: string | null
   editedAt?: string | null
   isDeleted?: boolean
   createdAt: string

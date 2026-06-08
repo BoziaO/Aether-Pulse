@@ -24,6 +24,7 @@ if (Number.isNaN(port) || port <= 0) throw new Error(`Invalid PORT value: "${raw
 
 // Connect to MongoDB before starting the HTTP server
 await connectDb()
+logger.info('Connected to MongoDB successfully')
 
 const httpServer = createServer(app)
 

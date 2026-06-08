@@ -5,10 +5,10 @@ import type { User } from '@/types/user.types'
 export const dmApi = {
   list: () => apiFetch<DmConversation[]>('/dms'),
 
-  openWith: (userId: number) =>
+  openWith: (userId: string) =>
     apiFetch<{ id: string; otherUser: User | null }>(`/dms/with/${userId}`, { method: 'POST' }),
 
-  messages: (conversationId: string, opts?: { before?: number; limit?: number }) => {
+  messages: (conversationId: string, opts?: { before?: string; limit?: number }) => {
     const params = new URLSearchParams()
     if (opts?.before) params.set('before', String(opts.before))
     if (opts?.limit) params.set('limit', String(opts.limit))
@@ -16,7 +16,7 @@ export const dmApi = {
     return apiFetch<DmMessage[]>(`/dms/${conversationId}/messages${qs ? `?${qs}` : ''}`)
   },
 
-  send: (conversationId: string, content: string, replyToId?: number) =>
+  send: (conversationId: string, content: string, replyToId?: string) =>
     apiFetch<DmMessage>(`/dms/${conversationId}/messages`, {
       method: 'POST',
       body: JSON.stringify({ content, replyToId }),
@@ -28,13 +28,13 @@ export const dmApi = {
       body: JSON.stringify({ dataUrl, fileName, caption }),
     }),
 
-  edit: (conversationId: string, messageId: number, content: string) =>
+  edit: (conversationId: string, messageId: string, content: string) =>
     apiFetch<DmMessage>(`/dms/${conversationId}/messages/${messageId}`, {
       method: 'PATCH',
       body: JSON.stringify({ content }),
     }),
 
-  delete: (conversationId: string, messageId: number) =>
+  delete: (conversationId: string, messageId: string) =>
     apiFetch<DmMessage>(`/dms/${conversationId}/messages/${messageId}`, {
       method: 'DELETE',
     }),

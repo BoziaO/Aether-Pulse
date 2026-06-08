@@ -9,9 +9,9 @@ import type { MessageType } from './messageType'
 import type { User } from './user'
 
 export interface Message {
-  id: number
+  id: string
   roomId: string
-  userId: number
+  userId: string
   content: string
   type: MessageType
   user?: User

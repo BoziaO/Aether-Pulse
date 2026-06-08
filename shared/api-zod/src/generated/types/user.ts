@@ -8,7 +8,7 @@
 import type { UserStatus } from './userStatus'
 
 export interface User {
-  id: number
+  id: string
   username: string
   displayName: string
   /** @nullable */

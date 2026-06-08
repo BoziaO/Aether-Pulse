@@ -3,32 +3,32 @@ import { ref } from 'vue'
 import type { User } from '@/types/user.types'
 
 export const usePresenceStore = defineStore('presence', () => {
-  const statuses = ref<Map<number, User['status']>>(new Map())
-  const onlineInRoom = ref<Set<number>>(new Set())
+  const statuses = ref<Map<string, User['status']>>(new Map())
+  const onlineInRoom = ref<Set<string>>(new Set())
 
-  function setStatus(userId: number, status: User['status']) {
+  function setStatus(userId: string, status: User['status']) {
     statuses.value = new Map(statuses.value.set(userId, status))
   }
 
-  function setRoomOnline(userIds: number[]) {
+  function setRoomOnline(userIds: string[]) {
     onlineInRoom.value = new Set(userIds)
   }
 
-  function userJoined(userId: number) {
+  function userJoined(userId: string) {
     onlineInRoom.value = new Set([...onlineInRoom.value, userId])
   }
 
-  function userLeft(userId: number) {
+  function userLeft(userId: string) {
     const next = new Set(onlineInRoom.value)
     next.delete(userId)
     onlineInRoom.value = next
   }
 
-  function getStatus(userId: number, fallback: User['status'] = 'offline'): User['status'] {
+  function getStatus(userId: string, fallback: User['status'] = 'offline'): User['status'] {
     return statuses.value.get(userId) ?? fallback
   }
 
-  function isOnlineInRoom(userId: number) {
+  function isOnlineInRoom(userId: string) {
     return onlineInRoom.value.has(userId)
   }
 

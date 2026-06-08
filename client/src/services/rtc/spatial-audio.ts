@@ -1,9 +1,9 @@
 class SpatialAudioService {
   private audioCtx: AudioContext | null = null
   private masterGain: GainNode | null = null
-  private sources = new Map<number, MediaStreamAudioSourceNode>()
-  private panners = new Map<number, PannerNode>()
-  private gains = new Map<number, GainNode>()
+  private sources = new Map<string, MediaStreamAudioSourceNode>()
+  private panners = new Map<string, PannerNode>()
+  private gains = new Map<string, GainNode>()
   private _enabled = false
 
   get enabled() {
@@ -40,7 +40,7 @@ class SpatialAudioService {
     if (this.masterGain) this.masterGain.gain.value = clamped / 100
   }
 
-  attachStream(userId: number, stream: MediaStream, position = { x: 1.5, y: 0, z: 0 }) {
+  attachStream(userId: string, stream: MediaStream, position = { x: 1.5, y: 0, z: 0 }) {
     if (!this._enabled) return
     if (!stream.getAudioTracks().length) return
 
@@ -88,7 +88,7 @@ class SpatialAudioService {
     }
   }
 
-  updatePosition(userId: number, x: number, y: number, z: number) {
+  updatePosition(userId: string, x: number, y: number, z: number) {
     const panner = this.panners.get(userId)
     if (!panner) return
     const hasPositionParams = typeof (panner as any).positionX !== 'undefined'
@@ -102,7 +102,7 @@ class SpatialAudioService {
     }
   }
 
-  detachStream(userId: number) {
+  detachStream(userId: string) {
     this.sources.get(userId)?.disconnect()
     this.panners.get(userId)?.disconnect()
     this.gains.get(userId)?.disconnect()

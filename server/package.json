@@ -24,6 +24,7 @@
     "ioredis": "^5.11.0",
     "jsonwebtoken": "^9.0.2",
     "media-typer": "^2.0.0",
+    "mongoose": "^8.15.0",
     "nanoid": "^5.1.11",
     "pino": "^10.3.1",
     "pino-http": "^11.0.0",

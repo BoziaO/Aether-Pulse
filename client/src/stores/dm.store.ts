@@ -19,7 +19,7 @@ export const useDmStore = defineStore('dm', () => {
   const uploading = ref(false)
   const hasMore = ref(true)
   const replyTo = ref<DmMessage | null>(null)
-  const typingUsers = ref<Set<number>>(new Set())
+  const typingUsers = ref<Set<string>>(new Set())
 
   function bindGlobalDmListener() {
     if (globalDmListenerBound) return
@@ -54,7 +54,7 @@ export const useDmStore = defineStore('dm', () => {
         isTyping,
       }: {
         conversationId: string
-        userId: number
+        userId: string
         isTyping: boolean
       }) => {
         if (conversationId === currentConversationId.value) {
@@ -86,7 +86,7 @@ export const useDmStore = defineStore('dm', () => {
     }
   }
 
-  async function openWith(userId: number) {
+  async function openWith(userId: string) {
     try {
       const conv = await auth.authRequest(() => dmApi.openWith(userId))
       const existing = conversations.value.find((c) => c.id === conv.id)
@@ -228,11 +228,11 @@ export const useDmStore = defineStore('dm', () => {
     }
   }
 
-  function addTypingUser(userId: number) {
+  function addTypingUser(userId: string) {
     typingUsers.value = new Set([...typingUsers.value, userId])
   }
 
-  function removeTypingUser(userId: number) {
+  function removeTypingUser(userId: string) {
     const next = new Set(typingUsers.value)
     next.delete(userId)
     typingUsers.value = next
@@ -243,7 +243,7 @@ export const useDmStore = defineStore('dm', () => {
     socket.emit('dm-typing', { conversationId, isTyping })
   }
 
-  async function editMessage(conversationId: string, messageId: number, content: string) {
+  async function editMessage(conversationId: string, messageId: string, content: string) {
     try {
       const updated = await auth.authRequest(() => dmApi.edit(conversationId, messageId, content))
       const idx = messages.value.findIndex((m) => m.id === messageId)
@@ -257,7 +257,7 @@ export const useDmStore = defineStore('dm', () => {
     }
   }
 
-  async function deleteMessage(conversationId: string, messageId: number) {
+  async function deleteMessage(conversationId: string, messageId: string) {
     try {
       const updated = await auth.authRequest(() => dmApi.delete(conversationId, messageId))
       const idx = messages.value.findIndex((m) => m.id === messageId)

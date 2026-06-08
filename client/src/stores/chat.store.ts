@@ -13,7 +13,7 @@ export const useChatStore = defineStore('chat', () => {
   const loadingMore = ref(false)
   const uploading = ref(false)
   const hasMore = ref(true)
-  const typingUsers = ref<Set<number>>(new Set())
+  const typingUsers = ref<Set<string>>(new Set())
   const replyTo = ref<Message | null>(null)
   const searchResults = ref<Message[]>([])
   const searchQuery = ref('')
@@ -93,7 +93,7 @@ export const useChatStore = defineStore('chat', () => {
     upsertMessage(message)
   }
 
-  function sendMessage(roomId: string, userId: number, content: string) {
+  function sendMessage(roomId: string, userId: string, content: string) {
     const socket = getSocket()
     socket.emit('chat-message', {
       roomId,
@@ -104,7 +104,7 @@ export const useChatStore = defineStore('chat', () => {
     replyTo.value = null
   }
 
-  async function editMessage(roomId: string, messageId: number, content: string) {
+  async function editMessage(roomId: string, messageId: string, content: string) {
     try {
       const updated = await roomApi.editMessage(roomId, messageId, content)
       upsertMessage(updated)
@@ -114,7 +114,7 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
-  async function deleteMessage(roomId: string, messageId: number) {
+  async function deleteMessage(roomId: string, messageId: string) {
     try {
       const updated = await roomApi.deleteMessage(roomId, messageId)
       upsertMessage(updated)
@@ -124,7 +124,7 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
-  async function toggleReaction(roomId: string, messageId: number, emoji: string) {
+  async function toggleReaction(roomId: string, messageId: string, emoji: string) {
     try {
       const updated = await roomApi.toggleReaction(roomId, messageId, emoji)
       upsertMessage(updated)
@@ -152,16 +152,16 @@ export const useChatStore = defineStore('chat', () => {
     replyTo.value = message
   }
 
-  function setTyping(roomId: string, userId: number, isTyping: boolean) {
+  function setTyping(roomId: string, userId: string, isTyping: boolean) {
     const socket = getSocket()
     socket.emit('user-typing', { roomId, userId, isTyping })
   }
 
-  function addTypingUser(userId: number) {
+  function addTypingUser(userId: string) {
     typingUsers.value = new Set([...typingUsers.value, userId])
   }
 
-  function removeTypingUser(userId: number) {
+  function removeTypingUser(userId: string) {
     const next = new Set(typingUsers.value)
     next.delete(userId)
     typingUsers.value = next

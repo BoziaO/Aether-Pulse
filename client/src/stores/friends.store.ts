@@ -49,7 +49,7 @@ export const useFriendsStore = defineStore('friends', () => {
     socketBound.value = true
   }
 
-  async function sendRequest(userId: number) {
+  async function sendRequest(userId: string) {
     try {
       const res = await auth.authRequest(() => friendsApi.sendRequest(userId))
       useToastStore().success(
@@ -62,7 +62,7 @@ export const useFriendsStore = defineStore('friends', () => {
     }
   }
 
-  async function accept(userId: number) {
+  async function accept(userId: string) {
     try {
       await auth.authRequest(() => friendsApi.accept(userId))
       useToastStore().success('Friend added')
@@ -73,29 +73,29 @@ export const useFriendsStore = defineStore('friends', () => {
     }
   }
 
-  async function reject(userId: number) {
+  async function reject(userId: string) {
     await auth.authRequest(() => friendsApi.reject(userId))
     await fetchFriends()
   }
 
-  async function remove(userId: number) {
+  async function remove(userId: string) {
     await auth.authRequest(() => friendsApi.remove(userId))
     useToastStore().push('Friend removed')
     await fetchFriends()
   }
 
-  async function block(userId: number) {
+  async function block(userId: string) {
     await auth.authRequest(() => friendsApi.block(userId))
     useToastStore().push('User blocked')
     await fetchFriends()
   }
 
-  async function getStatus(userId: number): Promise<FriendshipStatus> {
+  async function getStatus(userId: string): Promise<FriendshipStatus> {
     const res = await auth.authRequest(() => friendsApi.getStatus(userId))
     return res.status
   }
 
-  function isFriend(userId: number) {
+  function isFriend(userId: string) {
     return friends.value.some((f) => f.user.id === userId)
   }
 

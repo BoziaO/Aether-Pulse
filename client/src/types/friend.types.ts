@@ -14,7 +14,7 @@ export interface FriendEntry {
 
 export interface FriendRequest {
   user: User
-  requestId: number
+  requestId: string
   createdAt: string
 }
 

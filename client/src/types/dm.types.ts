@@ -5,7 +5,7 @@ export interface DmLastMessage {
   type: 'text' | 'file'
   attachmentName?: string | null
   createdAt: string
-  userId: number
+  userId: string
 }
 
 export interface DmConversation {
@@ -16,7 +16,7 @@ export interface DmConversation {
 }
 
 export interface DmMessageUser {
-  id: number
+  id: string
   displayName: string
   avatarUrl: string | null
   accentColor: string | null
@@ -25,18 +25,18 @@ export interface DmMessageUser {
 }
 
 export interface DmMessage {
-  id: number
+  id: string
   conversationId: string
-  userId: number
+  userId: string
   content: string
   type: 'text' | 'file'
   attachmentUrl?: string | null
   attachmentName?: string | null
   attachmentMime?: string | null
-  replyToId?: number | null
+  replyToId?: string | null
   editedAt?: string | null
   isDeleted?: boolean
   createdAt: string
   user?: DmMessageUser | null
-  replyTo?: { id: number; content: string; userId: number; isDeleted: boolean } | null
+  replyTo?: { id: string; content: string; userId: string; isDeleted: boolean } | null
 }

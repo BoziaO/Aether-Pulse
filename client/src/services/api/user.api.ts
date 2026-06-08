@@ -9,9 +9,9 @@ export interface UserStats {
 }
 
 export const userApi = {
-  getStats: (userId: number) => apiFetch<UserStats>(`/users/${userId}/stats`),
+  getStats: (userId: string) => apiFetch<UserStats>(`/users/${userId}/stats`),
   update: (
-    userId: number,
+    userId: string,
     data: Partial<
       Pick<
         User,
@@ -33,15 +33,15 @@ export const userApi = {
     >
   ) => apiFetch<User>(`/users/${userId}`, { method: 'PATCH', body: JSON.stringify(data) }),
 
-  get: (userId: number) => apiFetch<User>(`/users/${userId}`),
+  get: (userId: string) => apiFetch<User>(`/users/${userId}`),
 
-  uploadAvatar: (userId: number, dataUrl: string) =>
+  uploadAvatar: (userId: string, dataUrl: string) =>
     apiFetch<{ avatarUrl: string; user: User }>(`/users/${userId}/avatar`, {
       method: 'POST',
       body: JSON.stringify({ dataUrl }),
     }),
 
-  uploadBanner: (userId: number, dataUrl: string) =>
+  uploadBanner: (userId: string, dataUrl: string) =>
     apiFetch<{ bannerUrl: string; user: User }>(`/users/${userId}/banner`, {
       method: 'POST',
       body: JSON.stringify({ dataUrl }),

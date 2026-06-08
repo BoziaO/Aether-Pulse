@@ -7,30 +7,30 @@ export const friendsApi = {
 
   search: (q: string) => apiFetch<UserSearchResult[]>(`/friends/search?q=${encodeURIComponent(q)}`),
 
-  getStatus: (userId: number) =>
+  getStatus: (userId: string) =>
     apiFetch<{ status: FriendshipStatus }>(`/friends/status/${userId}`),
 
-  sendRequest: (userId: number) =>
+  sendRequest: (userId: string) =>
     apiFetch<{ status: string; user: User }>('/friends/request', {
       method: 'POST',
       body: JSON.stringify({ userId }),
     }),
 
-  accept: (userId: number) =>
+  accept: (userId: string) =>
     apiFetch<{ status: string; user: User | null }>('/friends/accept', {
       method: 'POST',
       body: JSON.stringify({ userId }),
     }),
 
-  reject: (userId: number) =>
+  reject: (userId: string) =>
     apiFetch<{ ok: boolean }>('/friends/reject', {
       method: 'POST',
       body: JSON.stringify({ userId }),
     }),
 
-  remove: (userId: number) => apiFetch<{ ok: boolean }>(`/friends/${userId}`, { method: 'DELETE' }),
+  remove: (userId: string) => apiFetch<{ ok: boolean }>(`/friends/${userId}`, { method: 'DELETE' }),
 
-  block: (userId: number) =>
+  block: (userId: string) =>
     apiFetch<{ ok: boolean }>('/friends/block', {
       method: 'POST',
       body: JSON.stringify({ userId }),

@@ -5,7 +5,7 @@ export interface SocialLink {
 }
 
 export interface User {
-  id: number
+  id: string
   username: string
   displayName: string
   avatarUrl: string | null

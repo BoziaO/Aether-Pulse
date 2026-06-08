@@ -5,7 +5,7 @@ export type PeerEventType = 'stream' | 'close' | 'error'
 
 export interface PeerConnection {
   peer: InstanceType<typeof SimplePeer>
-  userId: number
+  userId: string
   socketId: string
   stream: MediaStream | null
 }
@@ -14,9 +14,9 @@ export class PeerManager {
   private peers = new Map<string, PeerConnection>()
   private socket: Socket
   private localStream: MediaStream | null = null
-  private localUserId: number
-  private onStream: (userId: number, stream: MediaStream) => void
-  private onClose: (userId: number) => void
+  private localUserId: string
+  private onStream: (userId: string, stream: MediaStream) => void
+  private onClose: (userId: string) => void
 
   private onOffer = ({
     from,
@@ -24,10 +24,10 @@ export class PeerManager {
     offer,
   }: {
     from: string
-    fromUserId?: number
+    fromUserId?: string
     offer: SimplePeer.SignalData
   }) => {
-    this.handleOffer(from, fromUserId ?? 0, offer)
+    this.handleOffer(from, fromUserId ?? '', offer)
   }
   private onAnswer = ({
     from,
@@ -35,7 +35,7 @@ export class PeerManager {
     answer,
   }: {
     from: string
-    fromUserId?: number
+    fromUserId?: string
     answer: SimplePeer.SignalData
   }) => {
     const conn = this.peers.get(from)
@@ -57,9 +57,9 @@ export class PeerManager {
 
   constructor(
     socket: Socket,
-    localUserId: number,
-    onStream: (userId: number, stream: MediaStream) => void,
-    onClose: (userId: number) => void
+    localUserId: string,
+    onStream: (userId: string, stream: MediaStream) => void,
+    onClose: (userId: string) => void
   ) {
     this.socket = socket
     this.localUserId = localUserId
@@ -78,13 +78,13 @@ export class PeerManager {
     this.localStream = stream
   }
 
-  initiateCall(userId: number, socketId: string) {
+  initiateCall(userId: string, socketId: string) {
     if (this.peers.has(socketId)) return
     const peer = this.createPeer(true, userId, socketId)
     this.peers.set(socketId, { peer, userId, socketId, stream: null })
   }
 
-  private handleOffer(fromSocketId: string, fromUserId: number, signal: SimplePeer.SignalData) {
+  private handleOffer(fromSocketId: string, fromUserId: string, signal: SimplePeer.SignalData) {
     if (this.peers.has(fromSocketId)) {
       this.peers.get(fromSocketId)!.peer.signal(signal)
       return
@@ -96,7 +96,7 @@ export class PeerManager {
 
   private createPeer(
     initiator: boolean,
-    userId: number,
+    userId: string,
     socketId: string
   ): InstanceType<typeof SimplePeer> {
     const peer = new SimplePeer({

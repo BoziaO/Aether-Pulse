@@ -32,22 +32,22 @@ export const roomApi = {
   searchMessages: (roomId: string, q: string) =>
     apiFetch<Message[]>(`/rooms/${roomId}/messages/search?q=${encodeURIComponent(q)}`),
 
-  sendMessage: (roomId: string, content: string, replyToId?: number) =>
+  sendMessage: (roomId: string, content: string, replyToId?: string) =>
     apiFetch<Message>(`/rooms/${roomId}/messages`, {
       method: 'POST',
       body: JSON.stringify({ content, replyToId }),
     }),
 
-  editMessage: (roomId: string, messageId: number, content: string) =>
+  editMessage: (roomId: string, messageId: string, content: string) =>
     apiFetch<Message>(`/rooms/${roomId}/messages/${messageId}`, {
       method: 'PATCH',
       body: JSON.stringify({ content }),
     }),
 
-  deleteMessage: (roomId: string, messageId: number) =>
+  deleteMessage: (roomId: string, messageId: string) =>
     apiFetch<Message>(`/rooms/${roomId}/messages/${messageId}`, { method: 'DELETE' }),
 
-  toggleReaction: (roomId: string, messageId: number, emoji: string) =>
+  toggleReaction: (roomId: string, messageId: string, emoji: string) =>
     apiFetch<Message>(`/rooms/${roomId}/messages/${messageId}/reactions`, {
       method: 'POST',
       body: JSON.stringify({ emoji }),
@@ -58,7 +58,7 @@ export const roomApi = {
     dataUrl: string,
     fileName: string,
     caption?: string,
-    replyToId?: number
+    replyToId?: string
   ) =>
     apiFetch<Message>(`/rooms/${roomId}/upload`, {
       method: 'POST',

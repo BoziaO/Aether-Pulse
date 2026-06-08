@@ -40,7 +40,7 @@ export const LoginBody = zod.object({
 
 export const LoginResponse = zod.object({
   user: zod.object({
-    id: zod.number(),
+    id: zod.string(),
     username: zod.string(),
     displayName: zod.string(),
     avatarUrl: zod.string().nullish(),
@@ -68,7 +68,7 @@ export const LoginResponse = zod.object({
  * @summary Get current user
  */
 export const GetMeResponse = zod.object({
-  id: zod.number(),
+  id: zod.string(),
   username: zod.string(),
   displayName: zod.string(),
   avatarUrl: zod.string().nullish(),
@@ -100,7 +100,7 @@ export const RefreshBody = zod.object({
 
 export const RefreshResponse = zod.object({
   user: zod.object({
-    id: zod.number(),
+    id: zod.string(),
     username: zod.string(),
     displayName: zod.string(),
     avatarUrl: zod.string().nullish(),
@@ -132,7 +132,7 @@ export const GetUserParams = zod.object({
 })
 
 export const GetUserResponse = zod.object({
-  id: zod.number(),
+  id: zod.string(),
   username: zod.string(),
   displayName: zod.string(),
   avatarUrl: zod.string().nullish(),
@@ -196,7 +196,7 @@ export const UpdateUserBody = zod.object({
 })
 
 export const UpdateUserResponse = zod.object({
-  id: zod.number(),
+  id: zod.string(),
   username: zod.string(),
   displayName: zod.string(),
   avatarUrl: zod.string().nullish(),
@@ -226,12 +226,12 @@ export const ListRoomsResponseItem = zod.object({
   id: zod.string(),
   name: zod.string(),
   inviteCode: zod.string(),
-  ownerId: zod.number(),
+  ownerId: zod.string(),
   memberCount: zod.number(),
   members: zod
     .array(
       zod.object({
-        id: zod.number(),
+        id: zod.string(),
         username: zod.string(),
         displayName: zod.string(),
         avatarUrl: zod.string().nullish(),
@@ -282,12 +282,12 @@ export const GetRoomResponse = zod.object({
   id: zod.string(),
   name: zod.string(),
   inviteCode: zod.string(),
-  ownerId: zod.number(),
+  ownerId: zod.string(),
   memberCount: zod.number(),
   members: zod
     .array(
       zod.object({
-        id: zod.number(),
+        id: zod.string(),
         username: zod.string(),
         displayName: zod.string(),
         avatarUrl: zod.string().nullish(),
@@ -338,12 +338,12 @@ export const JoinRoomResponse = zod.object({
   id: zod.string(),
   name: zod.string(),
   inviteCode: zod.string(),
-  ownerId: zod.number(),
+  ownerId: zod.string(),
   memberCount: zod.number(),
   members: zod
     .array(
       zod.object({
-        id: zod.number(),
+        id: zod.string(),
         username: zod.string(),
         displayName: zod.string(),
         avatarUrl: zod.string().nullish(),
@@ -383,12 +383,12 @@ export const JoinRoomByCodeResponse = zod.object({
   id: zod.string(),
   name: zod.string(),
   inviteCode: zod.string(),
-  ownerId: zod.number(),
+  ownerId: zod.string(),
   memberCount: zod.number(),
   members: zod
     .array(
       zod.object({
-        id: zod.number(),
+        id: zod.string(),
         username: zod.string(),
         displayName: zod.string(),
         avatarUrl: zod.string().nullish(),
@@ -432,14 +432,14 @@ export const ListMessagesParams = zod.object({
 })
 
 export const ListMessagesResponseItem = zod.object({
-  id: zod.number(),
+  id: zod.string(),
   roomId: zod.string(),
-  userId: zod.number(),
+  userId: zod.string(),
   content: zod.string(),
   type: zod.enum(['text', 'system', 'file']),
   user: zod
     .object({
-      id: zod.number(),
+      id: zod.string(),
       username: zod.string(),
       displayName: zod.string(),
       avatarUrl: zod.string().nullish(),
@@ -495,7 +495,7 @@ export const GetRoomActivityResponse = zod.object({
     zod.object({
       type: zod.string(),
       description: zod.string(),
-      userId: zod.number().nullish(),
+      userId: zod.string().nullish(),
       createdAt: zod.string(),
     })
   ),

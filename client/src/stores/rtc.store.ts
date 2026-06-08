@@ -17,13 +17,13 @@ import type { User } from '@/types/user.types'
 export const useRtcStore = defineStore('rtc', () => {
   const localStream = shallowRef<MediaStream | null>(null)
   const screenStream = shallowRef<MediaStream | null>(null)
-  const remoteStreams = ref<Map<number, MediaStream>>(new Map())
+  const remoteStreams = ref<Map<string, MediaStream>>(new Map())
   const isMuted = ref(false)
   const isVideoOn = ref(false)
   const isScreenSharing = ref(false)
   const inCall = ref(false)
-  const roomUsers = ref<number[]>([])
-  const callUsers = ref<Map<number, string>>(new Map()) // userId -> socketId
+  const roomUsers = ref<string[]>([])
+  const callUsers = ref<Map<string, string>>(new Map()) // userId -> socketId
 
   let peerManager: PeerManager | null = null
   let currentRoomId: string | null = null
@@ -65,7 +65,7 @@ export const useRtcStore = defineStore('rtc', () => {
   function updateSpatialPositions() {
     if (!spatialAudio.enabled) return
     const keys = Array.from(remoteStreams.value.keys())
-    keys.forEach((userId, index) => {
+    keys.forEach((userId: string, index) => {
       const pos = calculateSpatialPosition(index)
       spatialAudio.updatePosition(userId, pos.x, pos.y, pos.z)
     })
@@ -90,7 +90,7 @@ export const useRtcStore = defineStore('rtc', () => {
     () => settings.spatialAudioEnabled,
     (enabled) => {
       if (enabled) {
-        remoteStreams.value.forEach((stream, userId) => {
+        remoteStreams.value.forEach((stream, userId: string) => {
           const index = Array.from(remoteStreams.value.keys()).indexOf(userId)
           const pos = calculateSpatialPosition(index)
           spatialAudio.attachStream(userId, stream, pos)
@@ -101,7 +101,7 @@ export const useRtcStore = defineStore('rtc', () => {
     }
   )
 
-  function onRemoteStream(userId: number, stream: MediaStream) {
+  function onRemoteStream(userId: string, stream: MediaStream) {
     remoteStreams.value = new Map(remoteStreams.value.set(userId, stream))
     if (spatialAudio.enabled) {
       const index = Array.from(remoteStreams.value.keys()).indexOf(userId)
@@ -110,14 +110,14 @@ export const useRtcStore = defineStore('rtc', () => {
     }
   }
 
-  function onPeerClose(userId: number) {
+  function onPeerClose(userId: string) {
     const newMap = new Map(remoteStreams.value)
     newMap.delete(userId)
     remoteStreams.value = newMap
     spatialAudio.detachStream(userId)
   }
 
-  async function joinRoom(roomId: string, userId: number) {
+  async function joinRoom(roomId: string, userId: string) {
     currentRoomId = roomId
     const socket = connectSocket()
 
@@ -151,22 +151,22 @@ export const useRtcStore = defineStore('rtc', () => {
       chatStore.updateMessage(msg)
     })
 
-    socket.on('user-typing', ({ userId: uid, isTyping }: { userId: number; isTyping: boolean }) => {
+    socket.on('user-typing', ({ userId: uid, isTyping }: { userId: string; isTyping: boolean }) => {
       if (isTyping) chatStore.addTypingUser(uid)
       else chatStore.removeTypingUser(uid)
     })
 
-    socket.on('room-users', ({ userIds }: { userIds: number[] }) => {
+    socket.on('room-users', ({ userIds }: { userIds: string[] }) => {
       roomUsers.value = userIds
       presenceStore.setRoomOnline(userIds)
     })
 
-    socket.on('user-joined', ({ userId: uid }: { userId: number; socketId: string }) => {
+    socket.on('user-joined', ({ userId: uid }: { userId: string; socketId: string }) => {
       roomUsers.value = [...new Set([...roomUsers.value, uid])]
       presenceStore.userJoined(uid)
     })
 
-    socket.on('user-left', ({ userId: uid }: { userId: number }) => {
+    socket.on('user-left', ({ userId: uid }: { userId: string }) => {
       roomUsers.value = roomUsers.value.filter((id) => id !== uid)
       presenceStore.userLeft(uid)
       onPeerClose(uid)
@@ -174,7 +174,7 @@ export const useRtcStore = defineStore('rtc', () => {
 
     socket.on(
       'user-status-changed',
-      ({ userId: uid, status }: { userId: number; status: User['status'] }) => {
+      ({ userId: uid, status }: { userId: string; status: User['status'] }) => {
         presenceStore.setStatus(uid, status)
         if (roomStore.currentRoom?.members) {
           const member = roomStore.currentRoom.members.find((m) => m.id === uid)
@@ -213,7 +213,7 @@ export const useRtcStore = defineStore('rtc', () => {
 
     socket.on(
       'room-member-left',
-      ({ roomId: rid, userId: uid }: { roomId: string; userId: number }) => {
+      ({ roomId: rid, userId: uid }: { roomId: string; userId: string }) => {
         if (roomStore.currentRoom?.id === rid && roomStore.currentRoom?.members) {
           roomStore.currentRoom.members = roomStore.currentRoom.members.filter((m) => m.id !== uid)
           roomStore.currentRoom.memberCount = roomStore.currentRoom.members.length
@@ -230,8 +230,8 @@ export const useRtcStore = defineStore('rtc', () => {
     })
 
     // Voice/video call participants (separate from "in room")
-    socket.on('call-users', ({ users }: { users: { userId: number; socketId: string }[] }) => {
-      const m = new Map<number, string>()
+    socket.on('call-users', ({ users }: { users: { userId: string; socketId: string }[] }) => {
+      const m = new Map<string, string>()
       users.forEach((u) => m.set(u.userId, u.socketId))
       callUsers.value = m
 
@@ -247,7 +247,7 @@ export const useRtcStore = defineStore('rtc', () => {
 
     socket.on(
       'call-user-joined',
-      ({ userId: uid, socketId }: { userId: number; socketId: string }) => {
+      ({ userId: uid, socketId }: { userId: string; socketId: string }) => {
         callUsers.value = new Map(callUsers.value.set(uid, socketId))
         if (inCall.value && peerManager && authStore.user) {
           if (authStore.user.id < uid && !peerManager.hasPeer(socketId)) {
@@ -257,7 +257,7 @@ export const useRtcStore = defineStore('rtc', () => {
       }
     )
 
-    socket.on('call-user-left', ({ userId: uid }: { userId: number }) => {
+    socket.on('call-user-left', ({ userId: uid }: { userId: string }) => {
       const m = new Map(callUsers.value)
       m.delete(uid)
       callUsers.value = m
@@ -268,7 +268,7 @@ export const useRtcStore = defineStore('rtc', () => {
     await chatStore.loadMessages(roomId)
   }
 
-  function leaveRoom(userId: number) {
+  function leaveRoom(userId: string) {
     if (currentRoomId) {
       const socket = getSocket()
       if (inCall.value) {
