@@ -13,7 +13,7 @@ module.exports = {
   plugins: [],
   overrides: [
     {
-      files: ['*.html'],
+      files: ['*.html', '*.md'],
       options: {
         printWidth: 120,
       },
@@ -25,15 +25,15 @@ module.exports = {
       },
     },
     {
-      files: ['*.md'],
-      options: {
-        printWidth: 120,
-      },
-    },
-    {
       files: ['*.json', '*.yaml', '*.yml'],
       options: {
         tabWidth: 2,
+      },
+    },
+    {
+      files: ['package.json', 'tsconfig.json', '*.lock'],
+      options: {
+        printWidth: 200,
       },
     },
   ],

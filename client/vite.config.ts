@@ -6,7 +6,9 @@ import path from 'path'
 import runtimeErrorOverlay from '@replit/vite-plugin-runtime-error-modal'
 
 const port = Number(process.env.CLIENT_PORT) || 5174
-const apiTarget = process.env.API_TARGET || `http://localhost:${process.env.PORT || 3000}`
+// Default server port is 3000 (from server's default configuration)
+const serverPort = process.env.SERVER_PORT || process.env.PORT || '3000'
+const apiTarget = process.env.API_TARGET || `http://localhost:${serverPort}`
 const basePath = process.env.BASE_PATH || '/'
 const isLocalWrapper = process.env.LOCAL_WRAPPER === 'true'
 

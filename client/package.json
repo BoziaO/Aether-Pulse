@@ -5,39 +5,48 @@
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
-    "dev": "vite --config vite.config.ts --host 0.0.0.0",
+    "dev": "vite --config vite.config.ts --host 0.0.0.0 --port 5174",
     "build": "vite build --config vite.config.ts",
-    "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
+    "serve": "vite preview --config vite.config.ts --host 0.0.0.0 --port 5174",
     "typecheck": "vue-tsc -p tsconfig.json --noEmit",
+    "lint": "eslint . --ext .vue,.ts,.tsx,.js,.jsx,.cjs,.mjs",
     "test": "vitest",
     "test:coverage": "vitest --coverage",
     "test:ui": "vitest --ui",
-    "electron:dev": "concurrently \"pnpm dev\" \"cross-env NODE_ENV=development electron .\"",
+    "test:watch": "vitest --watch",
+    "electron:dev": "concurrently --kill-others \"pnpm dev\" \"pnpm --filter aetherpulse-server dev\" \"wait-on http://localhost:5174 && wait-on http://localhost:3000 && cross-env NODE_ENV=development electron . --no-sandbox --disable-gpu\"",
+    "electron:dev:build": "pnpm build && cross-env NODE_ENV=development electron . --no-sandbox --disable-gpu",
     "electron:build": "cross-env LOCAL_WRAPPER=true pnpm build && electron-builder --win",
+    "electron:build:linux": "cross-env LOCAL_WRAPPER=true pnpm build && electron-builder --linux",
+    "electron:build:mac": "cross-env LOCAL_WRAPPER=true pnpm build && electron-builder --mac",
     "android:sync": "cross-env LOCAL_WRAPPER=true pnpm build && npx cap sync",
-    "android:open": "npx cap open android"
+    "android:open": "npx cap open android",
+    "android:build": "cross-env LOCAL_WRAPPER=true pnpm build && npx cap sync android && npx cap open android"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.0",
     "@capacitor/core": "^8.4.0",
-    "@types/simple-peer": "^9.11.9",
     "@vueuse/core": "^13.9.0",
     "lucide-vue-next": "^0.479.0",
     "pinia": "^3.0.4",
     "process": "^0.11.10",
     "simple-peer": "^9.11.1",
     "socket.io-client": "^4.8.3",
+    "util": "^0.12.5",
+    "util-browser": "^0.0.2",
     "vue": "^3.5.35",
     "vue-router": "^5.1.0"
   },
   "devDependencies": {
     "@capacitor/cli": "^8.4.0",
+    "@replit/vite-plugin-cartographer": "^0.5.1",
     "@replit/vite-plugin-dev-banner": "^0.1.2",
     "@replit/vite-plugin-runtime-error-modal": "^0.0.6",
     "@tailwindcss/vite": "^4.3.0",
     "@testing-library/jest-dom": "^6.6.2",
     "@testing-library/user-event": "^14.5.2",
     "@types/node": "^25.9.1",
+    "@types/simple-peer": "^9.11.9",
     "@vitejs/plugin-vue": "^6.0.7",
     "@vue/test-utils": "^2.4.6",
     "concurrently": "^10.0.3",
@@ -50,8 +59,9 @@
     "tslib": "^2.8.1",
     "typescript": "~6.0.3",
     "vite": "^8.0.14",
-    "vitest": "^2.1.6",
-    "vue-tsc": "^3.3.3"
+    "vitest": "^2.1.9",
+    "vue-tsc": "^3.3.3",
+    "wait-on": "^7.0.1"
   },
   "build": {
     "appId": "com.aetherpulse.app",
@@ -69,11 +79,28 @@
       "target": "portable",
       "icon": "public/icons/logo.png"
     },
+    "mac": {
+      "target": "dmg",
+      "icon": "public/icons/logo.png"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "public/icons/logo.png"
+    },
     "extraResources": [
       {
         "from": "dist/public",
         "to": "dist/public"
       }
+    ],
+    "extraFiles": [
+      {
+        "from": "public/icons",
+        "to": "icons"
+      }
     ]
+  },
+  "engines": {
+    "node": ">=22.0.0"
   }
 }

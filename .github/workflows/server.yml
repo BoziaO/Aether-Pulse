@@ -3,10 +3,10 @@ name: Server CI
 on:
   push:
     branches: [main]
-    paths: ['server/**', 'shared/**', 'package.json', 'pnpm-lock.yaml']
+    paths: ['server/**', 'shared/**', 'package.json', 'pnpm-workspace.yaml']
   pull_request:
     branches: [main]
-    paths: ['server/**', 'shared/**', 'package.json', 'pnpm-lock.yaml']
+    paths: ['server/**', 'shared/**', 'package.json', 'pnpm-workspace.yaml']
 
 jobs:
   build:
@@ -20,5 +20,11 @@ jobs:
         with:
           node-version: 22
           cache: 'pnpm'
-      - run: pnpm install
+      - name: Restore cache
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-
+      - run: pnpm install --frozen-lockfile
       - run: pnpm --filter aetherpulse-server build

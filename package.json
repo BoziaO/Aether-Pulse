@@ -3,10 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "license": "MIT",
+  "packageManager": "pnpm@11.5.2",
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
     "typecheck": "turbo typecheck",
+    "lint": "turbo lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "start:client": "pnpm --filter aetherpulse-client dev",
     "start:server": "pnpm --filter aetherpulse-server dev",
     "build:client": "pnpm --filter aetherpulse-client build",
@@ -15,23 +19,34 @@
     "electron:build": "pnpm --filter aetherpulse-client electron:build",
     "android:sync": "pnpm --filter aetherpulse-client android:sync",
     "android:open": "pnpm --filter aetherpulse-client android:open",
-    "lint:check": "prettier --check .",
-    "format:check": "prettier --check ."
+    "clean": "turbo clean && rm -rf node_modules",
+    "docker:build": "docker-compose -f docker/docker-compose.yml build",
+    "docker:up": "docker-compose -f docker/docker-compose.yml up -d",
+    "docker:down": "docker-compose -f docker/docker-compose.yml down"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/express-session": "^1.19.0",
+    "@types/node": "^25.3.3",
     "lint-staged": "^17.0.7",
     "prettier": "^3.8.3",
     "turbo": "^2.9.16",
     "typescript": "~6.0.3"
   },
-  "packageManager": "pnpm@11.5.2",
   "dependencies": {
-    "events": "^3.3.0",
     "util": "^0.12.5",
     "util-browser": "^0.0.2"
-  }
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=11.0.0"
+  },
+  "workspaces": [
+    "client",
+    "server",
+    "shared/*",
+    "scripts"
+  ]
 }

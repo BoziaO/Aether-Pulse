@@ -3,15 +3,42 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**", "build/**"]
     },
     "typecheck": {
       "dependsOn": ["^build"]
     },
+    "lint": {
+      "cache": false
+    },
     "dev": {
       "cache": false,
       "persistent": true,
-      "env": ["DATABASE_URL", "CLIENT_PORT", "PORT", "NODE_ENV", "SESSION_SECRET", "BASE_PATH"]
+      "env": [
+        "DATABASE_URL",
+        "CLIENT_PORT",
+        "PORT",
+        "NODE_ENV",
+        "SESSION_SECRET",
+        "BASE_PATH",
+        "REDIS_URL",
+        "JWT_SECRET"
+      ]
+    },
+    "clean": {
+      "cache": false
+    }
+  },
+  "pipeline": {
+    "build": {
+      "dependsOn": ["^build"]
+    },
+    "typecheck": {
+      "dependsOn": ["build"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
     }
   }
 }

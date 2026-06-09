@@ -3,6 +3,8 @@ const path = require('path')
 
 let mainWindow
 
+const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -14,23 +16,25 @@ function createWindow() {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.cjs'),
     },
-    icon: path.join(__dirname, '../public/icons/logo.png'),
+    icon: path.join(__dirname, isDev ? '../public/icons/logo.png' : '../dist/public/icons/logo.png'),
     title: 'AetherPulse',
   })
 
   mainWindow.setMenuBarVisibility(false)
 
-  const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
-
   if (isDev) {
     mainWindow.loadURL('http://localhost:5174')
+    // Open DevTools only in dev mode
     mainWindow.webContents.openDevTools()
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/public/index.html'))
   }
 
+  // Open external links in the default browser
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url)
+    if (url.startsWith('http')) {
+      shell.openExternal(url)
+    }
     return { action: 'deny' }
   })
 

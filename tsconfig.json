@@ -2,6 +2,7 @@
   "extends": "./tsconfig.base.json",
   "compileOnSave": false,
   "files": [],
+  "include": [],
   "references": [
     {
       "path": "./shared/db"
@@ -13,10 +14,16 @@
       "path": "./shared/api-zod"
     },
     {
+      "path": "./shared/api-spec"
+    },
+    {
       "path": "./client"
     },
     {
       "path": "./server"
+    },
+    {
+      "path": "./scripts"
     }
   ]
 }

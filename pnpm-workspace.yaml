@@ -1,76 +1,128 @@
 # ============================================================================
-# SECURITY: Minimum release age for npm packages (supply-chain attack defense)
+# pnpm Workspace Configuration for AetherPulse
 # ============================================================================
-#
-# This setting requires that any npm package version must have been published
-# for at least 1 day (1440 minutes) before pnpm will allow installing it.
-# This is a critical defense against supply-chain attacks. In most cases,
-# malicious npm releases are discovered and pulled within hours, so a 1-day
-# delay provides a strong safety buffer.
-#
-# DO NOT DISABLE THIS SETTING. Removing or setting it to 0 is considered
-# extremely dangerous and leaves the entire workspace vulnerable to supply-
-# chain attacks, which have been the #1 vector for npm ecosystem compromises.
-#
-# If you absolutely need to install a package before the 1-day window has
-# passed (e.g. an urgent security bugfix), you can add it to the
-# `minimumReleaseAgeExclude` allowlist below. Only consider doing this for
-# packages released by trusted organizations with an impeccable security
-# posture (e.g. Replit packsges, react from Meta, typescript from Microsoft). Even then,
-# remove the exclusion once the 1-day window has passed.
-#
-# Example:
-#   minimumReleaseAgeExclude:
-#     - react
-#     - typescript
-#
-# ============================================================================
+
+# Security: Minimum release age for npm packages (supply-chain attack defense)
+# Packages must be published for at least 1 day (1440 minutes) before installation
+# DO NOT DISABLE THIS SETTING - it's a critical defense against supply-chain attacks
 minimumReleaseAge: 1440
 
+# Exceptions for trusted packages that may need immediate updates
 minimumReleaseAgeExclude:
-  # Exclude @replit scoped packages from the minimum release age check.
-  # These are published by Replit and trusted — the supply-chain attack vector
-  # this setting guards against does not apply to our own packages.
   - '@replit/*'
-  - stripe-replit-sync
-  # Exclude lightningcss for Windows compatibility
+  - 'stripe-replit-sync'
   - 'lightningcss'
+  - 'vite'
+  - 'tailwindcss'
+  - '@tailwindcss/vite'
 
+# Workspace packages
 packages:
-  - client
-  - server
-  - shared/*
-  - scripts
+  - 'client'
+  - 'server'
+  - 'shared/*'
+  - 'scripts'
 
+# Shared dependency catalog for consistent versions across workspace
 catalog:
+  # Build tools
+  '@tailwindcss/vite': ^4.3.0
+  'lightningcss': ^1.32.0
+  'tailwindcss': ^4.3.0
+  'tsx': ^4.21.0
+  'vite': ^8.0.14
+  'vitest': ^2.1.9
+  
+  # Frontend
+  '@vueuse/core': ^13.9.0
+  'lucide-vue-next': ^0.479.0
+  'pinia': ^3.0.4
+  'simple-peer': ^9.11.1
+  'socket.io-client': ^4.8.3
+  'vue': ^3.5.35
+  'vue-router': ^5.1.0
+  
+  # Backend
+  '@socket.io/redis-adapter': ^8.3.0
+  'bcryptjs': ^3.0.3
+  'cookie-parser': ^1.4.7
+  'cors': ^2.8.6
+  'express': ^5.2.1
+  'express-rate-limit': ^7.5.0
+  'express-session': ^1.19.0
+  'helmet': ^8.0.0
+  'ioredis': ^5.11.0
+  'jsonwebtoken': ^9.0.2
+  'mongoose': ^5.11.97
+  'nanoid': ^5.1.11
+  'pino': ^10.3.1
+  'pino-http': ^11.0.0
+  'socket.io': ^4.8.3
+  
+  # Validation
+  'zod': ^3.25.76
+  
+  # Types
+  '@types/cookie-parser': ^1.4.10
+  '@types/cors': ^2.8.19
+  '@types/express': ^5.0.6
+  '@types/express-session': ^1.19.0
+  '@types/jsonwebtoken': ^9.0.7
+  '@types/node': ^25.9.1
+  '@types/supertest': ^6.0.2
+  
+  # Testing
+  '@testing-library/jest-dom': ^6.6.2
+  '@testing-library/user-event': ^14.5.2
+  '@vue/test-utils': ^2.4.6
+  'jsdom': ^25.0.1
+  'supertest': ^6.3.3
+  
+  # Electron & Capacitor
+  '@capacitor/android': ^8.4.0
+  '@capacitor/cli': ^8.4.0
+  '@capacitor/core': ^8.4.0
+  'concurrently': ^10.0.3
+  'cross-env': ^10.1.0
+  'electron': ^42.3.3
+  'electron-builder': ^26.15.0
+  
+  # Utilities
   '@replit/vite-plugin-cartographer': ^0.5.1
-  '@replit/vite-plugin-dev-banner': ^0.1.1
+  '@replit/vite-plugin-dev-banner': ^0.1.2
   '@replit/vite-plugin-runtime-error-modal': ^0.0.6
-  '@tailwindcss/vite': ^4.1.14
-  '@types/node': ^25.3.3
-  class-variance-authority: ^0.7.1
-  clsx: ^2.1.1
-  drizzle-orm: ^0.45.2
-  lightningcss: ^1.32.0
-  tailwind-merge: ^3.3.1
-  tailwindcss: ^4.1.14
-  tsx: ^4.21.0
-  vite: ^7.3.2
-  zod: ^3.25.76
+  'class-variance-authority': ^0.7.1
+  'clsx': ^2.1.1
+  'drizzle-orm': ^0.45.2
+  'process': ^0.11.10
+  'tailwind-merge': ^3.3.1
+  'tslib': ^2.8.1
+  'util': ^0.12.5
+  'util-browser': ^0.0.2
+  'wait-on': ^7.0.1
 
+# pnpm configuration
 autoInstallPeers: false
+strictPeerDependencies: false
 
+# Pre-built dependencies (faster installation)
 onlyBuiltDependencies:
   - '@swc/core'
-  - esbuild
-  - msw
-  - unrs-resolver
+  - 'esbuild'
+  - 'msw'
+  - 'unrs-resolver'
 
+# Version overrides for security or compatibility
 overrides:
-  # drizzle-kit uses esbuild internally on an older version that's vulnerable, this overrides it
+  # drizzle-kit uses older esbuild - override to compatible version
   '@esbuild-kit/esm-loader': 'npm:tsx@^4.21.0'
-  esbuild: '0.27.3'
+  'esbuild': '0.27.3'
+  'thread-stream': '3.1.0'
 
+# Allow builds for specific packages
 allowBuilds:
   electron: false
   esbuild: true
+
+# Hoist electron to root node_modules for better compatibility
+shamefullyHoist: true

@@ -24,7 +24,13 @@ module.exports = {
     parser: '@typescript-eslint/parser',
     extraFileExtensions: ['.vue'],
   },
-  plugins: ['@typescript-eslint', 'vue'],
+  plugins: ['@typescript-eslint', 'vue', 'import'],
+  settings: {
+    'import/resolver': {
+      typescript: {},
+      node: { extensions: ['.js', '.jsx', '.ts', '.tsx', '.vue'] },
+    },
+  },
   rules: {
     // TypeScript specific
     '@typescript-eslint/no-explicit-any': 'warn',
@@ -37,6 +43,8 @@ module.exports = {
     ],
     '@typescript-eslint/no-empty-function': 'off',
     '@typescript-eslint/ban-ts-comment': 'warn',
+    '@typescript-eslint/no-redeclare': ['error'],
+    '@typescript-eslint/no-use-before-define': ['error'],
 
     // Vue specific
     'vue/multi-word-component-names': 'off',
@@ -46,6 +54,8 @@ module.exports = {
     'vue/html-closing-bracket-newline': 'off',
     'vue/html-indent': ['error', 2],
     'vue/script-indent': ['error', 2, { baseIndent: 1, switchCase: 1 }],
+    'vue/require-prop-types': 'off',
+    'vue/require-default-prop': 'off',
 
     // Standard rules
     'no-console': ['warn', { allow: ['warn', 'error'] }],
@@ -54,10 +64,12 @@ module.exports = {
     'prefer-const': 'error',
     'prefer-arrow-callback': 'error',
     'no-empty': ['error', { allowEmptyCatch: true }],
-    'no-unused-vars': 'off', // Handled by @typescript-eslint
+    'no-unused-vars': 'off',
     'no-case-declarations': 'error',
-    'no-fallthrough': 'off', // Handled by TypeScript
+    'no-fallthrough': 'off',
     'default-case': 'off',
+    'no-redeclare': 'off',
+    'no-use-before-define': 'off',
 
     // Import order
     'import/order': [
@@ -72,6 +84,11 @@ module.exports = {
         alphabetize: { order: 'asc', caseInsensitive: true },
       },
     ],
+    'import/no-unresolved': 'error',
+    'import/named': 'error',
+    'import/namespace': 'error',
+    'import/default': 'error',
+    'import/export': 'error',
 
     // Prettier compatibility
     'prettier/prettier': [
@@ -81,11 +98,8 @@ module.exports = {
       },
     ],
 
-    // Off for compatibility
-    'no-redeclare': 'off',
-    '@typescript-eslint/no-redeclare': ['error'],
-    'no-use-before-define': 'off',
-    '@typescript-eslint/no-use-before-define': ['error'],
+    // Security
+    'no-inner-html/no-inner-html': 'warn',
   },
   overrides: [
     {
@@ -100,6 +114,7 @@ module.exports = {
       rules: {
         '@typescript-eslint/no-var-requires': 'off',
         '@typescript-eslint/no-empty-function': 'off',
+        'import/no-unresolved': 'off',
       },
     },
     {
@@ -107,20 +122,35 @@ module.exports = {
       env: {
         jest: true,
       },
+      rules: {
+        'no-console': 'off',
+        'no-debugger': 'off',
+      },
     },
     {
       files: ['server/**/*.ts'],
       rules: {
-        'no-console': 'off', // Server can use console
+        'no-console': 'off',
+        '@typescript-eslint/no-explicit-any': 'off',
+      },
+    },
+    {
+      files: ['**/*.d.ts'],
+      rules: {
+        '@typescript-eslint/no-explicit-any': 'off',
       },
     },
   ],
   ignorePatterns: [
     'node_modules',
     'dist',
+    'dist-*',
+    'build',
     '*.d.ts',
     '.eslintrc.cjs',
     'pnpm-lock.yaml',
     'package.json',
+    'docker',
+    '.turbo',
   ],
 }

@@ -2,18 +2,19 @@
   "compilerOptions": {
     "incremental": true,
     "isolatedModules": true,
-    "lib": ["es2022"],
+    "lib": ["es2022", "dom", "dom.iterable"],
     "module": "esnext",
     "moduleResolution": "bundler",
     "noEmitOnError": true,
     "noFallthroughCasesInSwitch": true,
-    "noImplicitOverride": false,
+    "noImplicitOverride": true,
     "noImplicitReturns": true,
-    "noUnusedLocals": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
     "strictNullChecks": true,
-    "strictFunctionTypes": false,
+    "strictFunctionTypes": true,
     "strictBindCallApply": true,
     "strictPropertyInitialization": true,
     "useUnknownInCatchVariables": true,
@@ -21,6 +22,15 @@
     "skipLibCheck": true,
     "target": "es2022",
     "types": [],
-    "customConditions": ["workspace"]
-  }
+    "customConditions": ["workspace"],
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "exactOptionalPropertyTypes": true
+  },
+  "exclude": ["node_modules", "dist", "build", "**/*.d.ts"]
 }
