@@ -35,7 +35,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(import.meta.dirname, 'src'),
-      // Use util-browser as a polyfill for Node.js 'util' module
       util: 'util-browser',
     },
   },
@@ -47,6 +46,11 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,ts,vue}'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+    },
   },
   server: {
     port,
