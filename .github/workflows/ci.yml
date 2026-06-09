@@ -18,7 +18,7 @@ jobs:
         with:
           node-version: 22
           cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install
 
   lint:
     needs: install
@@ -32,7 +32,7 @@ jobs:
         with:
           node-version: 22
           cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install
       - run: pnpm lint:check
       - run: pnpm format:check
 
@@ -48,7 +48,7 @@ jobs:
         with:
           node-version: 22
           cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install
       - run: pnpm typecheck
 
   test:
@@ -63,7 +63,7 @@ jobs:
         with:
           node-version: 22
           cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install
       - run: pnpm --filter aetherpulse-client test
       - run: pnpm --filter aetherpulse-server test
 
@@ -79,7 +79,7 @@ jobs:
         with:
           node-version: 22
           cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install
       - run: pnpm build
 
   electron-build:
@@ -94,7 +94,7 @@ jobs:
         with:
           node-version: 22
           cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install
       - run: pnpm --filter aetherpulse-client electron:build
       - uses: actions/upload-artifact@v4
         with:
@@ -114,7 +114,7 @@ jobs:
         with:
           node-version: 22
           cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install
       - run: pnpm build
       - name: Build Docker images
         run: |
@@ -139,5 +139,5 @@ jobs:
         with:
           node-version: 22
           cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install
       - run: pnpm audit --audit-level=moderate
