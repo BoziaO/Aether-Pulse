@@ -1,26 +1,21 @@
 {
-  "build": {
-    "appId": "com.aetherpulse.app",
-    "directories": {
-      "output": "dist-electron"
-    },
-    "extraResources": [
-      {
-        "from": "dist/public",
-        "to": "dist/public"
-      }
-    ],
-    "files": [
-      "dist/public/**/*",
-      "electron/**/*",
-      "package.json"
-    ],
-    "main": "electron/main.cjs",
-    "productName": "AetherPulse",
-    "win": {
-      "icon": "public/icons/logo.png",
-      "target": "portable"
-    }
+  "name": "aetherpulse-client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "vite --config vite.config.ts --host 0.0.0.0",
+    "build": "vite build --config vite.config.ts",
+    "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
+    "typecheck": "vue-tsc -p tsconfig.json --noEmit",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "test:ui": "vitest --ui",
+    "electron:dev": "concurrently \"pnpm dev\" \"cross-env NODE_ENV=development electron .\"",
+    "electron:build": "cross-env LOCAL_WRAPPER=true pnpm build && electron-builder --win",
+    "android:sync": "cross-env LOCAL_WRAPPER=true pnpm build && npx cap sync",
+    "android:open": "npx cap open android"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.0",
@@ -58,22 +53,27 @@
     "vitest": "^2.1.6",
     "vue-tsc": "^3.3.3"
   },
-  "main": "electron/main.cjs",
-  "name": "aetherpulse-client",
-  "private": true,
-  "scripts": {
-    "android:open": "npx cap open android",
-    "android:sync": "cross-env LOCAL_WRAPPER=true pnpm build && npx cap sync",
-    "build": "vite build --config vite.config.ts",
-    "dev": "vite --config vite.config.ts --host 0.0.0.0",
-    "electron:build": "cross-env LOCAL_WRAPPER=true pnpm build && electron-builder --win",
-    "electron:dev": "concurrently \"pnpm dev\" \"cross-env NODE_ENV=development electron .\"",
-    "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
-    "test": "vitest",
-    "test:coverage": "vitest --coverage",
-    "test:ui": "vitest --ui",
-    "typecheck": "vue-tsc -p tsconfig.json --noEmit"
-  },
-  "type": "module",
-  "version": "0.0.0"
+  "build": {
+    "appId": "com.aetherpulse.app",
+    "productName": "AetherPulse",
+    "main": "electron/main.cjs",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/public/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "portable",
+      "icon": "public/icons/logo.png"
+    },
+    "extraResources": [
+      {
+        "from": "dist/public",
+        "to": "dist/public"
+      }
+    ]
+  }
 }
