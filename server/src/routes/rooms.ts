@@ -1,11 +1,10 @@
-import { Router, type IRouter } from 'express'
-import { User, Room, RoomMember, Message } from '@workspace/db'
-import { CreateRoomBody, JoinRoomBody } from '@workspace/api-zod'
 import { randomBytes } from 'crypto'
-import { nanoid } from 'nanoid'
-import { serializeUser } from '../utils/serialize-user'
+import { Router, type IRouter } from 'express'
+import { CreateRoomBody, JoinRoomBody } from '@workspace/api-zod'
+import { User, Room, RoomMember, Message } from '@workspace/db'
+
 import { isRoomMember } from '../utils/room-auth'
-import { broadcastMessage } from '../utils/message-helpers'
+import { serializeUser } from '../utils/serialize-user'
 
 const router: IRouter = Router()
 

@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { parseFileDataUrl, saveUploadedFile, MAX_FILE_SIZE } from './upload'
 import fs from 'node:fs'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+
+import { parseFileDataUrl, saveUploadedFile, MAX_FILE_SIZE } from './upload'
 
 vi.mock('node:fs', () => {
   return {

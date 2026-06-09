@@ -1,11 +1,12 @@
 import { Router, type IRouter } from 'express'
-import healthRouter from './health'
+
 import authRouter from './auth'
-import usersRouter from './users'
-import roomsRouter from './rooms'
-import messagesRouter from './messages'
-import friendsRouter from './friends'
 import dmsRouter from './dms'
+import friendsRouter from './friends'
+import healthRouter from './health'
+import messagesRouter from './messages'
+import roomsRouter from './rooms'
+import usersRouter from './users'
 
 const router: IRouter = Router()
 

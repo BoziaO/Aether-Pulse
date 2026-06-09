@@ -11,13 +11,13 @@
 
 ## ✨ Key Features
 
-| Feature                     | Description                                                                                     |
-|-----------------------------|-------------------------------------------------------------------------------------------------|
-| **🎙️ Spatial Audio & Video** | Next-gen WebRTC voice and video calls with localized spatial audio for natural team interactions. |
+| Feature                      | Description                                                                                        |
+| ---------------------------- | -------------------------------------------------------------------------------------------------- |
+| **🎙️ Spatial Audio & Video** | Next-gen WebRTC voice and video calls with localized spatial audio for natural team interactions.  |
 | **💬 Real-Time Messaging**   | Fully-featured group rooms and direct messages with editing, soft-deletion, and typing indicators. |
 | **🎨 Custom UI Themes**      | Fluid glassmorphism animations with dual UI paradigms: **Maximalist Aesthetic** and **Pixel Art**. |
-| **🛡️ Enterprise Security**  | JWT session authentication, strict CORS, atomic database transactions, and rate-limiting guards. |
-| **⚡ Scalable Architecture**  | Powered by **Turborepo**, **pnpm workspace**, and **Socket.io with Redis clustering**.            |
+| **🛡️ Enterprise Security**   | JWT session authentication, strict CORS, atomic database transactions, and rate-limiting guards.   |
+| **⚡ Scalable Architecture** | Powered by **Turborepo**, **pnpm workspace**, and **Socket.io with Redis clustering**.             |
 
 ---
 
@@ -118,6 +118,7 @@ aether-pulse/
 ### Installation
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/BoziaO/Aether-Pulse.git
    cd Aether-Pulse
@@ -133,12 +134,15 @@ aether-pulse/
 ### Running the Project
 
 #### Development Mode
+
 Run both the client and server in development mode (this will also synchronize the local SQLite database schema):
+
 ```bash
 pnpm dev
 ```
 
 #### Individual Commands
+
 - Start the client:
   ```bash
   pnpm start:client
@@ -153,6 +157,7 @@ pnpm dev
 ### Database Setup
 
 1. Copy the example environment file:
+
    ```bash
    cp .env.example .env
    ```
@@ -167,6 +172,7 @@ pnpm dev
 ## 📦 Building for Production
 
 To build the project for production:
+
 ```bash
 pnpm build
 ```
@@ -176,6 +182,7 @@ pnpm build
 ## 🛡️ Security
 
 AetherPulse is designed with security in mind:
+
 - **JWT Authentication**: Secure session management.
 - **Strict CORS**: Only trusted origins are allowed.
 - **Rate Limiting**: Protects against abuse.
@@ -207,4 +214,5 @@ This project is licensed under the **MIT License** – see the [`LICENSE`](LICEN
 ## 📞 Contact
 
 For questions or feedback, please open an issue or contact the maintainers:
+
 - **Maciej Łada** ([@BoziaO](https://github.com/BoziaO))

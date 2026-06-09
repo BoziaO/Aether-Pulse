@@ -16,7 +16,10 @@ function createWindow() {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.cjs'),
     },
-    icon: path.join(__dirname, isDev ? '../public/icons/logo.png' : '../dist/public/icons/logo.png'),
+    icon: path.join(
+      __dirname,
+      isDev ? '../public/icons/logo.png' : '../dist/public/icons/logo.png'
+    ),
     title: 'AetherPulse',
   })
 

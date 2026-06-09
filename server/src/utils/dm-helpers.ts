@@ -1,5 +1,5 @@
-import { nanoid } from 'nanoid'
 import { DmConversation, DmParticipant, DmMessage, User } from '@workspace/db'
+
 import { serializeUser } from './serialize-user'
 
 export async function findConversationBetween(

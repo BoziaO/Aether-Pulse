@@ -1,7 +1,8 @@
 import { Router, type IRouter } from 'express'
 import { User, Friendship } from '@workspace/db'
-import { serializeUser } from '../utils/serialize-user'
+
 import { getFriendship, friendshipStatusFor } from '../utils/friend-helpers'
+import { serializeUser } from '../utils/serialize-user'
 
 const router: IRouter = Router()
 

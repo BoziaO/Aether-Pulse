@@ -1,14 +1,15 @@
-import express, { type Express } from 'express'
-import cors from 'cors'
-import helmet from 'helmet'
-import pinoHttp from 'pino-http'
 import fs from 'node:fs'
 import path from 'node:path'
-import { rateLimit } from 'express-rate-limit'
+import express, { type Express } from 'express'
+import cors from 'cors'
 import cookieParser from 'cookie-parser'
+import helmet from 'helmet'
+import pinoHttp from 'pino-http'
+import { rateLimit } from 'express-rate-limit'
+
 import router from './routes'
 import { logger } from './utils/logger'
-import { jwtMiddleware, optionalJwtMiddleware } from './middleware/auth'
+import { optionalJwtMiddleware } from './middleware/auth'
 
 const app: Express = express()
 app.set('trust proxy', 1)
@@ -111,7 +112,7 @@ const authLimiter = rateLimit({
   standardHeaders: false,
   legacyHeaders: false,
   keyGenerator: (req) => req.ip || req.socket.remoteAddress || 'anonymous',
-  handler: (req, res) => {
+  handler: (_req, res) => {
     res.status(429).json({
       error: {
         message: 'Too many authentication attempts, please try again later.',
@@ -154,7 +155,7 @@ app.use('/api', (req, res, next) => {
 app.use('/api', router)
 
 // Global Error Handler
-app.use((err: any, req: any, res: any, next: any) => {
+app.use((err: any, req: any, res: any, _next: any) => {
   const statusCode = err.status || err.statusCode || 500
   logger.error(
     {

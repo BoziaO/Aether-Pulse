@@ -1,9 +1,10 @@
 import { Router, type IRouter } from 'express'
 import bcrypt from 'bcryptjs'
-import { User } from '@workspace/db'
 import { RegisterBody, LoginBody, RefreshBody } from '@workspace/api-zod'
-import { serializeUser } from '../utils/serialize-user'
+import { User } from '@workspace/db'
+
 import { generateTokens, verifyRefreshToken } from '../middleware/auth'
+import { serializeUser } from '../utils/serialize-user'
 
 const router: IRouter = Router()
 

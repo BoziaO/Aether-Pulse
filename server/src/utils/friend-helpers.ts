@@ -1,6 +1,5 @@
 import { Friendship } from '@workspace/db'
 import type { IFriendship } from '@workspace/db'
-import mongoose from 'mongoose'
 
 export async function getFriendship(userId: string, otherId: string): Promise<IFriendship | null> {
   const row = await Friendship.findOne({

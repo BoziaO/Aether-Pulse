@@ -1,0 +1,60 @@
+/** @type {import('eslint').Linter.Config} */
+module.exports = {
+  root: true,
+  env: {
+    browser: true,
+    node: true,
+    es2022: true,
+  },
+  extends: [
+    'eslint:recommended',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:vue/vue3-recommended',
+    'plugin:import/recommended',
+    'plugin:import/typescript',
+  ],
+  parser: 'vue-eslint-parser',
+  parserOptions: {
+    ecmaVersion: 2022,
+    sourceType: 'module',
+    parser: '@typescript-eslint/parser',
+    extraFileExtensions: ['.vue'],
+  },
+  plugins: ['@typescript-eslint', 'vue', 'import'],
+  settings: {
+    'import/resolver': {
+      node: { extensions: ['.js', '.ts', '.vue'] },
+    },
+  },
+  rules: {
+    '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/explicit-function-return-type': 'off',
+    '@typescript-eslint/explicit-module-boundary-types': 'off',
+    '@typescript-eslint/no-non-null-assertion': 'warn',
+    '@typescript-eslint/no-unused-vars': [
+      'error',
+      { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+    ],
+    '@typescript-eslint/no-empty-function': 'off',
+    '@typescript-eslint/ban-ts-comment': 'warn',
+    '@typescript-eslint/no-var-requires': 'off',
+    'vue/multi-word-component-names': 'off',
+    'vue/html-self-closing': 'off',
+    'vue/max-attributes-per-line': 'off',
+    'vue/singleline-html-element-content-newline': 'off',
+    'vue/html-closing-bracket-newline': 'off',
+    'vue/html-indent': ['error', 2],
+    'vue/script-indent': ['error', 2, { baseIndent: 1, switchCase: 1 }],
+    'no-console': ['warn', { allow: ['warn', 'error'] }],
+    'no-debugger': 'warn',
+    'no-var': 'error',
+    'prefer-const': 'error',
+    'prefer-arrow-callback': 'error',
+    'import/order': [
+      'error',
+      { groups: [['builtin', 'external'], ['internal']], 'newlines-between': 'always' },
+    ],
+    'import/no-unresolved': 'off',
+  },
+  ignorePatterns: ['node_modules', 'dist', 'dist-*', 'build', '*.d.ts', '.eslintrc.cjs'],
+}

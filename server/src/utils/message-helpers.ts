@@ -1,6 +1,7 @@
 import type { Server as SocketIOServer } from 'socket.io'
 import { Message, MessageReaction, User } from '@workspace/db'
 import type { IMessage } from '@workspace/db'
+
 import { serializeUser } from './serialize-user'
 
 export type ReactionSummary = {

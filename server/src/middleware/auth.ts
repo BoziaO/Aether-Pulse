@@ -1,5 +1,6 @@
 import { type Request, type Response, type NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
+import 'express-session'
 
 const jwtSecret = process.env.JWT_SECRET
 const jwtExpiresIn = process.env.JWT_EXPIRES_IN || '1d'
@@ -88,7 +89,7 @@ export function jwtMiddleware(req: Request, res: Response, next: NextFunction): 
   }
 
   // Attach user to request
-  ;(req as any).user = payload
+  (req as any).user = payload
   next()
 }
 
@@ -96,14 +97,14 @@ export function jwtMiddleware(req: Request, res: Response, next: NextFunction): 
  * Optional JWT middleware - sets req.user if valid token present,
  * but doesn't fail if missing or invalid
  */
-export function optionalJwtMiddleware(req: Request, res: Response, next: NextFunction): void {
+export function optionalJwtMiddleware(req: Request, _res: Response, next: NextFunction): void {
   const authHeader = req.headers['authorization']
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined
 
   if (token) {
     const payload = verifyToken(token)
     if (payload) {
-      ;(req as any).user = payload
+      (req as any).user = payload
     }
   }
 
@@ -117,8 +118,6 @@ declare global {
     }
   }
 }
-
-import 'express-session'
 
 declare module 'express-session' {
   interface SessionData {

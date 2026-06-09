@@ -1,19 +1,12 @@
 import { createServer } from 'http'
 import { Server as SocketIOServer, type Socket } from 'socket.io'
+import { connectDb, Room, Message, User, DmMessage, DmConversation } from '@workspace/db'
+
 import app from './app'
-import { logger } from './utils/logger'
-import {
-  connectDb,
-  Room,
-  Message,
-  User,
-  DmMessage,
-  DmConversation,
-  DmParticipant,
-} from '@workspace/db'
-import { isRoomMember } from './utils/room-auth'
-import { buildMessagePayload, broadcastMessage } from './utils/message-helpers'
 import { buildDmMessagePayload, isDmParticipant } from './utils/dm-helpers'
+import { buildMessagePayload, broadcastMessage } from './utils/message-helpers'
+import { isRoomMember } from './utils/room-auth'
+import { logger } from './utils/logger'
 import { serializeUser } from './utils/serialize-user'
 import { verifyToken } from './middleware/auth'
 
@@ -131,7 +124,7 @@ io.on('connection', (socket) => {
   logger.info({ socketId: socket.id, userId: authedUserId }, 'Socket connected')
 
   // Rate limiting middleware for incoming client events
-  socket.use(([event, ...args], next) => {
+  socket.use(([event, ..._args], next) => {
     const limitEvents = ['chat-message', 'dm-message', 'join-room', 'join-call']
     if (!limitEvents.includes(event)) {
       return next()

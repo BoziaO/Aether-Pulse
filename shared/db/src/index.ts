@@ -12,9 +12,7 @@ export async function connectDb(): Promise<void> {
   if (isConnected) return
 
   try {
-    await mongoose.connect(process.env.DATABASE_URL!, {
-      dbName: undefined, // taken from the URI
-    })
+    await mongoose.connect(process.env.DATABASE_URL!)
     isConnected = true
     console.log('[db] Connected to MongoDB')
   } catch (error: any) {

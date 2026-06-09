@@ -1,9 +1,10 @@
-import { Router, type IRouter } from 'express'
-import { User, Friendship, Message, MessageReaction, mongoose } from '@workspace/db'
-import { UpdateUserBody } from '@workspace/api-zod'
-import { serializeUser } from '../utils/serialize-user'
-import path from 'node:path'
 import fs from 'node:fs'
+import path from 'node:path'
+import { Router, type IRouter } from 'express'
+import { UpdateUserBody } from '@workspace/api-zod'
+import { User, Friendship, Message, MessageReaction, mongoose } from '@workspace/db'
+
+import { serializeUser } from '../utils/serialize-user'
 
 const router: IRouter = Router()
 
