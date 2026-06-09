@@ -1,44 +1,26 @@
 {
-  "name": "aetherpulse-client",
-  "version": "0.0.0",
-  "private": true,
-  "type": "module",
-  "main": "electron/main.cjs",
-  "scripts": {
-    "dev": "vite --config vite.config.ts --host 0.0.0.0",
-    "build": "vite build --config vite.config.ts",
-    "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
-    "typecheck": "vue-tsc -p tsconfig.json --noEmit",
-    "test": "vitest",
-    "test:coverage": "vitest --coverage",
-    "test:ui": "vitest --ui",
-    "electron:dev": "concurrently \"pnpm dev\" \"cross-env NODE_ENV=development electron .\"",
-    "electron:build": "cross-env LOCAL_WRAPPER=true pnpm build && electron-builder --win",
-    "android:sync": "cross-env LOCAL_WRAPPER=true pnpm build && npx cap sync",
-    "android:open": "npx cap open android"
-  },
-  "devDependencies": {
-    "@capacitor/cli": "^8.4.0",
-    "@replit/vite-plugin-dev-banner": "^0.1.2",
-    "@replit/vite-plugin-runtime-error-modal": "^0.0.6",
-    "@testing-library/jest-dom": "^6.6.2",
-    "@testing-library/user-event": "^14.5.2",
-    "@types/node": "^25.9.1",
-    "@vitejs/plugin-vue": "^6.0.7",
-    "@vue/test-utils": "^2.4.6",
-    "concurrently": "^10.0.3",
-    "cross-env": "^10.1.0",
-    "electron": "^42.3.3",
-    "electron-builder": "^26.15.0",
-    "jsdom": "^25.0.1",
-    "lightningcss": "^1.32.0",
-    "tslib": "^2.8.1",
-    "typescript": "~6.0.3",
-    "vitest": "^2.1.6",
-    "vue-tsc": "^3.3.3",
-    "@tailwindcss/vite": "^4.3.0",
-    "tailwindcss": "^4.3.0",
-    "vite": "^8.0.14"
+  "build": {
+    "appId": "com.aetherpulse.app",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "extraResources": [
+      {
+        "from": "dist/public",
+        "to": "dist/public"
+      }
+    ],
+    "files": [
+      "dist/public/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "main": "electron/main.cjs",
+    "productName": "AetherPulse",
+    "win": {
+      "icon": "public/icons/logo.png",
+      "target": "portable"
+    }
   },
   "dependencies": {
     "@capacitor/android": "^8.4.0",
@@ -53,26 +35,45 @@
     "vue": "^3.5.35",
     "vue-router": "^5.1.0"
   },
-  "build": {
-    "appId": "com.aetherpulse.app",
-    "productName": "AetherPulse",
-    "main": "electron/main.cjs",
-    "directories": {
-      "output": "dist-electron"
-    },
-    "files": [
-      "dist/public/**/*",
-      "electron/**/*",
-      "package.json"
-    ],
-    "win": {
-      "target": "portable",
-      "icon": "public/icons/logo.png"
-    },
-    "extraResources": [
-      {
-        "from": "dist/public",
-        "to": "dist/public"
-      }
-    ]
-  }
+  "devDependencies": {
+    "@capacitor/cli": "^8.4.0",
+    "@replit/vite-plugin-dev-banner": "^0.1.2",
+    "@replit/vite-plugin-runtime-error-modal": "^0.0.6",
+    "@tailwindcss/vite": "^4.3.0",
+    "@testing-library/jest-dom": "^6.6.2",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/node": "^25.9.1",
+    "@vitejs/plugin-vue": "^6.0.7",
+    "@vue/test-utils": "^2.4.6",
+    "concurrently": "^10.0.3",
+    "cross-env": "^10.1.0",
+    "electron": "^42.3.3",
+    "electron-builder": "^26.15.0",
+    "jsdom": "^25.0.1",
+    "lightningcss": "^1.32.0",
+    "tailwindcss": "^4.3.0",
+    "tslib": "^2.8.1",
+    "typescript": "~6.0.3",
+    "vite": "^8.0.14",
+    "vitest": "^2.1.6",
+    "vue-tsc": "^3.3.3"
+  },
+  "main": "electron/main.cjs",
+  "name": "aetherpulse-client",
+  "private": true,
+  "scripts": {
+    "android:open": "npx cap open android",
+    "android:sync": "cross-env LOCAL_WRAPPER=true pnpm build && npx cap sync",
+    "build": "vite build --config vite.config.ts",
+    "dev": "vite --config vite.config.ts --host 0.0.0.0",
+    "electron:build": "cross-env LOCAL_WRAPPER=true pnpm build && electron-builder --win",
+    "electron:dev": "concurrently \"pnpm dev\" \"cross-env NODE_ENV=development electron .\"",
+    "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "test:ui": "vitest --ui",
+    "typecheck": "vue-tsc -p tsconfig.json --noEmit"
+  },
+  "type": "module",
+  "version": "0.0.0"
+}
