@@ -34,7 +34,7 @@ const activeTab = ref<'voice' | 'chat'>('voice')
 
 const roomId = computed(() => route.params.roomId as string)
 const room = computed(() => roomStore.currentRoom)
-const membersForChat = computed(() => 
+const membersForChat = computed(() =>
   (room.value?.members ?? []).map((m) => ({
     id: m.id,
     displayName: m.displayName,

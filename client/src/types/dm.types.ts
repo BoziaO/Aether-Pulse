@@ -3,7 +3,7 @@ import type { User } from './user.types'
 export interface DmLastMessage {
   content: string
   type: 'text' | 'file'
-  attachmentName?: string | null
+  attachmentName?: string | null | undefined
   createdAt: string
   userId: string
 }

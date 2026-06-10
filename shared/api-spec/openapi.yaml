@@ -132,7 +132,7 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
       responses:
         '200':
           description: User profile
@@ -151,7 +151,7 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
       requestBody:
         required: true
         content:
@@ -411,7 +411,7 @@ components:
       required: [id, username, displayName, status, createdAt]
       properties:
         id:
-          type: integer
+          type: string
         username:
           type: string
         displayName:
@@ -516,7 +516,7 @@ components:
         inviteCode:
           type: string
         ownerId:
-          type: integer
+          type: string
         memberCount:
           type: integer
         members:
@@ -555,11 +555,11 @@ components:
       required: [id, roomId, userId, content, type, createdAt]
       properties:
         id:
-          type: integer
+          type: string
         roomId:
           type: string
         userId:
-          type: integer
+          type: string
         content:
           type: string
         type:
@@ -606,7 +606,7 @@ components:
         description:
           type: string
         userId:
-          type: ['integer', 'null']
+          type: ['string', 'null']
         createdAt:
           type: string
 
