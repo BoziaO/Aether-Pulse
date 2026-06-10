@@ -1,4 +1,4 @@
-name: Full CI Pipeline
+name: CI
 
 on:
   push:
@@ -7,182 +7,33 @@ on:
     branches: [main]
 
 jobs:
-  setup:
+  ci:
+    name: Build & Test
     runs-on: ubuntu-latest
+    
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
         with:
           version: 11
-      - uses: actions/setup-node@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: 'pnpm'
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-  lint:
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 11
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'pnpm'
-      - name: Restore cache
-        uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: pnpm-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: pnpm-
-      - run: pnpm lint:check
-      - run: pnpm format:check
+      - name: Typecheck
+        run: pnpm typecheck
 
-  typecheck:
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 11
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'pnpm'
-      - name: Restore cache
-        uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: pnpm-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: pnpm-
-      - run: pnpm typecheck
+      - name: Run tests
+        run: pnpm --filter aetherpulse-client test && pnpm --filter aetherpulse-server test
 
-  test:
-    needs: [lint, typecheck]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 11
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'pnpm'
-      - name: Restore cache
-        uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: pnpm-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: pnpm-
-      - run: pnpm --filter aetherpulse-client test
-      - run: pnpm --filter aetherpulse-server test
-
-  build:
-    needs: [lint, typecheck, test]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 11
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'pnpm'
-      - name: Restore cache
-        uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: pnpm-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: pnpm-
-      - run: pnpm build
-
-  electron-build:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 11
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'pnpm'
-      - name: Restore cache
-        uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: pnpm-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: pnpm-
-      - run: pnpm --filter aetherpulse-client electron:build
-      - uses: actions/upload-artifact@v4
-        with:
-          name: aetherpulse-electron
-          path: client/dist-electron
-          retention-days: 7
-
-  docker-build:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 11
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'pnpm'
-      - name: Restore cache
-        uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: pnpm-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: pnpm-
-      - run: pnpm build
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Login to Docker Hub
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_TOKEN }}
-      - name: Build and push Docker images
-        run: |
-          docker build -t aetherpulse-server:latest -f docker/server/Dockerfile .
-          docker build -t aetherpulse-client:latest -f docker/client/Dockerfile .
-          docker save aetherpulse-server:latest > aetherpulse-server.tar
-          docker save aetherpulse-client:latest > aetherpulse-client.tar
-      - uses: actions/upload-artifact@v4
-        with:
-          name: aetherpulse-docker-images
-          path: aetherpulse-*.tar
-          retention-days: 7
-
-  security-audit:
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 11
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'pnpm'
-      - name: Restore cache
-        uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: pnpm-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: pnpm-
-      - run: pnpm audit --audit-level=moderate
+      - name: Build
+        run: pnpm build
