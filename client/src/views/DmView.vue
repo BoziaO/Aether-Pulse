@@ -19,11 +19,11 @@ const auth = useAuthStore()
 const dm = useDmStore()
 const friends = useFriendsStore()
 
-const otherUserId = computed(() => Number(route.params.userId))
+const otherUserId = computed(() => route.params.userId as string)
 const conversationId = ref<string | null>(null)
 const otherUser = ref(friends.friends.find((f) => f.user.id === otherUserId.value)?.user ?? null)
 const scrollEl = ref<HTMLElement | null>(null)
-const selectedUserId = ref<number | null>(null)
+const selectedUserId = ref<string | null>(null)
 const uploading = ref(false)
 const editingMessage = ref<Message | null>(null)
 const editContent = ref('')
@@ -58,15 +58,15 @@ function dmToMessage(msg: DmMessage): Message {
     userId: msg.userId,
     content: msg.content,
     type: msg.type,
-    replyToId: msg.replyToId,
-    editedAt: msg.editedAt,
-    isDeleted: msg.isDeleted,
+    replyToId: msg.replyToId ?? null,
+    editedAt: msg.editedAt ?? null,
+    isDeleted: msg.isDeleted ?? false,
     createdAt: msg.createdAt,
-    user: msg.user,
-    replyTo: msg.replyTo,
-    attachmentUrl: msg.attachmentUrl,
-    attachmentName: msg.attachmentName,
-    attachmentMime: msg.attachmentMime,
+    user: msg.user ?? null,
+    replyTo: msg.replyTo ?? null,
+    attachmentUrl: msg.attachmentUrl ?? null,
+    attachmentName: msg.attachmentName ?? null,
+    attachmentMime: msg.attachmentMime ?? null,
   }
 }
 
@@ -168,7 +168,7 @@ async function handleUpload(dataUrl: string, fileName: string, caption: string) 
         @open-profile="selectedUserId = $event"
         @reply="dm.setReply(dm.messages.find((m) => m.id === $event.id) ?? null)"
         @edit="startEdit"
-        @delete="dm.deleteMessage(msg.roomId, $event)"
+        @delete="dm.deleteMessage(conversationId!, $event)"
       />
       <div v-if="isOtherTyping" class="typing-indicator">
         <span class="typing-dots"><span /><span /><span /></span>

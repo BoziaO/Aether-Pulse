@@ -5,7 +5,6 @@ import {
   Check,
   Circle,
   EyeOff,
-  Image,
   Link,
   MapPin,
   MessageSquare,
@@ -34,7 +33,7 @@ const uploadingAvatar = ref(false)
 const uploadingBanner = ref(false)
 
 const emptyUser: User = {
-  id: 0,
+  id: '',
   username: 'username',
   displayName: 'Display Name',
   avatarUrl: null,
@@ -173,11 +172,6 @@ const normalizedWebsite = computed(() => {
   const website = form.website.trim()
   if (!website) return ''
   return /^https?:\/\//i.test(website) ? website : `https://${website}`
-})
-
-const cardStyle = computed(() => {
-  if (form.profileGradient) return { background: form.profileGradient }
-  return { background: `linear-gradient(135deg, ${form.accentColor}, #3b82f6)` }
 })
 
 const bannerStyle = computed(() => {

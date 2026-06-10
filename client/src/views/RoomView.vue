@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, defineAsyncComponent } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Phone, ArrowLeft, Link2, Settings, Users } from 'lucide-vue-next'
+import { Phone, ArrowLeft, Link2, Settings } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth.store'
 import { useRoomStore } from '@/stores/room.store'
 import { useRtcStore } from '@/stores/rtc.store'
-import { useSettingsStore } from '@/stores/settings.store'
 
 // Lazy-loaded components for performance
 const VideoTile = defineAsyncComponent(() => import('@/components/call/VideoTile.vue'))
@@ -25,17 +24,23 @@ const router = useRouter()
 const auth = useAuthStore()
 const roomStore = useRoomStore()
 const rtc = useRtcStore()
-const settings = useSettingsStore()
 
 const showInvite = ref(false)
 const showSettings = ref(false)
 const showMembers = ref(true)
 const callError = ref('')
-const selectedUserId = ref<number | null>(null)
+const selectedUserId = ref<string | null>(null)
 const activeTab = ref<'voice' | 'chat'>('voice')
 
 const roomId = computed(() => route.params.roomId as string)
 const room = computed(() => roomStore.currentRoom)
+const membersForChat = computed(() => 
+  (room.value?.members ?? []).map((m) => ({
+    id: m.id,
+    displayName: m.displayName,
+    status: m.status,
+  }))
+)
 const members = computed(() => room.value?.members ?? [])
 const remoteEntries = computed(() => [...rtc.remoteStreams.entries()])
 const inVoiceCount = computed(() => rtc.callUsers.size + (rtc.inCall ? 1 : 0))
@@ -67,7 +72,7 @@ function goBack() {
   router.push('/')
 }
 
-function openUserProfile(userId: number) {
+function openUserProfile(userId: string) {
   selectedUserId.value = userId
 }
 
@@ -161,7 +166,7 @@ function handleDeletedRoom() {
     <ChatPanel
       :room-id="roomId"
       :room-name="room?.name"
-      :members="members"
+      :members="membersForChat"
       :class="{ 'mobile-hidden': activeTab !== 'chat' }"
       @toggle-members="showMembers = !showMembers"
     />

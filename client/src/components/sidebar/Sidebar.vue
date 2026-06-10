@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { Hash, Plus, Settings, LogOut, Mic, MicOff, Users, MessageCircle } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth.store'
@@ -7,7 +7,6 @@ import { useRoomStore } from '@/stores/room.store'
 import { useRtcStore } from '@/stores/rtc.store'
 import { useFriendsStore } from '@/stores/friends.store'
 import { useDmStore } from '@/stores/dm.store'
-import { useSettingsStore } from '@/stores/settings.store'
 import UserAvatar from '@/components/profile/UserAvatar.vue'
 import CreateRoomModal from '@/components/rooms/CreateRoomModal.vue'
 
@@ -18,7 +17,6 @@ const roomStore = useRoomStore()
 const rtcStore = useRtcStore()
 const friendsStore = useFriendsStore()
 const dmStore = useDmStore()
-const settings = useSettingsStore()
 
 const showCreateModal = ref(false)
 
@@ -26,16 +24,16 @@ function goToRoom(roomId: string) {
   router.push(`/room/${roomId}`)
 }
 
-function goToDm(userId: number) {
-  router.push({ name: 'dm', params: { userId: String(userId) } })
+function goToDm(userId: string) {
+  router.push({ name: 'dm', params: { userId } })
 }
 
 function isActiveRoom(roomId: string) {
   return route.params.roomId === roomId
 }
 
-function isActiveDm(userId: number) {
-  return route.name === 'dm' && Number(route.params.userId) === userId
+function isActiveDm(userId: string) {
+  return route.name === 'dm' && route.params.userId === userId
 }
 
 function dmPreview(conv: import('@/types/dm.types').DmConversation) {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, defineAsyncComponent } from 'vue'
-import { Hash, Plus, UserPlus, Sparkles } from 'lucide-vue-next'
+import { Hash, Plus, UserPlus } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth.store'
 import { useRoomStore } from '@/stores/room.store'
 import RoomCardSkeleton from '@/components/rooms/RoomCardSkeleton.vue'

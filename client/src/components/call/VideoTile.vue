@@ -11,11 +11,11 @@ const props = defineProps<{
   label?: string
   isMuted?: boolean
   isLocal?: boolean
-  userId?: number
+  userId?: string
 }>()
 
 const emit = defineEmits<{
-  (e: 'profile-click', userId: number): void
+  (e: 'profile-click', userId: string): void
 }>()
 
 const videoEl = ref<HTMLVideoElement | null>(null)

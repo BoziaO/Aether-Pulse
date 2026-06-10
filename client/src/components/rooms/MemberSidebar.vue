@@ -11,7 +11,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'open-profile', userId: number): void
+  (e: 'open-profile', userId: string): void
 }>()
 
 const rtc = useRtcStore()
@@ -26,11 +26,11 @@ const sortedMembers = computed(() =>
   })
 )
 
-function isInCall(userId: number) {
+function isInCall(userId: string) {
   return rtc.callUsers.has(userId)
 }
 
-function isOnline(userId: number) {
+function isOnline(userId: string) {
   return presence.isOnlineInRoom(userId)
 }
 </script>

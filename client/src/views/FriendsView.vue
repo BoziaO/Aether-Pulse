@@ -33,21 +33,21 @@ async function handleSearch() {
   }, 300)
 }
 
-async function sendRequest(userId: number) {
+async function sendRequest(userId: string) {
   await friendsStore.sendRequest(userId)
   await handleSearch()
 }
 
-async function accept(userId: number) {
+async function accept(userId: string) {
   await friendsStore.accept(userId)
 }
 
-async function reject(userId: number) {
+async function reject(userId: string) {
   await friendsStore.reject(userId)
 }
 
-function openDm(userId: number) {
-  router.push({ name: 'dm', params: { userId: String(userId) } })
+function openDm(userId: string) {
+  router.push({ name: 'dm', params: { userId } })
 }
 </script>
 

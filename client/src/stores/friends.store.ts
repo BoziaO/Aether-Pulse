@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { friendsApi } from '@/services/api/friends.api'
-import { getSocket, connectSocket } from '@/services/socket/socket'
+import { connectSocket } from '@/services/socket/socket'
 import { useAuthStore } from '@/stores/auth.store'
 import { useToastStore } from '@/stores/toast.store'
 import type { FriendEntry, FriendRequest, FriendshipStatus } from '@/types/friend.types'

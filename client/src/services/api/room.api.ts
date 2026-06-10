@@ -21,9 +21,9 @@ export const roomApi = {
   joinByCode: (inviteCode: string) =>
     apiFetch<Room>('/rooms/join-by-code', { method: 'POST', body: JSON.stringify({ inviteCode }) }),
 
-  messages: (roomId: string, opts?: { before?: number; limit?: number }) => {
+  messages: (roomId: string, opts?: { before?: string; limit?: number }) => {
     const params = new URLSearchParams()
-    if (opts?.before) params.set('before', String(opts.before))
+    if (opts?.before) params.set('before', opts.before)
     if (opts?.limit) params.set('limit', String(opts.limit))
     const qs = params.toString()
     return apiFetch<Message[]>(`/rooms/${roomId}/messages${qs ? `?${qs}` : ''}`)

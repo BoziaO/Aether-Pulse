@@ -12,8 +12,8 @@ import type { Message } from '@/types/message.types'
 
 const props = defineProps<{
   roomId: string
-  roomName?: string
-  members?: Array<{ id: number; displayName: string; status?: string }>
+  roomName?: string | undefined
+  members?: Array<{ id: string; displayName: string; status?: string | undefined }> | undefined
 }>()
 
 const emit = defineEmits<{
@@ -24,7 +24,7 @@ const chatStore = useChatStore()
 const auth = useAuthStore()
 const rtc = useRtcStore()
 const scrollEl = ref<HTMLElement | null>(null)
-const selectedUserId = ref<number | null>(null)
+const selectedUserId = ref<string | null>(null)
 const showSearch = ref(false)
 const searchInput = ref('')
 const editingMessage = ref<Message | null>(null)
@@ -169,10 +169,9 @@ async function handleUpload(dataUrl: string, fileName: string, caption: string) 
     </div>
 
     <ChatInput
-      :room-id="roomId"
       :reply-to="chatStore.replyTo"
       :initial-value="editingMessage ? editContent : ''"
-      :placeholder="editingMessage ? 'Edit your message...' : undefined"
+      :placeholder="editingMessage ? 'Edit your message...' : 'Message...'"
       :uploading="uploading"
       @send="handleSend"
       @upload="handleUpload"

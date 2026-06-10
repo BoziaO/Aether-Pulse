@@ -9,7 +9,6 @@ import {
   MonitorOff,
   PhoneOff,
   Headphones,
-  Volume2,
 } from 'lucide-vue-next'
 import { useRtcStore } from '@/stores/rtc.store'
 import { useSettingsStore } from '@/stores/settings.store'

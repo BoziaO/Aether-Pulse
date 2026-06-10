@@ -26,8 +26,8 @@ function goToRoom(roomId: string) {
   emit('close')
 }
 
-function goToDm(userId: number) {
-  router.push({ name: 'dm', params: { userId: String(userId) } })
+function goToDm(userId: string) {
+  router.push({ name: 'dm', params: { userId } })
   emit('close')
 }
 
@@ -35,8 +35,8 @@ function isActiveRoom(roomId: string) {
   return route.params.roomId === roomId
 }
 
-function isActiveDm(userId: number) {
-  return route.name === 'dm' && Number(route.params.userId) === userId
+function isActiveDm(userId: string) {
+  return route.name === 'dm' && route.params.userId === userId
 }
 
 function dmPreview(conv: import('@/types/dm.types').DmConversation) {

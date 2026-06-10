@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
-import { getSocket } from '@/services/socket/socket'
-import { authApi, type AuthResponse, type TokensResponse } from '@/services/api/auth.api'
+import { authApi } from '@/services/api/auth.api'
 import { userApi } from '@/services/api/user.api'
 import type { User } from '@/types/user.types'
 import { useSettingsStore, type ThemeMode } from './settings.store'
+import { getSocket } from '@/services/socket/socket'
 
 // Storage keys for JWT tokens
 const ACCESS_TOKEN_KEY = 'aetherpulse_access_token'

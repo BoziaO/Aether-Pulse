@@ -3,9 +3,9 @@ import { computed } from 'vue'
 
 const props = withDefaults(
   defineProps<{
-    variant?: 'primary' | 'ghost' | 'danger' | string
-    size?: 'sm' | 'md' | 'lg' | string
-    disabled?: boolean
+    variant?: 'primary' | 'ghost' | 'danger' | string | undefined
+    size?: 'sm' | 'md' | 'lg' | string | undefined
+    disabled?: boolean | undefined
   }>(),
   {
     variant: undefined,

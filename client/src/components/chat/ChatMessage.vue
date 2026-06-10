@@ -7,18 +7,18 @@ import MessageContent from './MessageContent.vue'
 
 const props = defineProps<{
   message: Message
-  isOwn?: boolean
-  showAvatar?: boolean
-  roomId?: string
-  currentUserId?: number
+  isOwn?: boolean | undefined
+  showAvatar?: boolean | undefined
+  roomId?: string | undefined
+  currentUserId?: string | undefined
 }>()
 
 const emit = defineEmits<{
-  (e: 'open-profile', userId: number): void
+  (e: 'open-profile', userId: string): void
   (e: 'reply', message: Message): void
   (e: 'edit', message: Message): void
-  (e: 'delete', messageId: number): void
-  (e: 'react', messageId: number, emoji: string): void
+  (e: 'delete', messageId: string): void
+  (e: 'react', messageId: string, emoji: string): void
 }>()
 
 const showActions = ref(false)
@@ -33,7 +33,7 @@ function formatTime(iso: string) {
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
-function hasReacted(reaction: { emoji: string; userIds: number[] }) {
+function hasReacted(reaction: { emoji: string; userIds: string[] }) {
   return props.currentUserId != null && reaction.userIds.includes(props.currentUserId)
 }
 

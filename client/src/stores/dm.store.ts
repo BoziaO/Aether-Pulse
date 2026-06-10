@@ -183,7 +183,7 @@ export const useDmStore = defineStore('dm', () => {
     conv.lastMessage = {
       content: msg.isDeleted ? 'Message deleted' : msg.content,
       type: msg.type,
-      attachmentName: msg.attachmentName,
+      attachmentName: msg.attachmentName ?? null,
       createdAt: msg.createdAt,
       userId: msg.userId,
     }

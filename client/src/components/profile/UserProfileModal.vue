@@ -26,7 +26,7 @@ import type { User } from '@/types/user.types'
 import type { FriendshipStatus } from '@/types/friend.types'
 
 const props = defineProps<{
-  userId: number
+  userId: string
 }>()
 
 const emit = defineEmits<{
@@ -45,7 +45,7 @@ const modalRef = ref<HTMLElement | null>(null)
 const friendStatus = ref<FriendshipStatus>('none')
 const actionLoading = ref(false)
 
-const isSelf = computed(() => auth.user?.id === props.userId)
+const isSelf = computed(() => auth.user?.id === String(props.userId))
 
 async function load() {
   loading.value = true
@@ -169,7 +169,7 @@ async function acceptFriend() {
 
 async function openMessage() {
   emit('close')
-  router.push({ name: 'dm', params: { userId: String(props.userId) } })
+  router.push({ name: 'dm', params: { userId: props.userId } })
 }
 
 async function blockUser() {
