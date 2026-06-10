@@ -1,27 +1,33 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { Server } from 'socket.io'
 import { createServer } from 'http'
-import { Client } from 'socket.io-client'
+import { io as ioClient, Socket } from 'socket.io-client'
 
 describe('Socket.io Server', () => {
   let io: Server
   let server: ReturnType<typeof createServer>
-  let client: Client
+  let client: Socket
 
-  beforeAll((done) => {
+  beforeAll(async () => {
     server = createServer()
     io = new Server(server, { cors: { origin: '*', credentials: true } })
-    server.listen(3001, () => {
-      client = new Client('http://localhost:3001', { autoConnect: false })
-      client.connect()
-      client.on('connect', done)
+    
+    await new Promise<void>((resolve) => {
+      server.listen(3001, resolve)
+    })
+    
+    client = ioClient('http://localhost:3001', { autoConnect: false })
+    client.connect()
+    
+    await new Promise<void>((resolve) => {
+      client.on('connect', resolve)
     })
   })
 
   afterAll(() => {
+    client.disconnect()
     io.close()
     server.close()
-    client.disconnect()
   })
 
   it('should connect to socket server', () => {

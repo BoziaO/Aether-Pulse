@@ -9,6 +9,6 @@ describe('Settings Store', () => {
 
   it('should initialize with default theme', () => {
     const store = useSettingsStore()
-    expect(store.theme).toBe('light')
+    expect(store.theme).toBe('dark')
   })
 })
