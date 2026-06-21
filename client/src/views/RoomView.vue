@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, defineAsyncComponent } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Phone, ArrowLeft, Link2, Settings } from 'lucide-vue-next'
+import { Phone, ArrowLeft, Link2, Settings, Users, Radio, PictureInPicture2 } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth.store'
 import { useRoomStore } from '@/stores/room.store'
 import { useRtcStore } from '@/stores/rtc.store'
@@ -44,6 +44,10 @@ const membersForChat = computed(() =>
 const members = computed(() => room.value?.members ?? [])
 const remoteEntries = computed(() => [...rtc.remoteStreams.entries()])
 const inVoiceCount = computed(() => rtc.callUsers.size + (rtc.inCall ? 1 : 0))
+const isAndroidNative = computed(
+  () =>
+    typeof (window as any).Capacitor !== 'undefined' && (window as any).Capacitor.isNativePlatform()
+)
 
 onMounted(async () => {
   if (!auth.user) return
@@ -142,6 +146,16 @@ function handleDeletedRoom() {
         </div>
 
         <div v-else class="call-area">
+          <div class="stream-status">
+            <span>
+              <Radio :size="14" />
+              {{ rtc.isScreenSharing ? 'Stream aktywny' : 'Voice live' }}
+            </span>
+            <span v-if="isAndroidNative">
+              <PictureInPicture2 :size="14" />
+              PiP po wyjściu z aplikacji
+            </span>
+          </div>
           <div class="video-grid" :class="`peers-${remoteEntries.length + 1}`">
             <VideoTile
               :stream="rtc.screenStream || rtc.localStream"
@@ -298,11 +312,12 @@ function handleDeletedRoom() {
 }
 .join-card {
   text-align: center;
-  padding: 48px;
+  padding: 32px 24px;
   background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: 20px;
   max-width: 420px;
+  width: calc(100% - 32px);
   position: relative;
   z-index: 3;
 }
@@ -329,9 +344,10 @@ function handleDeletedRoom() {
 .join-btn {
   margin-top: 24px;
   width: 100%;
-  padding: 12px;
-  font-size: 15px;
+  padding: 14px;
+  font-size: 16px;
   gap: 10px;
+  touch-action: manipulation;
 }
 .call-area {
   flex: 1;
@@ -339,11 +355,29 @@ function handleDeletedRoom() {
   flex-direction: column;
   overflow: hidden;
 }
+.stream-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(139, 92, 246, 0.08);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+}
+.stream-status span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
 .video-grid {
   flex: 1;
   display: grid;
-  gap: 12px;
-  padding: 16px;
+  gap: 8px;
+  padding: 12px;
   overflow: hidden;
   align-items: center;
 }
@@ -358,10 +392,24 @@ function handleDeletedRoom() {
 }
 .video-grid.peers-3 {
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto auto;
 }
 .video-grid.peers-4 {
   grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 767px) {
+  .video-grid {
+    padding: 8px;
+    gap: 6px;
+  }
+  .video-grid.peers-1 {
+    max-width: 100%;
+  }
+  .video-grid.peers-2,
+  .video-grid.peers-3,
+  .video-grid.peers-4 {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 .error-msg {
   font-size: 13px;
@@ -381,31 +429,58 @@ function handleDeletedRoom() {
   .mobile-tab-btn {
     display: inline-flex !important;
     font-size: 12px;
-    padding: 6px 12px;
+    padding: 6px 14px;
+    touch-action: manipulation;
   }
-
   .desktop-only {
     display: none !important;
   }
-
   .mobile-hidden {
     display: none !important;
   }
-
   .room-view {
     flex-direction: column;
   }
-
+  .room-header {
+    padding: 9px 10px;
+    gap: 8px;
+    min-height: 54px;
+  }
+  .room-title {
+    gap: 5px;
+    min-width: 0;
+  }
+  .room-title h2 {
+    max-width: 34vw;
+    overflow: hidden;
+    font-size: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .room-users {
+    display: none;
+  }
+  .voice-badge,
+  .live-badge {
+    font-size: 9px;
+    padding: 2px 6px;
+  }
+  .stream-status {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+    padding: 8px 10px;
+  }
+  .join-card {
+    width: calc(100% - 20px);
+    padding: 24px 18px;
+    border-radius: 12px;
+  }
   :deep(.chat-panel) {
     width: 100% !important;
     min-width: 100% !important;
     border-left: none !important;
     flex: 1 !important;
-  }
-
-  .join-card {
-    padding: 24px !important;
-    margin: 16px;
   }
 }
 </style>

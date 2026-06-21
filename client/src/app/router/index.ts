@@ -1,13 +1,23 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.store'
 
+// True when running inside Electron or Capacitor (Android/iOS)
+const isNative =
+  !!(window as any).electronAPI ||
+  (typeof (window as any).Capacitor !== 'undefined' && (window as any).Capacitor.isNativePlatform())
+
 export const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    {
-      path: '/',
-      component: () => import('@/views/LandingView.vue'),
-    },
+    isNative
+      ? {
+          path: '/',
+          redirect: '/app',
+        }
+      : {
+          path: '/',
+          component: () => import('@/views/LandingView.vue'),
+        },
     {
       path: '/auth',
       component: () => import('@/views/LoginView.vue'),

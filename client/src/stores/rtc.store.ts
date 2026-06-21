@@ -22,6 +22,7 @@ export const useRtcStore = defineStore('rtc', () => {
   const isVideoOn = ref(false)
   const isScreenSharing = ref(false)
   const inCall = ref(false)
+  const isPiP = ref(false)
   const roomUsers = ref<string[]>([])
   const callUsers = ref<Map<string, string>>(new Map()) // userId -> socketId
 
@@ -29,6 +30,8 @@ export const useRtcStore = defineStore('rtc', () => {
   let currentRoomId: string | null = null
   let lastSharedScreenVideoTrack: MediaStreamTrack | null = null
   let lastRemovedCameraTrack: MediaStreamTrack | null = null
+  let wakeLock: WakeLockSentinel | null = null
+  let pipVideo: HTMLVideoElement | null = null
 
   function calculateSpatialPosition(index: number) {
     const settings = useSettingsStore()
@@ -320,6 +323,9 @@ export const useRtcStore = defineStore('rtc', () => {
       peerManager = new PeerManager(socket, authStore.user.id, onRemoteStream, onPeerClose)
       peerManager.setLocalStream(stream)
 
+      // Keep screen awake during call
+      await acquireWakeLock()
+
       // Announce that we joined the call; server replies with current call participants.
       socket.emit('join-call', { roomId: currentRoomId, userId: authStore.user.id })
     } catch (e: any) {
@@ -358,6 +364,65 @@ export const useRtcStore = defineStore('rtc', () => {
     peerManager = null
     remoteStreams.value = new Map()
     spatialAudio.cleanup()
+    stopWakeLock()
+    exitPiP()
+  }
+
+  async function acquireWakeLock() {
+    try {
+      if ('wakeLock' in navigator) {
+        wakeLock = await (navigator as any).wakeLock.request('screen')
+        wakeLock!.addEventListener('release', () => { wakeLock = null })
+      }
+    } catch {}
+  }
+
+  function stopWakeLock() {
+    wakeLock?.release().catch(() => {})
+    wakeLock = null
+  }
+
+  async function enterPiP() {
+    try {
+      // Use the first available stream (screen > local)
+      const stream = screenStream.value || localStream.value
+      if (!stream) return
+      if (!pipVideo) {
+        pipVideo = document.createElement('video')
+        pipVideo.muted = true
+        pipVideo.autoplay = true
+        pipVideo.playsInline = true
+        pipVideo.style.position = 'fixed'
+        pipVideo.style.opacity = '0'
+        pipVideo.style.pointerEvents = 'none'
+        pipVideo.style.width = '1px'
+        pipVideo.style.height = '1px'
+        document.body.appendChild(pipVideo)
+      }
+      pipVideo.srcObject = stream
+      await pipVideo.play().catch(() => {})
+      if ((pipVideo as any).requestPictureInPicture) {
+        await (pipVideo as any).requestPictureInPicture()
+        isPiP.value = true
+        pipVideo.addEventListener('leavepictureinpicture', () => { isPiP.value = false }, { once: true })
+      }
+    } catch (e) {
+      console.warn('PiP not supported:', e)
+    }
+  }
+
+  function exitPiP() {
+    try {
+      if ((document as any).pictureInPictureElement) {
+        ;(document as any).exitPictureInPicture().catch(() => {})
+      }
+    } catch {}
+    if (pipVideo) {
+      pipVideo.srcObject = null
+      pipVideo.remove()
+      pipVideo = null
+    }
+    isPiP.value = false
   }
 
   function toggleMute() {
@@ -451,6 +516,7 @@ export const useRtcStore = defineStore('rtc', () => {
     isVideoOn,
     isScreenSharing,
     inCall,
+    isPiP,
     roomUsers,
     callUsers,
     joinRoom,
@@ -461,6 +527,8 @@ export const useRtcStore = defineStore('rtc', () => {
     toggleVideo,
     shareScreen,
     stopScreenShare,
+    enterPiP,
+    exitPiP,
     calculateSpatialPosition,
     updateSpatialPositions,
   }

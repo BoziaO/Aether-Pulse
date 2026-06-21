@@ -26,6 +26,17 @@ export async function startScreenShare(
 ): Promise<MediaStream> {
   const cfg = CONFIGS[quality]
 
+  // Android (Capacitor): getDisplayMedia not supported — share front/back camera instead
+  const isAndroid =
+    typeof (window as any).Capacitor !== 'undefined' &&
+    (window as any).Capacitor.isNativePlatform()
+  if (isAndroid) {
+    return navigator.mediaDevices.getUserMedia({
+      video: { width: { ideal: cfg.width }, height: { ideal: cfg.height }, frameRate: { ideal: cfg.frameRate }, facingMode: 'environment' },
+      audio: false,
+    })
+  }
+
   // Electron: getDisplayMedia is blocked; use desktopCapturer via IPC instead
   if (window.electronAPI?.getDesktopSources) {
     const sources = await window.electronAPI.getDesktopSources()

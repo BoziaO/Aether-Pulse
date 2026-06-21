@@ -5,7 +5,11 @@
   "type": "module",
   "main": "electron/main.cjs",
   "description": "AetherPulse desktop client (Electron wrapper for the Vue web app).",
-  "author": "AetherPulse",
+  "author": {
+    "name": "Maciej Łada",
+    "email": "contact@aetherpulse.app",
+    "url": "https://github.com/BoziaO"
+  },
   "scripts": {
     "dev": "vite --config vite.config.ts --host 0.0.0.0 --port 5174",
     "build": "vite build --config vite.config.ts",
@@ -97,7 +101,9 @@
       "icon": "public/icons/logo.png"
     },
     "linux": {
-      "target": "AppImage",
+      "target": [
+        { "target": "zip", "arch": ["x64"] }
+      ],
       "icon": "public/icons/logo.png"
     },
     "nsis": {
