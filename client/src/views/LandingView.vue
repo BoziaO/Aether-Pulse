@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const DOWNLOAD_URL = 'https://github.com/BoziaO/Aether-Pulse/releases/latest/download/AetherPulse.Setup.0.0.0.exe'
+const DOWNLOAD_URL = 'https://github.com/BoziaO/Aether-Pulse/releases/download/v1.0/AetherPulse-setup-v1.0.exe'
 
 const features = [
   {
