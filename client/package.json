@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "main": "electron/main.cjs",
+  "description": "AetherPulse desktop client (Electron wrapper for the Vue web app).",
+  "author": "AetherPulse",
   "scripts": {
     "dev": "vite --config vite.config.ts --host 0.0.0.0 --port 5174",
     "build": "vite build --config vite.config.ts",
@@ -76,7 +78,6 @@
   "build": {
     "appId": "com.aetherpulse.app",
     "productName": "AetherPulse",
-    "main": "electron/main.cjs",
     "directories": {
       "output": "dist-electron"
     },

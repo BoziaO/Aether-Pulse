@@ -127,6 +127,15 @@ const uploadsDir = path.resolve(process.cwd(), 'uploads')
 fs.mkdirSync(uploadsDir, { recursive: true })
 app.use('/api/uploads', express.static(uploadsDir, { maxAge: '30d', immutable: true }))
 
+// Root health check endpoint.
+// Returns 200 OK so that process managers (wait-on, Docker healthchecks, load
+// balancers) can detect that the server is up. Without this, GET / returns 404,
+// which causes `wait-on http://localhost:3000` to hang forever and prevents
+// Electron from launching in dev mode.
+app.get('/', (_req, res) => {
+  res.json({ status: 'ok' })
+})
+
 // Apply optional JWT to all API routes first
 app.use('/api', optionalJwtMiddleware)
 

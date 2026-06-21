@@ -22,8 +22,10 @@ function buildHeaders(additionalHeaders: Record<string, string> = {}): Record<st
   return headers
 }
 
+const API_BASE = (import.meta.env.VITE_API_URL ?? '') + '/api'
+
 export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(`/api${path}`, {
+  const res = await fetch(`${API_BASE}${path}`, {
     credentials: 'include',
     headers: buildHeaders(options.headers as Record<string, string>),
     ...options,
@@ -51,7 +53,7 @@ export async function apiUpload<T>(
     headers['Authorization'] = `Bearer ${token}`
   }
 
-  const res = await fetch(`/api${path}`, {
+  const res = await fetch(`${API_BASE}${path}`, {
     method: options.method ?? 'POST',
     credentials: 'include',
     body: formData,

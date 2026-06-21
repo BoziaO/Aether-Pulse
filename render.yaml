@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: aetherpulse-server
+    runtime: node
+    region: frankfurt
+    plan: free
+    buildCommand: pnpm install && pnpm --filter aetherpulse-server build
+    startCommand: node server/dist/server.mjs
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false        # set manually in Render dashboard
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: CLIENT_URL
+        sync: false        # paste your Vercel URL here after first deploy
+      - key: REDIS_URL
+        sync: false        # optional — leave empty for in-memory adapter

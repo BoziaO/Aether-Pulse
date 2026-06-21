@@ -13,11 +13,42 @@ const CONFIGS: Record<ScreenShareQuality, ShareConfig> = {
   standard: { width: 1280, height: 720, frameRate: 30, audio: false },
 }
 
+declare global {
+  interface Window {
+    electronAPI?: {
+      getDesktopSources: () => Promise<{ id: string; name: string; thumbnail: string }[]>
+    }
+  }
+}
+
 export async function startScreenShare(
   quality: ScreenShareQuality = 'standard'
 ): Promise<MediaStream> {
   const cfg = CONFIGS[quality]
-  const stream = await navigator.mediaDevices.getDisplayMedia({
+
+  // Electron: getDisplayMedia is blocked; use desktopCapturer via IPC instead
+  if (window.electronAPI?.getDesktopSources) {
+    const sources = await window.electronAPI.getDesktopSources()
+    // Pick the first screen source (entire screen)
+    const screen = sources.find((s) => s.id.startsWith('screen:')) ?? sources[0]
+    if (!screen) throw new Error('No screen sources found')
+
+    return navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: {
+        // @ts-expect-error — Electron-specific constraint
+        mandatory: {
+          chromeMediaSource: 'desktop',
+          chromeMediaSourceId: screen.id,
+          maxWidth: cfg.width,
+          maxHeight: cfg.height,
+          maxFrameRate: cfg.frameRate,
+        },
+      },
+    })
+  }
+
+  return navigator.mediaDevices.getDisplayMedia({
     video: {
       width: { ideal: cfg.width },
       height: { ideal: cfg.height },
@@ -25,7 +56,6 @@ export async function startScreenShare(
     },
     audio: cfg.audio,
   })
-  return stream
 }
 
 export function getShareLabel(quality: ScreenShareQuality): string {

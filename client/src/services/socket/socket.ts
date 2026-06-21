@@ -5,13 +5,14 @@ let _socket: Socket | null = null
 export function getSocket(): Socket {
   if (!_socket) {
     const token = localStorage.getItem('aetherpulse_access_token')
-    _socket = io({
+    // In production (Vercel/Electron) VITE_API_URL points to the Render server.
+    // In dev the Vite proxy forwards /api/* so we use relative '/'.
+    const serverUrl = import.meta.env.VITE_API_URL ?? ''
+    _socket = io(serverUrl, {
       path: '/api/socket.io',
       autoConnect: false,
       withCredentials: true,
-      auth: {
-        token,
-      },
+      auth: { token },
     })
   }
   return _socket

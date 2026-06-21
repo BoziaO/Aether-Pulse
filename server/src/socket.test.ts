@@ -11,14 +11,14 @@ describe('Socket.io Server', () => {
   beforeAll(async () => {
     server = createServer()
     io = new Server(server, { cors: { origin: '*', credentials: true } })
-    
+
     await new Promise<void>((resolve) => {
       server.listen(3001, resolve)
     })
-    
+
     client = ioClient('http://localhost:3001', { autoConnect: false })
     client.connect()
-    
+
     await new Promise<void>((resolve) => {
       client.on('connect', resolve)
     })

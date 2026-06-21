@@ -7,6 +7,7 @@ const { contextBridge, ipcRenderer } = require('electron')
 contextBridge.exposeInMainWorld('electronAPI', {
   send: (channel, data) => ipcRenderer.send(channel, data),
   on: (channel, func) => ipcRenderer.on(channel, (event, ...args) => func(...args)),
+  getDesktopSources: () => ipcRenderer.invoke('get-desktop-sources'),
 })
 
 // Polyfill for Node.js globals in the renderer process
