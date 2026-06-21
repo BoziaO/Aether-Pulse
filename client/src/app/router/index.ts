@@ -5,6 +5,10 @@ export const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
+      path: '/',
+      component: () => import('@/views/LandingView.vue'),
+    },
+    {
       path: '/auth',
       component: () => import('@/views/LoginView.vue'),
     },
@@ -13,7 +17,7 @@ export const router = createRouter({
       component: () => import('@/views/JoinView.vue'),
     },
     {
-      path: '/',
+      path: '/app',
       component: () => import('@/app/layouts/AppLayout.vue'),
       meta: { requiresAuth: true },
       children: [
@@ -42,7 +46,7 @@ router.beforeEach(async (to) => {
   }
   if (to.path === '/auth') {
     if (!auth.user) await auth.fetchMe()
-    if (auth.user) return '/'
+    if (auth.user) return '/app'
   }
 
   return true

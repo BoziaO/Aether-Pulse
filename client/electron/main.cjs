@@ -26,10 +26,10 @@ function createWindow() {
   mainWindow.setMenuBarVisibility(false)
 
   if (isDev) {
-    mainWindow.loadURL('http://localhost:5174')
+    mainWindow.loadURL('http://localhost:5174/app')
     mainWindow.webContents.openDevTools()
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'))
+    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'), { hash: '/app' })
   }
 
   // Open external links in the default browser
