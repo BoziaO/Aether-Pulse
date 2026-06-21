@@ -65,7 +65,7 @@ const corsOptions = {
 }
 
 // Handle preflight before helmet so CORS headers are set first
-app.options('*', cors(corsOptions))
+app.options('/{*path}', cors(corsOptions))
 app.use(cors(corsOptions))
 
 app.use(
