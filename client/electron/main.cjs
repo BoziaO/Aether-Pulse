@@ -18,7 +18,7 @@ function createWindow() {
     },
     icon: path.join(
       __dirname,
-      isDev ? '../public/icons/logo.png' : '../dist/public/icons/logo.png'
+      isDev ? '../public/icons/logo.png' : '../dist/icons/logo.png'
     ),
     title: 'AetherPulse',
   })
@@ -27,10 +27,9 @@ function createWindow() {
 
   if (isDev) {
     mainWindow.loadURL('http://localhost:5174')
-    // Open DevTools only in dev mode
     mainWindow.webContents.openDevTools()
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/public/index.html'))
+    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'))
   }
 
   // Open external links in the default browser

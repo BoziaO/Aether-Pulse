@@ -37,21 +37,35 @@ if (sessionSecret.length < 32) {
   )
 }
 
-const allowedOrigins =
+const allowedOrigins: string[] =
   process.env.NODE_ENV === 'production'
-    ? process.env.CLIENT_URL
-      ? [process.env.CLIENT_URL]
-      : []
+    ? (process.env.CLIENT_URL ?? '')
+        .split(',')
+        .map((o) => o.trim())
+        .filter(Boolean)
     : ['http://localhost:5174', 'http://localhost:3000']
 
-// Configure CORS more securely
+if (process.env.NODE_ENV === 'production' && allowedOrigins.length === 0) {
+  logger.warn('CLIENT_URL is not set — CORS will block all browser requests in production')
+}
+
 const corsOptions = {
-  origin: allowedOrigins,
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    // Electron sends requests with no origin (file://) — always allow
+    if (!origin) return callback(null, true)
+    if (allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+      return callback(null, true)
+    }
+    callback(new Error(`CORS: origin ${origin} not allowed`))
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-Requested-With'],
   optionsSuccessStatus: 200,
 }
+
+// Handle preflight before helmet so CORS headers are set first
+app.options('*', cors(corsOptions))
 app.use(cors(corsOptions))
 
 app.use(

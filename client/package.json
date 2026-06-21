@@ -82,13 +82,15 @@
       "output": "dist-electron"
     },
     "files": [
-      "dist/public/**/*",
+      "dist/**/*",
       "electron/**/*",
       "package.json"
     ],
     "win": {
-      "target": "portable",
-      "icon": "public/icons/logo.png"
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ],
+      "icon": "dist-electron/.icon-ico/icon.ico"
     },
     "mac": {
       "target": "dmg",
@@ -98,18 +100,12 @@
       "target": "AppImage",
       "icon": "public/icons/logo.png"
     },
-    "extraResources": [
-      {
-        "from": "dist/public",
-        "to": "dist/public"
-      }
-    ],
-    "extraFiles": [
-      {
-        "from": "public/icons",
-        "to": "icons"
-      }
-    ]
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
   },
   "engines": {
     "node": ">=22.0.0"
