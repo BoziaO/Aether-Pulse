@@ -6,6 +6,7 @@ services:
     plan: free
     buildCommand: pnpm install && pnpm --filter aetherpulse-server build
     startCommand: node server/dist/server.mjs
+    nodeVersion: 22
     healthCheckPath: /
     envVars:
       - key: NODE_ENV
