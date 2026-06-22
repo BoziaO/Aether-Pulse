@@ -123,7 +123,7 @@ overrides:
 allowBuilds:
   electron: false
   esbuild: true
-  unrs-resolver: set this to true or false
+  unrs-resolver: true
 
 # Hoist electron to root node_modules for better compatibility
 shamefullyHoist: true

@@ -1,7 +1,7 @@
 {
-  "buildCommand": "cd .. && pnpm --filter aetherpulse-client build",
-  "outputDirectory": "dist",
-  "installCommand": "cd .. && pnpm install",
+  "buildCommand": "pnpm --filter aetherpulse-client build",
+  "outputDirectory": "client/dist",
+  "installCommand": "pnpm install",
   "framework": null,
-  "rewrites": [{ "source": "/((?!assets/).*)", "destination": "/index.html" }]
+  "rewrites": [{ "source": "/((?!assets|icons|api/).*)", "destination": "/client/dist/index.html" }]
 }
