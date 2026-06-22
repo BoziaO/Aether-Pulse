@@ -44,6 +44,24 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, 'dist'),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Split large vendor chunks for better performance
+          vue: ['vue', 'vue-router', 'pinia'],
+          socket: ['socket.io-client'],
+          webrtc: ['simple-peer'],
+          lucide: ['lucide-vue-next'],
+          vueuse: ['@vueuse/core'],
+        },
+      },
+    },
+    // Enable minification for better performance
+    minify: 'esbuild',
+    // Generate source maps for debugging
+    sourcemap: process.env.NODE_ENV === 'development',
+    // Optimize for performance
+    cssMinify: true,
   },
   server: {
     port,

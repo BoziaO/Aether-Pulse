@@ -8,6 +8,8 @@ export interface PeerConnection {
   userId: string
   socketId: string
   stream: MediaStream | null
+  createdAt: number
+  lastActivity: number
 }
 
 export class PeerManager {
@@ -17,6 +19,9 @@ export class PeerManager {
   private localUserId: string
   private onStream: (userId: string, stream: MediaStream) => void
   private onClose: (userId: string) => void
+  private cleanupInterval: NodeJS.Timeout | null = null
+  private maxPeerAge = 300000 // 5 minutes
+  private inactiveThreshold = 60000 // 1 minute
 
   private onOffer = ({
     from,
@@ -66,6 +71,7 @@ export class PeerManager {
     this.onStream = onStream
     this.onClose = onClose
     this.setupSignaling()
+    this.startCleanupInterval()
   }
 
   private setupSignaling() {
@@ -75,22 +81,50 @@ export class PeerManager {
   }
 
   setLocalStream(stream: MediaStream | null) {
+    // Clean up previous stream tracks to prevent memory leaks
+    if (this.localStream) {
+      this.localStream.getTracks().forEach(track => {
+        track.stop()
+      })
+    }
     this.localStream = stream
   }
 
   initiateCall(userId: string, socketId: string) {
     if (this.peers.has(socketId)) return
+    
+    // Clean up old peers to prevent memory leaks
+    this.cleanupOldPeers()
+    
     const peer = this.createPeer(true, userId, socketId)
-    this.peers.set(socketId, { peer, userId, socketId, stream: null })
+    const now = Date.now()
+    this.peers.set(socketId, { 
+      peer, 
+      userId, 
+      socketId, 
+      stream: null,
+      createdAt: now,
+      lastActivity: now
+    })
   }
 
   private handleOffer(fromSocketId: string, fromUserId: string, signal: SimplePeer.SignalData) {
     if (this.peers.has(fromSocketId)) {
-      this.peers.get(fromSocketId)!.peer.signal(signal)
+      const conn = this.peers.get(fromSocketId)!
+      conn.lastActivity = Date.now()
+      conn.peer.signal(signal)
       return
     }
     const peer = this.createPeer(false, fromUserId, fromSocketId)
-    this.peers.set(fromSocketId, { peer, userId: fromUserId, socketId: fromSocketId, stream: null })
+    const now = Date.now()
+    this.peers.set(fromSocketId, { 
+      peer, 
+      userId: fromUserId, 
+      socketId: fromSocketId, 
+      stream: null,
+      createdAt: now,
+      lastActivity: now
+    })
     peer.signal(signal)
   }
 
@@ -99,7 +133,10 @@ export class PeerManager {
     userId: string,
     socketId: string
   ): InstanceType<typeof SimplePeer> {
-    const peer = new SimplePeer({
+    // Electron-specific WebRTC configuration for better compatibility
+    const isElectron = typeof (window as any).process?.versions?.electron !== undefined
+    
+    const config: SimplePeer.Config = {
       initiator,
       stream: this.localStream || undefined,
       trickle: true,
@@ -107,9 +144,21 @@ export class PeerManager {
         iceServers: [
           { urls: 'stun:stun.l.google.com:19302' },
           { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun2.l.google.com:19302' },
+          { urls: 'stun:stun3.l.google.com:19302' },
         ],
+        iceTransportPolicy: isElectron ? 'all' : 'all',
+        bundlePolicy: 'max-bundle',
+        rtcpMuxPolicy: 'require',
+        sdpSemantics: 'unified-plan',
       },
-    })
+      // Electron-specific optimizations
+      wrtc: isElectron ? (window as any).wrtc : undefined,
+      // Reconnection and timeout settings
+      reconnectTimer: 5000,
+      iceCompleteTimeout: 10000,
+      sdpTransform: isElectron ? this.fixSdpForElectron : undefined,
+    }
 
     peer.on('signal', (signal) => {
       if (initiator) {
@@ -153,6 +202,83 @@ export class PeerManager {
     return peer
   }
 
+  /**
+   * Fix SDP for Electron WebRTC compatibility
+   */
+  private fixSdpForElectron(sdp: string): string {
+    if (typeof sdp !== 'string') return sdp
+    
+    // Remove bandwidth constraints that might cause issues in Electron
+    // Fix for common Electron WebRTC issues
+    let fixedSdp = sdp
+    
+    // Remove bandwidth constraints that Electron doesn't handle well
+    fixedSdp = fixedSdp.replace(/b=AS:\d+\r\n/g, '')
+    fixedSdp = fixedSdp.replace(/b=TIAS:\d+\r\n/g, '')
+    
+    // Ensure proper codec ordering for Electron
+    if (fixedSdp.includes('VP8')) {
+      // Move VP8 to the top for better compatibility
+      const vp8Match = fixedSdp.match(/a=rtpmap:\s*(\d+)\s*VP8/96000\r\n/g)
+      if (vp8Match) {
+        fixedSdp = fixedSdp.replace(/a=rtpmap:\s*(\d+)\s*VP8/96000\r\n/g, '')
+        fixedSdp = `a=rtpmap:96 VP8/96000\r\n` + fixedSdp
+      }
+    }
+    
+    return fixedSdp
+  }
+
+  /**
+   * Clean up old peers to prevent memory leaks
+   */
+  private cleanupOldPeers(): void {
+    const now = Date.now()
+    const oldPeers = []
+    
+    for (const [socketId, conn] of this.peers.entries()) {
+      const age = now - conn.createdAt
+      const inactiveTime = now - conn.lastActivity
+      
+      // Remove peers that are too old or inactive
+      if (age > this.maxPeerAge || inactiveTime > this.inactiveThreshold) {
+        oldPeers.push(socketId)
+      }
+    }
+    
+    oldPeers.forEach(socketId => {
+      const conn = this.peers.get(socketId)
+      if (conn) {
+        try {
+          conn.peer.destroy()
+        } catch (e) {
+          console.warn('Error destroying old peer:', e)
+        }
+        this.peers.delete(socketId)
+      }
+    })
+  }
+
+  /**
+   * Start cleanup interval for memory management
+   */
+  private startCleanupInterval(): void {
+    // Clean up every minute
+    this.cleanupInterval = setInterval(() => {
+      this.cleanupOldPeers()
+    }, 60000)
+  }
+
+  /**
+   * Stop cleanup interval
+   */
+  private stopCleanupInterval(): void {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval)
+      this.cleanupInterval = null
+    }
+  }
+
   addTrack(track: MediaStreamTrack, stream: MediaStream) {
     this.peers.forEach(({ peer }) => {
       try {
@@ -170,13 +296,32 @@ export class PeerManager {
   }
 
   destroyAll() {
-    this.peers.forEach(({ peer }) => peer.destroy())
+    this.peers.forEach(({ peer }) => {
+      try {
+        peer.destroy()
+      } catch (e) {
+        console.warn('Error destroying peer:', e)
+      }
+    })
     this.peers.clear()
+    this.stopCleanupInterval()
 
     // Avoid duplicated listeners when leaving/re-joining calls.
     this.socket.off('offer', this.onOffer)
     this.socket.off('answer', this.onAnswer)
     this.socket.off('ice-candidate', this.onIceCandidate)
+    
+    // Additional cleanup for local stream
+    if (this.localStream) {
+      this.localStream.getTracks().forEach(track => {
+        try {
+          track.stop()
+        } catch (e) {
+          console.warn('Error stopping track:', e)
+        }
+      })
+      this.localStream = null
+    }
   }
 
   hasPeer(socketId: string): boolean {

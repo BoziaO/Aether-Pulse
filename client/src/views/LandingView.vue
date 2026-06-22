@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { markRaw } from 'vue'
+import { ref, markRaw, onMounted } from 'vue'
 import {
   Download,
   Globe2,
@@ -12,36 +12,62 @@ import {
   Radio,
   ShieldCheck,
   Smartphone,
+  CheckCircle,
+  AlertTriangle,
+  Loader2,
 } from 'lucide-vue-next'
 
-const downloads = [
+interface DownloadItem {
+  icon: any
+  platform: string
+  meta: string
+  href: string
+  label: string
+  primary: boolean
+  version?: string
+  size?: string
+}
+
+interface FeatureItem {
+  icon: any
+  title: string
+  desc: string
+}
+
+const downloads = ref<DownloadItem[]>([
   {
     icon: markRaw(MonitorUp),
     platform: 'Windows',
     meta: 'Windows 10+',
-    href: 'https://github.com/BoziaO/Aether-Pulse/releases/download/v1.0/AetherPulse-setup-v1.0.exe',
+    href: 'https://github.com/BoziaO/Aether-Pulse/releases/latest/download/AetherPulse-setup.exe',
     label: 'Pobierz .exe',
     primary: true,
+    version: 'Najnowsza',
+    size: '~120MB',
   },
   {
     icon: markRaw(Smartphone),
     platform: 'Android',
     meta: 'APK dla telefonu',
-    href: 'https://github.com/BoziaO/Aether-Pulse/releases/download/v1.0/AetherPulse-v1.0.apk',
+    href: 'https://github.com/BoziaO/Aether-Pulse/releases/latest/download/AetherPulse.apk',
     label: 'Pobierz APK',
     primary: false,
+    version: 'Najnowsza',
+    size: '~45MB',
   },
   {
     icon: markRaw(Laptop),
     platform: 'Linux',
     meta: 'x64 desktop',
-    href: 'https://github.com/BoziaO/Aether-Pulse/releases/download/v1.0/AetherPulse-linux-x64.zip',
+    href: 'https://github.com/BoziaO/Aether-Pulse/releases/latest/download/AetherPulse-linux-x64.zip',
     label: 'Pobierz ZIP',
     primary: false,
+    version: 'Najnowsza',
+    size: '~140MB',
   },
-]
+])
 
-const features = [
+const features = ref<FeatureItem[]>([
   {
     icon: markRaw(Radio),
     title: 'Streamy i live rooms',
@@ -72,55 +98,148 @@ const features = [
     title: 'Bezpieczne podstawy',
     desc: 'JWT, CORS, rate limiting i transakcyjne operacje po stronie API.',
   },
-]
+])
+
+const isLoading = ref<boolean>(false)
+const downloadProgress = ref<number>(0)
+const downloadStatus = ref<string>('')
+const selectedPlatform = ref<string>('')
+const showBrowserOption = ref<boolean>(false)
+
+// Browser compatibility check
+const isElectron = ref<boolean>(false)
+const isMobile = ref<boolean>(false)
+
+onMounted(() => {
+  // Check if running in Electron
+  isElectron.value = typeof window !== 'undefined' && 'electron' in window.process.versions
+  
+  // Check if mobile device
+  if (typeof window !== 'undefined') {
+    isMobile.value = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  }
+})
+
+function handleDownload(platform: string, href: string) {
+  selectedPlatform.value = platform
+  isLoading.value = true
+  downloadProgress.value = 0
+  downloadStatus.value = `Pobieranie ${platform}...`
+  
+  // Simulate progress for better UX (real progress would require server support)
+  const interval = setInterval(() => {
+    downloadProgress.value += Math.random() * 15
+    if (downloadProgress.value >= 90) {
+      clearInterval(interval)
+    }
+  }, 300)
+  
+  // Start actual download
+  const link = document.createElement('a')
+  link.href = href
+  link.download = true
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  
+  // Reset after a delay
+  setTimeout(() => {
+    isLoading.value = false
+    downloadProgress.value = 100
+    downloadStatus.value = `Pobrano ${platform}!`
+    setTimeout(() => {
+      downloadProgress.value = 0
+      downloadStatus.value = ''
+    }, 2000)
+  }, 3000)
+}
+
+function getDownloadButtonText(platform: string, isPrimary: boolean): string {
+  if (isLoading.value && selectedPlatform.value === platform) {
+    return 'Pobieranie...'
+  }
+  return platform === 'Windows' && isPrimary ? 'Pobierz dla Windows' : 
+         platform === 'Android' ? 'Pobierz APK' : 
+         'Pobierz dla Linux'
+}
+
+function getStatusColor(platform: string): string {
+  if (downloadStatus.value.includes(platform) && downloadProgress.value === 100) {
+    return '#22c55e' // success green
+  }
+  return ''
+}
 </script>
 
 <template>
   <div class="landing">
+    <!-- Navigation -->
     <nav class="nav">
       <a class="brand" href="/">
-        <img src="/icons/logo.png" alt="AetherPulse" />
+        <img src="/icons/logo.png" alt="AetherPulse" loading="lazy" />
         <span>AetherPulse</span>
       </a>
       <div class="nav-actions">
-        <a href="/auth" class="btn ghost">Log in</a>
-        <a href="/auth" class="btn solid">Open app</a>
+        <a href="/auth" class="btn ghost" prefetch>Zaloguj się</a>
+        <a href="/auth" class="btn solid">Otwórz w przeglądarce</a>
       </div>
     </nav>
 
+    <!-- Hero Section -->
     <main>
       <section class="hero">
         <div class="hero-copy">
-          <p class="eyebrow">Voice, chat and streams for your crew</p>
+          <p class="eyebrow">🎙️ Voice, chat i streamy dla Twojej załogi</p>
           <h1>AetherPulse</h1>
           <p class="hero-text">
-            Prywatne pokoje głosowe, chat realtime, stream z kamery lub ekranu i wygodny tryb
-            Picture-in-Picture na telefonie.
+            Prywatne pokoje głosowe, chat realtime, stream z kamery lub ekranu 
+            i wygodny tryb Picture-in-Picture na telefonie. Wszystko w jednym miejscu.
           </p>
+          
+          <!-- Primary CTA with loading state -->
           <div class="hero-actions">
-            <a :href="downloads[0].href" class="btn solid large" download>
-              <Download :size="20" />
-              Download Windows
-            </a>
+            <button 
+              class="btn solid large download-btn"
+              @click="handleDownload('Windows', downloads[0].href)"
+              :disabled="isLoading && selectedPlatform === 'Windows'"
+            >
+              <Loader2 v-if="isLoading && selectedPlatform === 'Windows'" class="loader" :size="20" />
+              <Download v-else :size="20" />
+              {{ getDownloadButtonText('Windows', true) }}
+            </button>
+            
             <a href="/auth" class="btn outline large">
               <Globe2 :size="20" />
-              Open in browser
+              Uruchom w przeglądarce
             </a>
           </div>
+          
+          <!-- Download progress bar -->
+          <div v-if="isLoading && downloadProgress > 0" class="download-progress">
+            <div 
+              class="progress-bar"
+              :style="{ width: `${downloadProgress}%` }"
+              :class="{ complete: downloadProgress === 100 }"
+            ></div>
+            <span class="progress-text">{{ downloadStatus }}</span>
+          </div>
+          
           <div class="hero-pills">
-            <span>Android PiP</span>
-            <span>Linux build</span>
-            <span>WebRTC live</span>
+            <span>✅ Android PiP</span>
+            <span>✅ Linux build</span>
+            <span>✅ WebRTC live</span>
+            <span>✅ Spatial Audio</span>
           </div>
         </div>
 
+        <!-- Product Preview Panel -->
         <div class="product-panel" aria-label="AetherPulse preview">
           <div class="panel-top">
             <div>
-              <span class="panel-label">Live room</span>
+              <span class="panel-label">🔴 Live room</span>
               <strong># night-session</strong>
             </div>
-            <span class="live-dot">LIVE</span>
+            <span class="live-dot">🎵 LIVE</span>
           </div>
           <div class="stream-preview">
             <div class="stream-main">
@@ -141,68 +260,156 @@ const features = [
         </div>
       </section>
 
+      <!-- Downloads Section with better UX -->
       <section class="downloads" id="download">
         <div class="section-head">
-          <p class="eyebrow">Download</p>
-          <h2>Pobierz na swój system</h2>
+          <p class="eyebrow">📥 Pobierz aplikację</p>
+          <h2>Dostępna na wszystkie platformy</h2>
+          <p class="section-desc">
+            Wybierz swoją platformę i ciesz się pełną funkcjonalnością AetherPulse
+          </p>
         </div>
+        
         <div class="download-grid">
-          <a
+          <div 
             v-for="item in downloads"
             :key="item.platform"
-            :href="item.href"
             class="download-card"
-            :class="{ primary: item.primary }"
-            download
+            :class="{ primary: item.primary, loading: isLoading && selectedPlatform === item.platform }"
+            @click="!isLoading ? handleDownload(item.platform, item.href) : null"
           >
-            <component :is="item.icon" :size="28" />
-            <span>
+            <div class="download-icon">
+              <component :is="item.icon" :size="32" />
+            </div>
+            <div class="download-info">
               <strong>{{ item.platform }}</strong>
               <small>{{ item.meta }}</small>
-            </span>
-            <em>{{ item.label }}</em>
+              <div class="download-meta">
+                <span class="version">{{ item.version }}</span>
+                <span class="size">{{ item.size }}</span>
+              </div>
+            </div>
+            <div class="download-action">
+              <span v-if="isLoading && selectedPlatform === item.platform" class="downloading">
+                <Loader2 class="loader-small" :size="18" />
+                {{ downloadProgress }}%
+              </span>
+              <em v-else>{{ item.label }}</em>
+            </div>
+            
+            <!-- Status indicator -->
+            <div 
+              v-if="downloadProgress === 100 && selectedPlatform === item.platform"
+              class="download-status success"
+            >
+              <CheckCircle :size="20" />
+            </div>
+          </div>
+        </div>
+        
+        <!-- Browser option for users who can't download -->
+        <div class="browser-option">
+          <p>⚡ <strong>Nie chcesz pobierać?</strong> Uruchom aplikację bezpośrednio w przeglądarce!</p>
+          <a href="/auth" class="btn outline">
+            <Globe2 :size="18" />
+            Otwórz AetherPulse w przeglądarce
           </a>
         </div>
       </section>
 
+      <!-- Features Section -->
       <section class="features">
         <div class="section-head">
-          <p class="eyebrow">Features</p>
+          <p class="eyebrow">✨ Funkcjonalności</p>
           <h2>Komunikacja, która działa też na telefonie</h2>
         </div>
         <div class="features-grid">
-          <article v-for="feature in features" :key="feature.title" class="feature-card">
-            <component :is="feature.icon" :size="24" />
+          <article 
+            v-for="(feature, index) in features" 
+            :key="feature.title" 
+            class="feature-card"
+            :style="{ animationDelay: `${index * 100}ms` }"
+          >
+            <div class="feature-icon">
+              <component :is="feature.icon" :size="28" />
+            </div>
             <h3>{{ feature.title }}</h3>
             <p>{{ feature.desc }}</p>
           </article>
         </div>
       </section>
+
+      <!-- Browser Compatibility Notice -->
+      <section v-if="!isElectron && isMobile" class="browser-notice">
+        <div class="notice-card">
+          <AlertTriangle :size="24" />
+          <div class="notice-content">
+            <h3>Używasz telefonu?</h3>
+            <p>Dla najlepszego doświadczenia pobierz naszą aplikację mobilną lub użyj trybu PWA (Progressive Web App).</p>
+          </div>
+          <a href="/auth" class="btn solid">
+            Kontynuuj w przeglądarce
+          </a>
+        </div>
+      </section>
     </main>
 
+    <!-- Footer -->
     <footer class="footer">
       <a class="brand" href="/">
-        <img src="/icons/logo.png" alt="AetherPulse" />
+        <img src="/icons/logo.png" alt="AetherPulse" loading="lazy" />
         <span>AetherPulse</span>
       </a>
       <div class="footer-links">
-        <a href="https://github.com/BoziaO/Aether-Pulse" target="_blank" rel="noopener">GitHub</a>
-        <a href="/auth">Log in</a>
-        <a href="/auth">Register</a>
+        <a href="https://github.com/BoziaO/Aether-Pulse" target="_blank" rel="noopener noreferrer">📱 GitHub</a>
+        <a href="/auth">Zaloguj się</a>
+        <a href="/auth">Zarejestruj się</a>
+      </div>
+      <div class="footer-copyright">
+        <p>© {{ new Date().getFullYear() }} AetherPulse. Wszelkie prawa zastrzeżone.</p>
       </div>
     </footer>
   </div>
 </template>
 
 <style scoped>
+/* Animations for Core Web Vitals */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes progress {
+  from {
+    width: 0%;
+  }
+}
+
 .landing {
   min-height: 100vh;
   overflow-x: hidden;
   overflow-y: auto;
   background:
-    linear-gradient(135deg, rgba(139, 92, 246, 0.12), transparent 34%),
-    linear-gradient(225deg, rgba(6, 182, 212, 0.11), transparent 38%), #070a13;
+    radial-gradient(ellipse at top left, rgba(139, 92, 246, 0.15), transparent 40%),
+    radial-gradient(ellipse at bottom right, rgba(6, 182, 212, 0.12), transparent 40%),
+    #070a13;
   color: #e2e8f0;
+  scroll-behavior: smooth;
 }
 
 .nav,
@@ -217,6 +424,15 @@ const features = [
 
 .nav {
   min-height: 72px;
+  position: sticky;
+  top: 0;
+  background: rgba(7, 10, 19, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 100;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 
 .brand {
@@ -227,12 +443,18 @@ const features = [
   font-size: 18px;
   font-weight: 800;
   text-decoration: none;
+  transition: transform 0.2s ease;
+}
+
+.brand:hover {
+  transform: scale(1.02);
 }
 
 .brand img {
   width: 34px;
   height: 34px;
   object-fit: contain;
+  filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.3));
 }
 
 .nav-actions,
@@ -241,6 +463,7 @@ const features = [
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .btn {
@@ -260,16 +483,33 @@ const features = [
   transition:
     background 0.18s ease,
     border-color 0.18s ease,
-    transform 0.18s ease;
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+  cursor: pointer;
+  will-change: transform, background;
 }
 
-.btn:hover {
+.btn:hover:not(:disabled) {
   transform: translateY(-1px);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none !important;
 }
 
 .btn.solid {
   background: linear-gradient(135deg, #8b5cf6, #2563eb);
   box-shadow: 0 14px 34px rgba(37, 99, 235, 0.22);
+}
+
+.btn.solid:hover:not(:disabled) {
+  box-shadow: 0 18px 40px rgba(37, 99, 235, 0.3);
 }
 
 .btn.outline,
@@ -280,6 +520,11 @@ const features = [
 
 .btn.ghost {
   color: #cbd5e1;
+}
+
+.btn.ghost:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .btn.large {
@@ -294,12 +539,13 @@ main {
 }
 
 .hero {
-  min-height: calc(100svh - 72px);
+  min-height: calc(100svh - 80px);
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(340px, 480px);
   align-items: center;
   gap: 48px;
   padding: 48px 0 72px;
+  animation: fadeInUp 0.6s ease-out;
 }
 
 .hero-copy {
@@ -326,6 +572,11 @@ h1 {
   font-size: clamp(48px, 9vw, 104px);
   line-height: 0.95;
   letter-spacing: 0;
+  background: linear-gradient(135deg, #f8fafc, #a78bfa, #67e8f9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: fadeInUp 0.6s ease-out 0.1s both;
 }
 
 .hero-text {
@@ -334,11 +585,35 @@ h1 {
   color: #b6c2d4;
   font-size: clamp(17px, 2vw, 22px);
   line-height: 1.55;
+  animation: fadeInUp 0.6s ease-out 0.2s both;
 }
 
 .hero-actions {
   margin-top: 34px;
   flex-wrap: wrap;
+  gap: 16px;
+  animation: fadeInUp 0.6s ease-out 0.3s both;
+}
+
+.download-btn {
+  position: relative;
+}
+
+.loader {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loader-small {
+  animation: spin 0.8s linear infinite;
 }
 
 .hero-pills {
@@ -346,6 +621,7 @@ h1 {
   flex-wrap: wrap;
   gap: 10px;
   margin-top: 20px;
+  animation: fadeInUp 0.6s ease-out 0.4s both;
 }
 
 .hero-pills span {
@@ -359,17 +635,28 @@ h1 {
 }
 
 .product-panel,
+.download-card,
 .feature-card,
-.download-card {
+.notice-card {
   border: 1px solid rgba(255, 255, 255, 0.09);
   background: rgba(13, 16, 23, 0.72);
   box-shadow: 0 28px 70px rgba(0, 0, 0, 0.32);
   backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  will-change: transform, box-shadow;
+  transition: 
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .product-panel {
   border-radius: 8px;
   padding: 16px;
+}
+
+.product-panel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.4);
 }
 
 .panel-top,
@@ -445,6 +732,7 @@ h1 {
   margin-right: -12px;
   border: 2px solid #0d1017;
   border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .avatar.a {
@@ -461,15 +749,16 @@ h1 {
 
 .downloads,
 .features {
-  padding: 48px 0;
+  padding: 64px 0;
 }
 
 .section-head {
   display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 24px;
-  margin-bottom: 22px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 32px;
+  animation: fadeInUp 0.6s ease-out both;
 }
 
 .section-head h2 {
@@ -479,60 +768,142 @@ h1 {
   letter-spacing: 0;
 }
 
-.download-grid,
-.features-grid {
+.section-desc {
+  color: #94a3b8;
+  font-size: 15px;
+  line-height: 1.6;
+  max-width: 560px;
+}
+
+.download-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
 }
 
 .download-card {
   display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 14px;
-  min-height: 126px;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 12px;
+  min-height: 120px;
   padding: 20px;
-  border-radius: 8px;
+  border-radius: 12px;
   color: #e2e8f0;
-  text-decoration: none;
+  cursor: pointer;
   transition:
     border-color 0.18s ease,
     transform 0.18s ease,
-    background 0.18s ease;
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-.download-card:hover {
-  transform: translateY(-2px);
+.download-card:hover:not(.loading) {
+  transform: translateY(-4px);
   border-color: rgba(103, 232, 249, 0.42);
+  box-shadow: 0 12px 40px rgba(139, 92, 246, 0.15);
 }
 
 .download-card.primary {
   background: rgba(37, 99, 235, 0.18);
+  border-color: rgba(37, 99, 235, 0.3);
 }
 
-.download-card strong,
-.download-card small,
-.download-card em {
-  display: block;
+.download-card.loading {
+  cursor: wait;
 }
 
-.download-card strong {
+.download-icon {
+  grid-row: span 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #67e8f9;
+}
+
+.download-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.download-info strong {
   font-size: 18px;
+  font-weight: 700;
 }
 
-.download-card small {
-  margin-top: 5px;
+.download-info small {
   color: #94a3b8;
   font-size: 13px;
 }
 
-.download-card em {
-  grid-column: 1 / -1;
-  align-self: end;
+.download-meta {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.download-meta .version,
+.download-meta .size {
+  font-size: 11px;
+  color: #64748b;
+  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+}
+
+.download-action {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+.download-action em {
   color: #67e8f9;
   font-size: 13px;
   font-style: normal;
   font-weight: 800;
+  padding: 6px 10px;
+  background: rgba(103, 232, 249, 0.1);
+  border-radius: 6px;
+  transition: background 0.18s ease;
+}
+
+.download-action em:hover {
+  background: rgba(103, 232, 249, 0.2);
+}
+
+.downloading {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #67e8f9 !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  padding: 6px 10px;
+  background: rgba(103, 232, 249, 0.15);
+  border-radius: 6px;
+}
+
+.download-status {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  color: #22c55e;
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.download-status.success {
+  color: #22c55e;
 }
 
 .features-grid {
@@ -541,16 +912,30 @@ h1 {
 
 .feature-card {
   min-height: 164px;
-  padding: 22px;
-  border-radius: 8px;
+  padding: 24px;
+  border-radius: 12px;
+  cursor: default;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.feature-card svg {
+.feature-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.1);
+}
+
+.feature-icon {
+  color: #67e8f9;
+  margin-bottom: 16px;
+}
+
+.feature-icon svg {
   color: #67e8f9;
 }
 
 .feature-card h3 {
-  margin-top: 16px;
+  margin-top: 0;
   color: #f8fafc;
   font-size: 18px;
 }
@@ -562,15 +947,134 @@ h1 {
   line-height: 1.55;
 }
 
+/* Download Progress */
+.download-progress {
+  margin-top: 20px;
+  width: 100%;
+  max-width: 300px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #8b5cf6, #2563eb, #67e8f9);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.progress-bar.complete {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.progress-text {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #67e8f9;
+  font-weight: 600;
+}
+
+/* Browser Option */
+.browser-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  animation: fadeInUp 0.6s ease-out 0.5s both;
+}
+
+.browser-option p {
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.browser-option p strong {
+  color: #f8fafc;
+}
+
+/* Browser Notice */
+.browser-notice {
+  padding: 32px 0;
+  animation: fadeInUp 0.6s ease-out 0.6s both;
+}
+
+.notice-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255, 182, 0, 0.05), rgba(255, 182, 0, 0.02));
+  border-color: rgba(255, 182, 0, 0.2);
+}
+
+.notice-card svg {
+  color: #ff9900;
+  flex-shrink: 0;
+}
+
+.notice-content {
+  flex: 1;
+}
+
+.notice-content h3 {
+  color: #fbbf24;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.notice-content p {
+  color: #94a3b8;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 .footer {
-  padding: 32px 0 42px;
+  padding: 40px 0;
   color: #64748b;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  margin-top: 40px;
+}
+
+.footer-links {
+  display: flex;
+  align-items: center;
+  gap: 20px;
 }
 
 .footer-links a {
   color: #94a3b8;
   font-size: 14px;
   text-decoration: none;
+  transition: color 0.18s ease;
+}
+
+.footer-links a:hover {
+  color: #f8fafc;
+}
+
+.footer-copyright {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.footer-copyright p {
+  font-size: 13px;
+  color: #64748b;
+}
+
+@media (max-width: 1024px) {
+  .download-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 860px) {
@@ -583,11 +1087,26 @@ h1 {
 
   .product-panel {
     max-width: 560px;
+    margin: 0 auto;
   }
 
-  .download-grid,
   .features-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .download-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .nav-actions {
+    gap: 8px;
+  }
+  
+  .btn.large {
+    padding: 12px 16px;
+    font-size: 14px;
   }
 }
 
@@ -595,7 +1114,7 @@ h1 {
   .nav,
   .footer,
   main {
-    width: min(100% - 24px, 1180px);
+    width: min(100% - 20px, 1180px);
   }
 
   .nav {
@@ -610,18 +1129,24 @@ h1 {
     padding: 28px 0 42px;
   }
 
-  .hero-actions,
+  .hero-actions {
+    width: 100%;
+  }
+
   .hero-actions .btn {
     width: 100%;
+    justify-content: center;
   }
 
   .hero-pills span {
     flex: 1 1 auto;
     text-align: center;
+    font-size: 12px;
+    padding: 6px 8px;
   }
 
   .section-head {
-    display: block;
+    align-items: flex-start;
   }
 
   .downloads,
@@ -629,9 +1154,55 @@ h1 {
     padding: 34px 0;
   }
 
-  .footer {
-    align-items: flex-start;
+  .download-card {
+    grid-template-columns: auto 1fr;
+    min-height: auto;
+    padding: 16px;
+  }
+  
+  .download-icon {
+    grid-row: auto;
+  }
+  
+  .download-action {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+
+  .download-meta {
+    display: none;
+  }
+
+  .browser-option {
     flex-direction: column;
+    text-align: center;
+  }
+
+  .footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+  
+  .footer-links {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  
+  .footer-copyright {
+    margin-top: 0;
+    padding-top: 16px;
+    border-top: none;
+  }
+  
+  .browser-notice {
+    padding: 20px 0;
+  }
+  
+  .notice-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
   }
 }
 </style>

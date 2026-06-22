@@ -14,6 +14,8 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      worldSafeExecuteJavaScript: true,
+      sandbox: true,
       preload: path.join(__dirname, 'preload.cjs'),
     },
     icon: path.join(
@@ -77,3 +79,16 @@ app.on('window-all-closed', () => {
     app.quit()
   }
 })
+
+// Enable garbage collection for better memory management
+if (global.gc) {
+  setInterval(() => {
+    if (global.gc) {
+      global.gc()
+    }
+  }, 10000) // Run GC every 10 seconds
+}
+
+// Optimize WebRTC for Electron
+app.commandLine.appendSwitch('enable-features', 'WebRTCPipeWireCapturer,WebRTC-H264WithSVC')
+app.commandLine.appendSwitch('disable-features', 'OutOfBlinkCors,WebRTC-legacy-DTLS')

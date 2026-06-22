@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, defineAsyncComponent } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Phone, ArrowLeft, Link2, Settings, Users, Radio, PictureInPicture2 } from 'lucide-vue-next'
+import { Phone, ArrowLeft, Link2, Settings, Users, Radio, PictureInPicture2, Loader2 } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth.store'
 import { useRoomStore } from '@/stores/room.store'
 import { useRtcStore } from '@/stores/rtc.store'
@@ -29,6 +29,8 @@ const showInvite = ref(false)
 const showSettings = ref(false)
 const showMembers = ref(true)
 const callError = ref('')
+const showJoinWithoutMicrophone = ref(false)
+const isCheckingMicrophone = ref(false)
 const selectedUserId = ref<string | null>(null)
 const activeTab = ref<'voice' | 'chat'>('voice')
 
@@ -68,7 +70,20 @@ async function handleJoinCall() {
   try {
     await rtc.startCall()
   } catch (e: unknown) {
-    callError.value = e instanceof Error ? e.message : 'Could not access microphone'
+    callError.value = e instanceof Error ? e.message : 'Nie można uzyskać dostępu do mikrofonu'
+  }
+}
+
+async function handleJoinWithoutMicrophone() {
+  callError.value = ''
+  try {
+    isCheckingMicrophone.value = true
+    await rtc.startCall(true) // allowWithoutMicrophone = true
+    showJoinWithoutMicrophone.value = false
+  } catch (e: unknown) {
+    callError.value = e instanceof Error ? e.message : 'Nie można dołączyć bez mikrofonu'
+  } finally {
+    isCheckingMicrophone.value = false
   }
 }
 
@@ -132,16 +147,61 @@ function handleDeletedRoom() {
           <div class="join-card">
             <div class="join-icon">🎙️</div>
             <h3>{{ room?.name }}</h3>
-            <p>Join the voice channel — spatial audio, screen share, and HD video built in.</p>
+            <p>Dołącz do kanału głosowego — dźwięk przestrzenny, udostępnianie ekranu i HD video.</p>
             <p v-if="inVoiceCount > 0" class="voice-hint">
-              {{ inVoiceCount }} {{ inVoiceCount === 1 ? 'person is' : 'people are' }} already in
-              voice
+              {{ inVoiceCount }} {{ inVoiceCount === 1 ? 'osoba jest' : 'osoby są' }} już w
+              rozmoowie
             </p>
             <p v-if="callError" class="error-msg">{{ callError }}</p>
-            <button class="btn-primary join-btn" @click="handleJoinCall">
-              <Phone :size="18" />
-              Join Voice
-            </button>
+            
+            <div v-if="!showJoinWithoutMicrophone" class="join-options">
+              <button 
+                class="btn-primary join-btn"
+                @click="handleJoinCall"
+                :disabled="isCheckingMicrophone"
+              >
+                <Phone :size="18" />
+                Dołącz z mikrofonem
+              </button>
+              
+              <button 
+                class="btn-outline join-btn-no-mic"
+                @click="showJoinWithoutMicrophone = true"
+              >
+                Dołącz bez mikrofonu
+              </button>
+            </div>
+            
+            <div v-else class="confirm-no-microphone">
+              <p class="no-microphone-warning">
+                ⚠️ Będziesz mógł słuchać, ale nie mówić. 
+                Inni użytkownicy będą widzieć, że dołączyłeś bez mikrofonu.
+              </p>
+              <div class="confirm-buttons">
+                <button 
+                  class="btn-primary"
+                  @click="handleJoinWithoutMicrophone"
+                  :disabled="isCheckingMicrophone"
+                >
+                  <Loader2 v-if="isCheckingMicrophone" class="loader" :size="18" />
+                  <span v-else>Potwierdź i dołącz</span>
+                </button>
+                <button 
+                  class="btn-ghost"
+                  @click="showJoinWithoutMicrophone = false"
+                >
+                  Anuluj
+                </button>
+              </div>
+            </div>
+            
+            <!-- Audio detection status -->
+            <p v-if="rtc.noMicrophoneDetected" class="audio-status warning">
+              ⚠️ Nie wykryto mikrofonu na tym urządzeniu
+            </p>
+            <p v-if="rtc.microphonePermissionDenied" class="audio-status error">
+              ❌ Dostęp do mikrofonu został zablokowany
+            </p>
           </div>
         </div>
 
@@ -418,6 +478,78 @@ function handleDeletedRoom() {
   border-radius: 6px;
   padding: 8px 12px;
   margin-top: 8px;
+}
+
+.join-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+  width: 100%;
+}
+
+.join-btn-no-mic {
+  background: transparent !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary) !important;
+}
+
+.join-btn-no-mic:hover {
+  border-color: var(--accent-violet) !important;
+  color: var(--accent-violet) !important;
+}
+
+.confirm-no-microphone {
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(255, 182, 0, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 182, 0, 0.2);
+}
+
+.no-microphone-warning {
+  font-size: 13px;
+  color: #fbbf24;
+  margin: 0 0 12px 0;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.confirm-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.audio-status {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin-top: 12px;
+  text-align: center;
+}
+
+.audio-status.warning {
+  color: #fbbf24;
+  background: rgba(255, 182, 0, 0.1);
+}
+
+.audio-status.error {
+  color: var(--danger);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.loader {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Responsiveness overrides */

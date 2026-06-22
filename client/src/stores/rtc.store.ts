@@ -25,6 +25,9 @@ export const useRtcStore = defineStore('rtc', () => {
   const isPiP = ref(false)
   const roomUsers = ref<string[]>([])
   const callUsers = ref<Map<string, string>>(new Map()) // userId -> socketId
+  const audioDetected = ref(false)
+  const noMicrophoneDetected = ref(false)
+  const microphonePermissionDenied = ref(false)
 
   let peerManager: PeerManager | null = null
   let currentRoomId: string | null = null
@@ -32,6 +35,18 @@ export const useRtcStore = defineStore('rtc', () => {
   let lastRemovedCameraTrack: MediaStreamTrack | null = null
   let wakeLock: WakeLockSentinel | null = null
   let pipVideo: HTMLVideoElement | null = null
+  let audioContext: AudioContext | null = null
+  let audioAnalyser: AnalyserNode | null = null
+  let microphoneCheckInterval: NodeJS.Timeout | null = null
+  let connectionTimeout: NodeJS.Timeout | null = null
+  
+  // Memory management - track all created objects for cleanup
+  const createdObjects = new Set<{ destroy?: () => void; stop?: () => void; remove?: () => void }>()
+  
+  // Connection health monitoring
+  const connectionHealth = ref<'good' | 'poor' | 'disconnected'>('good')
+  let lastHealthCheck = Date.now()
+  const healthCheckInterval = 30000 // 30 seconds
 
   function calculateSpatialPosition(index: number) {
     const settings = useSettingsStore()
@@ -118,6 +133,170 @@ export const useRtcStore = defineStore('rtc', () => {
     newMap.delete(userId)
     remoteStreams.value = newMap
     spatialAudio.detachStream(userId)
+  }
+  
+  /**
+   * Check if microphone is available and audio is working
+   */
+  async function checkMicrophoneAccess(): Promise<boolean> {
+    try {
+      // First, check if we have permission
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: true, 
+        video: false 
+      })
+      
+      // Stop the test stream immediately
+      stream.getTracks().forEach(track => track.stop())
+      
+      audioDetected.value = true
+      noMicrophoneDetected.value = false
+      microphonePermissionDenied.value = false
+      return true
+    } catch (error: any) {
+      console.warn('Microphone access check failed:', error)
+      
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        microphonePermissionDenied.value = true
+        audioDetected.value = false
+        noMicrophoneDetected.value = false
+      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        noMicrophoneDetected.value = true
+        audioDetected.value = false
+        microphonePermissionDenied.value = false
+      } else {
+        audioDetected.value = false
+        noMicrophoneDetected.value = false
+        microphonePermissionDenied.value = false
+      }
+      return false
+    }
+  }
+  
+  /**
+   * Start audio level monitoring
+   */
+  function startAudioMonitoring(stream: MediaStream): void {
+    try {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+      }
+      
+      if (!audioAnalyser && audioContext) {
+        audioAnalyser = audioContext.createAnalyser()
+        audioAnalyser.fftSize = 256
+      }
+      
+      const source = audioContext?.createMediaStreamSource(stream)
+      if (source && audioAnalyser && audioContext) {
+        source.connect(audioAnalyser)
+        
+        const bufferLength = audioAnalyser.frequencyBinCount
+        const dataArray = new Uint8Array(bufferLength)
+        
+        microphoneCheckInterval = setInterval(() => {
+          if (audioAnalyser) {
+            audioAnalyser.getByteTimeDomainData(dataArray)
+            
+            // Simple audio detection - check if we have any significant audio
+            let sum = 0
+            for (let i = 0; i < dataArray.length; i++) {
+              sum += Math.abs(dataArray[i] - 128)
+            }
+            const average = sum / dataArray.length
+            
+            // If we detect audio above threshold, mark as detected
+            if (average > 5) {
+              audioDetected.value = true
+            }
+          }
+        }, 200)
+      }
+    } catch (error) {
+      console.warn('Failed to start audio monitoring:', error)
+    }
+  }
+  
+  /**
+   * Stop audio monitoring
+   */
+  function stopAudioMonitoring(): void {
+    if (microphoneCheckInterval) {
+      clearInterval(microphoneCheckInterval)
+      microphoneCheckInterval = null
+    }
+    
+    // Clean up audio context
+    if (audioContext) {
+      try {
+        audioContext.close()
+      } catch (e) {
+        console.warn('Error closing audio context:', e)
+      }
+      audioContext = null
+    }
+    
+    audioAnalyser = null
+  }
+  
+  /**
+   * Start connection health monitoring
+   */
+  function startHealthMonitoring(): void {
+    if (connectionTimeout) {
+      clearInterval(connectionTimeout)
+    }
+    
+    connectionTimeout = setInterval(() => {
+      const now = Date.now()
+      if (now - lastHealthCheck > healthCheckInterval) {
+        checkConnectionHealth()
+        lastHealthCheck = now
+      }
+    }, 10000)
+  }
+  
+  /**
+   * Check connection health
+   */
+  function checkConnectionHealth(): void {
+    // Simple health check based on peer manager state
+    if (!peerManager) {
+      connectionHealth.value = 'disconnected'
+      return
+    }
+    
+    // Count active peers
+    const activePeers = peerManager ? [...peerManager['peers'].values()].length : 0
+    
+    if (activePeers === 0 && inCall.value) {
+      connectionHealth.value = 'poor'
+    } else {
+      connectionHealth.value = 'good'
+    }
+  }
+  
+  /**
+   * Track object for memory management
+   */
+  function trackObject(obj: { destroy?: () => void; stop?: () => void; remove?: () => void }): void {
+    createdObjects.add(obj)
+  }
+  
+  /**
+   * Clean up all tracked objects
+   */
+  function cleanupTrackedObjects(): void {
+    createdObjects.forEach(obj => {
+      try {
+        if (obj.destroy) obj.destroy()
+        if (obj.stop) obj.stop()
+        if (obj.remove) obj.remove()
+      } catch (e) {
+        console.warn('Error cleaning up tracked object:', e)
+      }
+    })
+    createdObjects.clear()
   }
 
   async function joinRoom(roomId: string, userId: string) {
@@ -301,21 +480,51 @@ export const useRtcStore = defineStore('rtc', () => {
     callUsers.value = new Map()
   }
 
-  async function startCall() {
+  async function startCall(allowWithoutMicrophone = false) {
     try {
       const authStore = useAuthStore()
       if (!authStore.user) throw new Error('Not authenticated')
       if (!currentRoomId) throw new Error('Not in a room')
 
       const settings = useSettingsStore()
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: settings.noiseSuppressionEnabled,
-          autoGainControl: true,
-        },
-        video: isVideoOn.value,
-      })
+      const toastStore = useToastStore()
+      
+      // First check if we have microphone access
+      const hasMicrophone = await checkMicrophoneAccess()
+      
+      let stream: MediaStream | null = null
+      
+      if (hasMicrophone || allowWithoutMicrophone) {
+        try {
+          // Try to get audio stream, but if it fails and allowWithoutMicrophone is true, continue without it
+          let audioConstraints = {
+            echoCancellation: true,
+            noiseSuppression: settings.noiseSuppressionEnabled,
+            autoGainControl: true,
+          }
+          
+          stream = await navigator.mediaDevices.getUserMedia({
+            audio: hasMicrophone ? audioConstraints : false,
+            video: isVideoOn.value,
+          })
+          
+        } catch (audioError: any) {
+          if (allowWithoutMicrophone) {
+            // Try without audio
+            console.warn('Audio failed, trying without microphone:', audioError)
+            stream = await navigator.mediaDevices.getUserMedia({
+              audio: false,
+              video: isVideoOn.value,
+            })
+            toastStore.push('Dołączyłeś bez mikrofonu. Możesz słuchać, ale nie mówić.')
+          } else {
+            throw audioError
+          }
+        }
+      } else if (!hasMicrophone && !allowWithoutMicrophone) {
+        throw new Error('No microphone detected and not allowed to join without microphone')
+      }
+
       localStream.value = stream
       inCall.value = true
 
@@ -323,19 +532,34 @@ export const useRtcStore = defineStore('rtc', () => {
       peerManager = new PeerManager(socket, authStore.user.id, onRemoteStream, onPeerClose)
       peerManager.setLocalStream(stream)
 
+      // Start audio monitoring if we have a stream
+      if (stream) {
+        startAudioMonitoring(stream)
+      }
+
       // Keep screen awake during call
       await acquireWakeLock()
+      
+      // Start connection health monitoring
+      startHealthMonitoring()
 
       // Announce that we joined the call; server replies with current call participants.
       socket.emit('join-call', { roomId: currentRoomId, userId: authStore.user.id })
+      
+      // If we don't have audio, notify other users
+      if (!stream || !stream.getAudioTracks().length) {
+        socket.emit('join-call-no-audio', { roomId: currentRoomId, userId: authStore.user.id })
+      }
     } catch (e: any) {
       console.error('Failed to start call:', e)
       const toastStore = useToastStore()
       let msg = 'Failed to start call'
       if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
-        msg = 'Microphone/Camera permission denied. Please allow access.'
+        msg = 'Mikrofon lub kamera - dostęp zablokowany. Zezwól na dostęp.'
       } else if (e.name === 'NotFoundError' || e.name === 'DevicesNotFoundError') {
-        msg = 'No input media devices found.'
+        msg = 'Nie znaleziono urządzeń wejściowych.'
+      } else if (e.message.includes('not allowed to join without microphone')) {
+        msg = 'Brak mikrofonu. Zaznacz opcję dołączenia bez mikrofonu.'
       }
       toastStore.error(msg)
       throw e
@@ -350,20 +574,51 @@ export const useRtcStore = defineStore('rtc', () => {
       } catch {}
     }
 
-    localStream.value?.getTracks().forEach((t) => t.stop())
-    screenStream.value?.getTracks().forEach((t) => t.stop())
+    // Stop audio monitoring
+    stopAudioMonitoring()
+    
+    // Clean up all streams
+    localStream.value?.getTracks().forEach((t) => {
+      try { t.stop() } catch (e) { console.warn('Error stopping track:', e) }
+    })
+    screenStream.value?.getTracks().forEach((t) => {
+      try { t.stop() } catch (e) { console.warn('Error stopping track:', e) }
+    })
+    
     localStream.value = null
     screenStream.value = null
     isScreenSharing.value = false
     inCall.value = false
     isMuted.value = false
     isVideoOn.value = false
+    audioDetected.value = false
+    noMicrophoneDetected.value = false
+    microphonePermissionDenied.value = false
+    
     lastSharedScreenVideoTrack = null
     lastRemovedCameraTrack = null
+    
+    // Clean up peer manager
     peerManager?.destroyAll()
     peerManager = null
+    
+    // Clear remote streams
     remoteStreams.value = new Map()
+    
+    // Clean up spatial audio
     spatialAudio.cleanup()
+    
+    // Clean up tracked objects
+    cleanupTrackedObjects()
+    
+    // Clear timeouts
+    if (connectionTimeout) {
+      clearInterval(connectionTimeout)
+      connectionTimeout = null
+    }
+    
+    connectionHealth.value = 'disconnected'
+    
     stopWakeLock()
     exitPiP()
   }
@@ -519,6 +774,10 @@ export const useRtcStore = defineStore('rtc', () => {
     isPiP,
     roomUsers,
     callUsers,
+    audioDetected,
+    noMicrophoneDetected,
+    microphonePermissionDenied,
+    connectionHealth,
     joinRoom,
     leaveRoom,
     startCall,
@@ -531,5 +790,7 @@ export const useRtcStore = defineStore('rtc', () => {
     exitPiP,
     calculateSpatialPosition,
     updateSpatialPositions,
+    checkMicrophoneAccess,
+    cleanupTrackedObjects,
   }
 })

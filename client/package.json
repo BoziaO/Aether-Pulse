@@ -20,8 +20,8 @@
     "test:coverage": "vitest --coverage",
     "test:ui": "vitest --ui",
     "test:watch": "vitest --watch",
-    "electron:dev": "concurrently --kill-others \"pnpm dev\" \"pnpm --filter aetherpulse-server dev\" \"wait-on http://localhost:5174 && wait-on http://localhost:3000 && cross-env NODE_ENV=development electron . --no-sandbox --disable-gpu\"",
-    "electron:dev:build": "pnpm build && cross-env NODE_ENV=development electron . --no-sandbox --disable-gpu",
+    "electron:dev": "concurrently --kill-others \"pnpm dev\" \"pnpm --filter aetherpulse-server dev\" \"wait-on http://localhost:5174 && wait-on http://localhost:3000 && cross-env NODE_ENV=development electron .\"",
+    "electron:dev:build": "pnpm build && cross-env NODE_ENV=development electron .",}
     "electron:build": "cross-env LOCAL_WRAPPER=true pnpm build && electron-builder --win",
     "electron:build:linux": "cross-env LOCAL_WRAPPER=true pnpm build && electron-builder --linux",
     "electron:build:mac": "cross-env LOCAL_WRAPPER=true pnpm build && electron-builder --mac",
