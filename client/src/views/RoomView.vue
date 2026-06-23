@@ -88,7 +88,7 @@ async function handleJoinWithoutMicrophone() {
 }
 
 function goBack() {
-  router.push('/')
+  router.push('/app')
 }
 
 function openUserProfile(userId: string) {
@@ -97,7 +97,7 @@ function openUserProfile(userId: string) {
 
 function handleLeftRoom() {
   showSettings.value = false
-  router.push('/')
+  router.push('/app')
 }
 
 function handleDeletedRoom() {

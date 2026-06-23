@@ -8,7 +8,7 @@ const router = useRouter()
 </script>
 
 <template>
-  <div class="room-card" @click="router.push(`/room/${room.id}`)">
+  <div class="room-card" @click="router.push(`/app/room/${room.id}`)">
     <div class="room-icon">
       <Hash :size="20" />
     </div>

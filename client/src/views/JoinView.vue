@@ -35,7 +35,7 @@ async function joinRoom() {
   error.value = ''
   try {
     const room = await roomStore.joinByCode(inviteCode.value.trim())
-    router.push(`/room/${room.id}`)
+    router.push(`/app/room/${room.id}`)
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : 'Invalid invite code'
     loading.value = false
@@ -79,7 +79,7 @@ async function joinRoom() {
           </button>
         </template>
 
-        <button class="back-link" @click="router.push(auth.user ? '/' : '/auth')">
+        <button class="back-link" @click="router.push(auth.user ? '/app' : '/auth')">
           <ArrowLeft :size="14" />
           {{ auth.user ? 'Back to Home' : 'Back to Login' }}
         </button>

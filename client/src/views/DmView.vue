@@ -89,7 +89,7 @@ onMounted(async () => {
     scrollToBottom()
   } catch (e) {
     useToastStore().error(e instanceof Error ? e.message : 'Failed to open conversation')
-    router.push('/friends')
+    router.push('/app/friends')
   }
 })
 

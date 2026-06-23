@@ -21,7 +21,7 @@ const dmStore = useDmStore()
 const showCreateModal = ref(false)
 
 function goToRoom(roomId: string) {
-  router.push(`/room/${roomId}`)
+  router.push(`/app/room/${roomId}`)
 }
 
 function goToDm(userId: string) {
@@ -66,8 +66,8 @@ onMounted(() => {
     <div class="sidebar-dms">
       <button
         class="room-item friends-link"
-        :class="{ active: route.path === '/friends' }"
-        @click="router.push('/friends')"
+        :class="{ active: route.path === '/app/friends' }"
+        @click="router.push('/app/friends')"
       >
         <Users :size="16" />
         <span>Friends</span>
@@ -129,7 +129,7 @@ onMounted(() => {
     </div>
 
     <div class="sidebar-user">
-      <div class="user-info" @click="router.push('/profile')" style="cursor: pointer">
+      <div class="user-info" @click="router.push('/app/profile')" style="cursor: pointer">
         <UserAvatar :user="auth.user" :size="32" />
         <div class="user-details">
           <div class="user-name">{{ auth.user?.displayName }}</div>
@@ -137,7 +137,7 @@ onMounted(() => {
         </div>
       </div>
       <div class="user-actions">
-        <button class="icon-btn" @click="router.push('/settings')" title="Settings">
+        <button class="icon-btn" @click="router.push('/app/settings')" title="Settings">
           <Settings :size="16" />
         </button>
         <button class="icon-btn danger" @click="handleLogout" title="Log out">

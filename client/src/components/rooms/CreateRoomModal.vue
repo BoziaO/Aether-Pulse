@@ -20,7 +20,7 @@ async function create() {
   try {
     const room = await roomStore.createRoom(name.value.trim(), quality.value)
     emit('close')
-    router.push(`/room/${room.id}`)
+    router.push(`/app/room/${room.id}`)
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : 'Failed to create room'
   } finally {
