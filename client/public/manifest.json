@@ -10,31 +10,13 @@
   "status_bar_style": "black-translucent",
   "icons": [
     {
-      "src": "/icons/logo-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/logo-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    },
-    {
       "src": "/icons/logo.png",
       "sizes": "300x300",
-      "type": "image/png"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/icons/logo-512.png",
-      "sizes": "512x512",
       "type": "image/png",
-      "form_factor": "wide",
-      "label": "AetherPulse Main Screen"
+      "purpose": "any maskable"
     }
   ],
+  "screenshots": [],
   "shortcuts": [
     {
       "name": "Open App",
@@ -56,12 +38,6 @@
     }
   ],
   "prefer_related_applications": true,
-  "iarc_protocol_handlers": [
-    {
-      "protocol": "web+aetherpulse",
-      "url": "/join?room=%s"
-    }
-  ],
   "handle_links": "preferred",
   "launch_handler": {
     "client_mode": "navigate-existing"
@@ -72,8 +48,8 @@
   "display_override": ["window-controls-overlay", "standalone", "browser"],
   "protocol_handlers": [
     {
-      "protocol": "web",
-      "url": "/"
+      "protocol": "web+aetherpulse",
+      "url": "/join?room=%s"
     }
   ],
   "share_target": {

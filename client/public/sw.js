@@ -9,8 +9,6 @@ const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/icons/logo.png',
-  '/icons/logo-192.png',
-  '/icons/logo-512.png',
   '/manifest.json',
 ]
 
@@ -71,11 +69,7 @@ self.addEventListener('fetch', (event) => {
           
           // Only cache successful GET requests
           if (response.status === 200 && event.request.method === 'GET') {
-            const cacheData = {
-              response: responseClone,
-              timestamp: Date.now()
-            }
-            cache.put(event.request, JSON.stringify(cacheData))
+            cache.put(event.request, responseClone)
           }
           
           return response
@@ -83,11 +77,7 @@ self.addEventListener('fetch', (event) => {
           // Fallback to cache if network fails
           return cache.match(event.request).then((cachedResponse) => {
             if (cachedResponse) {
-              const data = JSON.parse(cachedResponse)
-              // Check TTL
-              if (Date.now() - data.timestamp < API_CACHE_TTL) {
-                return data.response
-              }
+              return cachedResponse
             }
             // Return offline response
             return new Response(JSON.stringify({ 
@@ -101,6 +91,7 @@ self.addEventListener('fetch', (event) => {
         })
       })
     )
+    return
   }
   
   // Cache and return static assets
@@ -122,6 +113,7 @@ self.addEventListener('fetch', (event) => {
         })
       })
     )
+    return
   }
   
   // For other requests, use network first with cache fallback
@@ -143,8 +135,8 @@ self.addEventListener('push', (event) => {
   const title = data?.title || 'AetherPulse'
   const options = {
     body: data?.body || 'Masz nowe powiadomienie',
-    icon: '/icons/logo-192.png',
-    badge: '/icons/logo-192.png',
+    icon: '/icons/logo.png',
+    badge: '/icons/logo.png',
     data: data?.data || {}
   }
   
