@@ -1,19 +1,18 @@
 // Service Worker for AetherPulse
 // Provides offline support and better caching for improved Core Web Vitals
 
-const CACHE_NAME = 'aetherpulse-v3'
-const OFFLINE_CACHE = 'aetherpulse-offline-v2'
+const CACHE_NAME = 'aetherpulse-v4'
+const OFFLINE_CACHE = 'aetherpulse-offline-v3'
 
 // Files to cache for offline use
 const ASSETS_TO_CACHE = [
-  '/',
   '/index.html',
   '/icons/logo.png',
   '/manifest.json',
 ]
 
 // API cache strategy - Network first, then cache
-const API_CACHE_NAME = 'aetherpulse-api-v2'
+const API_CACHE_NAME = 'aetherpulse-api-v3'
 const API_CACHE_TTL = 24 * 60 * 60 * 1000 // 24 hours
 
 self.addEventListener('install', (event) => {
@@ -58,6 +57,21 @@ self.addEventListener('fetch', (event) => {
   const isAssetRequest = ASSETS_TO_CACHE.some(asset => 
     url.pathname === asset || url.pathname.endsWith(asset)
   )
+  
+  // Don't intercept asset files (hashed JS/CSS from Vite) - let them go to network
+  if (url.pathname.startsWith('/assets/')) {
+    return
+  }
+  
+  // Handle root path - serve index.html
+  if (url.pathname === '/') {
+    event.respondWith(
+      caches.match('/index.html').then((response) => {
+        return response || fetch(event.request)
+      })
+    )
+    return
+  }
   
   // Cache API responses with TTL - only for GET requests
   if (isApiRequest && event.request.method === 'GET') {
