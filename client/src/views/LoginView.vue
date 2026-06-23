@@ -23,7 +23,7 @@ async function submit() {
     } else {
       await auth.register(username.value, password.value, displayName.value || username.value)
     }
-    router.push('/')
+    router.push('/app')
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : 'Something went wrong'
   } finally {

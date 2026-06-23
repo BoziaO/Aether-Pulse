@@ -46,17 +46,35 @@ export const router = createRouter({
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
 
+  // If going to auth page and already logged in, redirect to app
+  if (to.path === '/auth') {
+    // Only fetch user if we don't have one yet
+    if (!auth.user) {
+      try {
+        await auth.fetchMe()
+      } catch {
+        // fetchMe failed, but we're on /auth so just continue
+      }
+    }
+    if (auth.user) {
+      return '/app'
+    }
+    return true
+  }
+
+  // If route requires auth, check authentication
   if (to.meta.requiresAuth) {
     if (!auth.user) {
-      await auth.fetchMe()
+      try {
+        await auth.fetchMe()
+      } catch {
+        // fetchMe failed, redirect to auth
+        return '/auth'
+      }
     }
     if (!auth.user) {
       return '/auth'
     }
-  }
-  if (to.path === '/auth') {
-    if (!auth.user) await auth.fetchMe()
-    if (auth.user) return '/app'
   }
 
   return true

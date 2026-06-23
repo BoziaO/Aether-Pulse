@@ -46,6 +46,7 @@ export const useAuthStore = defineStore('auth', () => {
   const error = ref<string | null>(null)
   const accessToken = ref<string | null>(getAccessToken())
   const refreshToken = ref<string | null>(getRefreshToken())
+  const isFetchingMe = ref(false)
 
   const isLoggedIn = computed(() => {
     // Check if we have a valid access token and user
@@ -141,14 +142,22 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function fetchMe() {
+    // Prevent concurrent fetchMe calls
+    if (isFetchingMe.value) {
+      return
+    }
+    
+    isFetchingMe.value = true
     try {
       const res = await authApi.me()
       user.value = res.user
     } catch {
+      // If fetchMe fails, don't clear tokens - they might still be valid
+      // The user will just remain as null until next successful fetch
+      // This prevents being logged out due to temporary network issues
       user.value = null
-      clearTokens()
-      accessToken.value = null
-      refreshToken.value = null
+    } finally {
+      isFetchingMe.value = false
     }
   }
 
