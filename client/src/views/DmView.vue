@@ -5,6 +5,7 @@ import { ArrowLeft, X } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth.store'
 import { useDmStore } from '@/stores/dm.store'
 import { useFriendsStore } from '@/stores/friends.store'
+import { useSettingsStore } from '@/stores/settings.store'
 import { useToastStore } from '@/stores/toast.store'
 import ChatMessage from '@/components/chat/ChatMessage.vue'
 import ChatInput from '@/components/chat/ChatInput.vue'
@@ -18,6 +19,7 @@ const router = useRouter()
 const auth = useAuthStore()
 const dm = useDmStore()
 const friends = useFriendsStore()
+const settings = useSettingsStore()
 
 const otherUserId = computed(() => route.params.userId as string)
 const conversationId = ref<string | null>(null)
@@ -71,6 +73,10 @@ function dmToMessage(msg: DmMessage): Message {
 }
 
 const displayMessages = computed(() => dm.messages.map(dmToMessage))
+const isCompactView = computed(
+  () => settings.compactChatMode || settings.chatLayout === 'compact'
+)
+const layoutClass = computed(() => `layout-${settings.chatLayout}`)
 
 onMounted(async () => {
   if (!auth.user || !otherUserId.value) return
@@ -137,7 +143,7 @@ async function handleUpload(dataUrl: string, fileName: string, caption: string) 
 </script>
 
 <template>
-  <div class="dm-view">
+  <div class="dm-view" :class="[layoutClass, { compact: isCompactView }]">
     <header class="dm-header">
       <button class="back-btn" @click="router.push('/friends')"><ArrowLeft :size="16" /></button>
       <UserAvatar v-if="otherUser" :user="otherUser" :size="36" />
@@ -205,6 +211,13 @@ async function handleUpload(dataUrl: string, fileName: string, caption: string) 
   overflow: hidden;
   background: var(--bg-primary);
 }
+.dm-view.compact .dm-header {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+.dm-view.layout-bubble {
+  background: linear-gradient(180deg, var(--bg-primary), rgba(59, 130, 246, 0.025));
+}
 .dm-header {
   display: flex;
   align-items: center;
@@ -239,6 +252,13 @@ async function handleUpload(dataUrl: string, fileName: string, caption: string) 
   overflow-y: auto;
   padding: 8px 0;
 }
+.dm-view.layout-compact .dm-messages {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+.dm-view.compact .dm-messages {
+  padding-top: 6px;
+}
 .load-more {
   text-align: center;
   font-size: 12px;
@@ -259,6 +279,10 @@ async function handleUpload(dataUrl: string, fileName: string, caption: string) 
   border-bottom: 1px solid var(--border);
   color: var(--text-muted);
   background: var(--bg-secondary);
+}
+.dm-view.compact .edit-bar {
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 .edit-bar span {
   flex: 1;
@@ -287,6 +311,10 @@ async function handleUpload(dataUrl: string, fileName: string, caption: string) 
   font-size: 12px;
   color: var(--text-muted);
 }
+.dm-view.compact .typing-indicator {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
 .typing-dots {
   display: flex;
   gap: 3px;
@@ -313,6 +341,19 @@ async function handleUpload(dataUrl: string, fileName: string, caption: string) 
   }
   40% {
     transform: scale(1);
+  }
+}
+
+/* Mobile responsive styles */
+@media (max-width: 767px) {
+  .dm-view.layout-bubble {
+    background: var(--bg-primary);
+  }
+  
+  .dm-view.layout-compact .dm-header,
+  .dm-view.layout-bubble .dm-header {
+    padding-top: 10px;
+    padding-bottom: 10px;
   }
 }
 </style>

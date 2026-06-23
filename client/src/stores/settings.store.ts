@@ -1,32 +1,41 @@
 import { defineStore } from 'pinia'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { spatialAudio } from '@/services/rtc/spatial-audio'
 import { useAuthStore } from './auth.store'
+import { useSystemTheme } from '@/composables/useSystemTheme'
+import type { ChatLayoutPreset, ResolvedThemeMode, ThemeMode } from '@/types/settings.types'
+import { CHAT_LAYOUT_PRESETS, THEME_MODES } from '@/types/settings.types'
 
-export type ThemeMode = 'dark' | 'light' | 'mistral' | 'apple-music' | 'neon-cyber' | 'sakura'
+const THEME_STORAGE_KEY = 'theme'
+const CHAT_LAYOUT_STORAGE_KEY = 'chatLayout'
+const COMPACT_CHAT_STORAGE_KEY = 'compactChatMode'
 
-export type LayoutMode = 'maximalist' | 'minimalist'
-
-export const AVAILABLE_THEMES: Array<{ id: ThemeMode; name: string; colors: string[] }> = [
-  { id: 'dark', name: 'Dark (Default)', colors: ['#070a13', '#8b5cf6', '#e2e8f0'] },
-  { id: 'light', name: 'Light', colors: ['#f6f7fb', '#6d28d9', '#0f172a'] },
-  { id: 'mistral', name: 'Mistral AI', colors: ['#111111', '#ff5a1f', '#f5f5f7'] },
-  { id: 'apple-music', name: 'Apple Music', colors: ['#0d0d0d', '#fa2356', '#ffffff'] },
-  { id: 'neon-cyber', name: 'Neon Cyber', colors: ['#05050d', '#00f0ff', '#ff007f'] },
-  { id: 'sakura', name: 'Midnight Sakura', colors: ['#0f0913', '#ff75a0', '#a5f3fc'] },
-]
-
-const VALID_THEMES = new Set<ThemeMode>(AVAILABLE_THEMES.map((t) => t.id))
+const VALID_THEMES = new Set<ThemeMode>(THEME_MODES.map((theme) => theme.id))
+const VALID_CHAT_LAYOUTS = new Set<ChatLayoutPreset>(CHAT_LAYOUT_PRESETS.map((layout) => layout.id))
 
 function readStoredTheme(): ThemeMode {
-  const stored = localStorage.getItem('theme') as ThemeMode | null
+  const stored = localStorage.getItem(THEME_STORAGE_KEY) as ThemeMode | null
   return stored && VALID_THEMES.has(stored) ? stored : 'dark'
+}
+
+function readStoredChatLayout(): ChatLayoutPreset {
+  const stored = localStorage.getItem(CHAT_LAYOUT_STORAGE_KEY) as ChatLayoutPreset | null
+  return stored && VALID_CHAT_LAYOUTS.has(stored) ? stored : 'modern'
+}
+
+function readStoredCompactChatMode(): boolean {
+  return localStorage.getItem(COMPACT_CHAT_STORAGE_KEY) === 'true'
 }
 
 export const useSettingsStore = defineStore('settings', () => {
   const theme = ref<ThemeMode>(readStoredTheme())
+  const { systemTheme } = useSystemTheme()
+  const resolvedTheme = computed<ResolvedThemeMode>(() =>
+    theme.value === 'system' ? systemTheme.value : theme.value
+  )
   const mobileSidebarOpen = ref(false)
-  const layout = ref<LayoutMode>((localStorage.getItem('layout') as LayoutMode) || 'maximalist')
+  const chatLayout = ref<ChatLayoutPreset>(readStoredChatLayout())
+  const compactChatMode = ref(readStoredCompactChatMode())
   const spatialAudioEnabled = ref(false)
   const spatialAudioDistance = ref<number>(
     localStorage.getItem('spatialAudioDistance')
@@ -47,11 +56,8 @@ export const useSettingsStore = defineStore('settings', () => {
   const messageNotifications = ref(localStorage.getItem('messageNotifications') !== 'false')
 
   function applyTheme() {
-    if (theme.value === 'dark') {
-      delete document.documentElement.dataset.theme
-    } else {
-      document.documentElement.dataset.theme = theme.value
-    }
+    document.documentElement.dataset.theme = resolvedTheme.value
+    document.documentElement.style.colorScheme = resolvedTheme.value
   }
 
   function setTheme(next: ThemeMode) {
@@ -68,7 +74,13 @@ export const useSettingsStore = defineStore('settings', () => {
     }
   }
 
+  function setChatLayout(next: ChatLayoutPreset) {
+    if (!VALID_CHAT_LAYOUTS.has(next)) return
+    chatLayout.value = next
+  }
+
   function applyUserTheme(preferredTheme: string | null | undefined) {
+    if (localStorage.getItem(THEME_STORAGE_KEY) !== null) return
     if (preferredTheme && VALID_THEMES.has(preferredTheme as ThemeMode)) {
       theme.value = preferredTheme as ThemeMode
     }
@@ -77,17 +89,35 @@ export const useSettingsStore = defineStore('settings', () => {
   watch(
     theme,
     (v) => {
-      localStorage.setItem('theme', v)
+      localStorage.setItem(THEME_STORAGE_KEY, v)
       applyTheme()
     },
     { immediate: true }
   )
 
   watch(
-    layout,
+    resolvedTheme,
     (v) => {
-      localStorage.setItem('layout', v)
-      document.documentElement.dataset.layout = v
+      document.documentElement.dataset.theme = v
+      document.documentElement.style.colorScheme = v
+    },
+    { immediate: true }
+  )
+
+  watch(
+    chatLayout,
+    (v) => {
+      localStorage.setItem(CHAT_LAYOUT_STORAGE_KEY, v)
+      document.documentElement.dataset.chatLayout = v
+    },
+    { immediate: true }
+  )
+
+  watch(
+    compactChatMode,
+    (v) => {
+      localStorage.setItem(COMPACT_CHAT_STORAGE_KEY, String(v))
+      document.documentElement.dataset.chatDensity = v ? 'compact' : 'comfortable'
     },
     { immediate: true }
   )
@@ -152,8 +182,11 @@ export const useSettingsStore = defineStore('settings', () => {
 
   return {
     theme,
-    layout,
-    AVAILABLE_THEMES,
+    resolvedTheme,
+    chatLayout,
+    compactChatMode,
+    THEME_MODES,
+    CHAT_LAYOUT_PRESETS,
     VALID_THEMES,
     spatialAudioEnabled,
     spatialAudioDistance,
@@ -165,8 +198,11 @@ export const useSettingsStore = defineStore('settings', () => {
     messageNotifications,
     applyTheme,
     setTheme,
+    setChatLayout,
     applyUserTheme,
     toggleSpatialAudio,
     mobileSidebarOpen,
   }
 })
+
+export type { ChatLayoutPreset, ResolvedThemeMode, ThemeMode } from '@/types/settings.types'

@@ -246,60 +246,19 @@ const simulatedCallers = computed(() => {
 
           <div class="setting-item">
             <div class="setting-info">
-              <div class="setting-title">Page Layout</div>
-              <div class="setting-desc">
-                Choose between standard density and clean compact layouts
-              </div>
+              <div class="setting-title">Theme mode</div>
+              <div class="setting-desc">Light, dark, or follow your operating system</div>
             </div>
           </div>
 
-          <div class="layouts-grid">
-            <button
-              class="layout-card"
-              :class="{ active: settings.layout === 'maximalist' }"
-              @click="settings.layout = 'maximalist'"
-            >
-              <div class="layout-preview">
-                <div class="p-sidebar" />
-                <div class="p-main">
-                  <div class="p-line width-large" />
-                  <div class="p-line width-medium" />
-                  <div class="p-line width-small" />
-                </div>
-              </div>
-              <span class="layout-name">Maximalist (Standard)</span>
-            </button>
-
-            <button
-              class="layout-card"
-              :class="{ active: settings.layout === 'minimalist' }"
-              @click="settings.layout = 'minimalist'"
-            >
-              <div class="layout-preview">
-                <div class="p-sidebar compact" />
-                <div class="p-main compact">
-                  <div class="p-line compact width-large" />
-                  <div class="p-line compact width-medium" />
-                </div>
-              </div>
-              <span class="layout-name">Minimalist (Compact)</span>
-            </button>
-          </div>
-
-          <div class="setting-item">
-            <div class="setting-info">
-              <div class="setting-title">Theme</div>
-              <div class="setting-desc">Change the interface color scheme</div>
-            </div>
-          </div>
           <div class="themes-grid">
             <button
-              v-for="themeOption in settings.AVAILABLE_THEMES"
+              v-for="themeOption in settings.THEME_MODES"
               :key="themeOption.id"
               class="theme-card"
               :class="{ active: settings.theme === themeOption.id }"
               @click="settings.setTheme(themeOption.id)"
-              :title="themeOption.name"
+              :title="themeOption.description"
             >
               <div class="theme-preview">
                 <div
@@ -310,6 +269,64 @@ const simulatedCallers = computed(() => {
                 />
               </div>
               <span class="theme-name">{{ themeOption.name }}</span>
+              <span class="theme-detail">{{ themeOption.description }}</span>
+            </button>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <div class="setting-title">Compact chat mode</div>
+              <div class="setting-desc">Reduce message spacing and composer padding</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" v-model="settings.compactChatMode" />
+              <span class="toggle-slider" />
+            </label>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <div class="setting-title">Chat layout preset</div>
+              <div class="setting-desc">
+                Pick how messages are presented in rooms and direct messages
+              </div>
+            </div>
+          </div>
+
+          <div class="layouts-grid">
+            <button
+              v-for="layoutOption in settings.CHAT_LAYOUT_PRESETS"
+              :key="layoutOption.id"
+              class="layout-card"
+              :class="{ active: settings.chatLayout === layoutOption.id }"
+              @click="settings.setChatLayout(layoutOption.id)"
+            >
+              <div class="layout-preview" :class="layoutOption.id">
+                <template v-if="layoutOption.id === 'compact'">
+                  <div class="layout-avatar compact" />
+                  <div class="layout-stack compact">
+                    <div class="layout-line compact short" />
+                    <div class="layout-line compact long" />
+                  </div>
+                </template>
+                <template v-else-if="layoutOption.id === 'bubble'">
+                  <div class="layout-bubble-row">
+                    <div class="layout-bubble incoming" />
+                    <div class="layout-bubble outgoing" />
+                  </div>
+                  <div class="layout-line bubble long" />
+                </template>
+                <template v-else>
+                  <div class="layout-avatar modern" />
+                  <div class="layout-stack modern">
+                    <div class="layout-line modern long" />
+                    <div class="layout-line modern medium" />
+                    <div class="layout-line modern short" />
+                  </div>
+                </template>
+              </div>
+              <span class="layout-name">{{ layoutOption.name }}</span>
+              <span class="layout-detail">{{ layoutOption.description }}</span>
             </button>
           </div>
         </div>
@@ -646,7 +663,11 @@ const simulatedCallers = computed(() => {
   flex-direction: column;
   align-items: center;
   cursor: pointer;
-  transition: transform 0.2s;
+  transition:
+    transform 0.2s,
+    border-color 0.2s,
+    background 0.2s;
+  gap: 6px;
 }
 .theme-card:hover {
   transform: translateY(-2px);
@@ -672,6 +693,12 @@ const simulatedCallers = computed(() => {
   font-weight: 600;
   color: var(--text-secondary);
   text-align: center;
+}
+.theme-detail {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.35;
 }
 .info-card {
   padding: 16px;
@@ -708,7 +735,8 @@ const simulatedCallers = computed(() => {
   cursor: pointer;
   transition:
     transform 0.2s,
-    border-color 0.2s;
+    border-color 0.2s,
+    background 0.2s;
   gap: 12px;
 }
 .layout-card:hover {
@@ -721,56 +749,98 @@ const simulatedCallers = computed(() => {
 }
 .layout-preview {
   width: 100%;
-  height: 80px;
+  min-height: 84px;
   border-radius: 6px;
   background: var(--bg-primary);
   border: 1px solid var(--border);
   display: flex;
   overflow: hidden;
-  padding: 4px;
-  gap: 4px;
+  padding: 10px;
+  gap: 8px;
+  flex-direction: column;
+  justify-content: center;
 }
-.p-sidebar {
-  width: 30%;
-  background: var(--bg-secondary);
-  border-radius: 4px;
-  border: 1px solid var(--border);
-  transition: width 0.3s;
+.layout-preview.compact {
+  background: linear-gradient(180deg, var(--bg-primary), rgba(139, 92, 246, 0.05));
 }
-.p-sidebar.compact {
-  width: 18%;
+.layout-preview.bubble {
+  background: linear-gradient(180deg, var(--bg-primary), rgba(59, 130, 246, 0.05));
 }
-.p-main {
-  flex: 1;
+.layout-preview.modern {
+  background: linear-gradient(180deg, var(--bg-primary), rgba(14, 165, 233, 0.05));
+}
+.layout-avatar {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-violet), var(--accent-blue));
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.03);
+}
+.layout-avatar.compact {
+  width: 16px;
+  height: 16px;
+}
+.layout-stack {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 4px;
 }
-.p-main.compact {
+.layout-stack.compact {
   gap: 4px;
 }
-.p-line {
+.layout-line {
   height: 6px;
+  border-radius: 999px;
   background: var(--border);
-  border-radius: 3px;
 }
-.p-line.compact {
+.layout-line.compact {
   height: 4px;
 }
-.width-large {
-  width: 90%;
+.layout-line.modern {
+  background: linear-gradient(90deg, var(--accent-violet), rgba(148, 163, 184, 0.7));
 }
-.width-medium {
-  width: 65%;
+.layout-line.bubble {
+  margin-top: 2px;
 }
-.width-small {
-  width: 40%;
+.layout-bubble-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.layout-bubble {
+  height: 18px;
+  border-radius: 999px;
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border);
+}
+.layout-bubble.incoming {
+  width: 42%;
+}
+.layout-bubble.outgoing {
+  width: 28%;
+  margin-left: auto;
+  background: rgba(139, 92, 246, 0.14);
+  border-color: var(--border-accent);
+}
+.short {
+  width: 56%;
+}
+.long {
+  width: 86%;
+}
+.medium {
+  width: 70%;
 }
 .layout-name {
   font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
+}
+.layout-detail {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.35;
 }
 
 @media (max-width: 640px) {
@@ -781,7 +851,10 @@ const simulatedCallers = computed(() => {
     padding: 24px;
   }
   .themes-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+  .layouts-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

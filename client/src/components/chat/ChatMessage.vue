@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { Reply, Pencil, Trash2, SmilePlus, Download, FileText } from 'lucide-vue-next'
 import type { Message } from '@/types/message.types'
+import { useSettingsStore } from '@/stores/settings.store'
 import UserAvatar from '@/components/profile/UserAvatar.vue'
 import MessageContent from './MessageContent.vue'
 
@@ -23,8 +24,13 @@ const emit = defineEmits<{
 
 const showActions = ref(false)
 const showReactionPicker = ref(false)
+const settings = useSettingsStore()
 
 const QUICK_REACTIONS = ['👍', '❤️', '😂', '🔥', '🎉']
+const isCompactMessage = computed(
+  () => settings.compactChatMode || settings.chatLayout === 'compact'
+)
+const layoutClass = computed(() => `layout-${settings.chatLayout}`)
 
 const displayName = computed(() => props.message.user?.displayName || 'Unknown')
 
@@ -53,7 +59,7 @@ function selectReaction(emoji: string) {
 <template>
   <div
     class="message"
-    :class="{ own: isOwn, system: message.type === 'system' }"
+    :class="[{ own: isOwn, system: message.type === 'system' }, layoutClass, { compact: isCompactMessage }]"
     @mouseenter="showActions = true"
     @mouseleave="hideActions"
     @dblclick="isOwn && !message.isDeleted && emit('edit', message)"
@@ -190,16 +196,55 @@ function selectReaction(emoji: string) {
 .message:hover {
   background: rgba(255, 255, 255, 0.025);
 }
+.message.compact {
+  gap: 10px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+.message.layout-compact {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+.message.layout-bubble {
+  margin: 4px 12px;
+  padding: 10px 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+.message.layout-bubble:hover {
+  background: var(--bg-surface-2);
+}
+.message.layout-bubble.own {
+  margin-left: 56px;
+  background: rgba(139, 92, 246, 0.08);
+  border-color: rgba(139, 92, 246, 0.18);
+}
+.message.layout-modern {
+  border-radius: 10px;
+}
+.message.layout-modern:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
 .message.system {
   padding-left: 56px;
+}
+.message.layout-compact.system {
+  padding-left: 44px;
 }
 .message-avatar {
   flex-shrink: 0;
   margin-top: 2px;
 }
+.message.compact .message-avatar {
+  margin-top: 0;
+}
 .message-body {
   flex: 1;
   min-width: 0;
+}
+.message.layout-bubble .message-body {
+  width: 100%;
 }
 .reply-preview {
   display: flex;
@@ -219,6 +264,9 @@ function selectReaction(emoji: string) {
   align-items: baseline;
   gap: 8px;
   margin-bottom: 3px;
+}
+.message.compact .message-meta {
+  gap: 6px;
 }
 .message-author,
 .author-btn {
@@ -254,6 +302,9 @@ function selectReaction(emoji: string) {
   gap: 6px;
   margin-top: 6px;
 }
+.message.compact .reactions {
+  gap: 4px;
+}
 .reaction-chip {
   display: inline-flex;
   align-items: center;
@@ -281,6 +332,11 @@ function selectReaction(emoji: string) {
   border-radius: 8px;
   padding: 2px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+.message.layout-bubble .message-actions,
+.message.layout-bubble .reaction-picker {
+  top: -12px;
+  right: 10px;
 }
 .message-actions button {
   background: transparent;

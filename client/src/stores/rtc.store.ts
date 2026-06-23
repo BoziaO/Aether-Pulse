@@ -32,16 +32,13 @@ export const useRtcStore = defineStore('rtc', () => {
   let peerManager: PeerManager | null = null
   let currentRoomId: string | null = null
   let lastSharedScreenVideoTrack: MediaStreamTrack | null = null
-  let lastRemovedCameraTrack: MediaStreamTrack | null = null
+let lastRemovedCameraTrack: MediaStreamTrack | null = null
   let wakeLock: WakeLockSentinel | null = null
   let pipVideo: HTMLVideoElement | null = null
   let audioContext: AudioContext | null = null
   let audioAnalyser: AnalyserNode | null = null
   let microphoneCheckInterval: NodeJS.Timeout | null = null
   let connectionTimeout: NodeJS.Timeout | null = null
-  
-  // Memory management - track all created objects for cleanup
-  const createdObjects = new Set<{ destroy?: () => void; stop?: () => void; remove?: () => void }>()
   
   // Connection health monitoring
   const connectionHealth = ref<'good' | 'poor' | 'disconnected'>('good')
@@ -276,28 +273,10 @@ export const useRtcStore = defineStore('rtc', () => {
     }
   }
   
-  /**
-   * Track object for memory management
-   */
-  function trackObject(obj: { destroy?: () => void; stop?: () => void; remove?: () => void }): void {
-    createdObjects.add(obj)
-  }
-  
-  /**
-   * Clean up all tracked objects
-   */
-  function cleanupTrackedObjects(): void {
-    createdObjects.forEach(obj => {
-      try {
-        if (obj.destroy) obj.destroy()
-        if (obj.stop) obj.stop()
-        if (obj.remove) obj.remove()
-      } catch (e) {
-        console.warn('Error cleaning up tracked object:', e)
-      }
-    })
-    createdObjects.clear()
-  }
+/**
+    * Clean up all tracked objects
+    */
+  function cleanupTrackedObjects(): void {}
 
   async function joinRoom(roomId: string, userId: string) {
     currentRoomId = roomId

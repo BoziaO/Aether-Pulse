@@ -3,6 +3,7 @@ import { ref, computed, watch, nextTick } from 'vue'
 import { Search, Users, X } from 'lucide-vue-next'
 import { useChatStore } from '@/stores/chat.store'
 import { useAuthStore } from '@/stores/auth.store'
+import { useSettingsStore } from '@/stores/settings.store'
 import { useRtcStore } from '@/stores/rtc.store'
 import { useToastStore } from '@/stores/toast.store'
 import ChatMessage from './ChatMessage.vue'
@@ -22,6 +23,7 @@ const emit = defineEmits<{
 
 const chatStore = useChatStore()
 const auth = useAuthStore()
+const settings = useSettingsStore()
 const rtc = useRtcStore()
 const scrollEl = ref<HTMLElement | null>(null)
 const selectedUserId = ref<string | null>(null)
@@ -37,6 +39,10 @@ const typingList = computed(() => [...chatStore.typingUsers].filter((id) => id !
 const displayMessages = computed(() =>
   showSearch.value && searchInput.value.trim() ? chatStore.searchResults : chatStore.messages
 )
+const isCompactPanel = computed(
+  () => settings.compactChatMode || settings.chatLayout === 'compact'
+)
+const layoutClass = computed(() => `layout-${settings.chatLayout}`)
 
 function scrollToBottom() {
   nextTick(() => {
@@ -106,7 +112,7 @@ async function handleUpload(dataUrl: string, fileName: string, caption: string) 
 </script>
 
 <template>
-  <div class="chat-panel">
+  <div class="chat-panel" :class="[layoutClass, { compact: isCompactPanel }]">
     <div class="chat-header">
       <span class="chat-title"># {{ roomName || 'chat' }}</span>
       <div class="header-actions">
@@ -197,12 +203,25 @@ async function handleUpload(dataUrl: string, fileName: string, caption: string) 
   width: 360px;
   min-width: 320px;
 }
+.chat-panel.compact {
+  width: 344px;
+  min-width: 304px;
+}
+.chat-panel.layout-bubble {
+  background: linear-gradient(180deg, var(--bg-secondary), rgba(139, 92, 246, 0.03));
+}
+.chat-panel.layout-modern {
+  background: var(--bg-secondary);
+}
 .chat-header {
   padding: 14px 16px;
   border-bottom: 1px solid var(--border);
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+.chat-panel.compact .chat-header {
+  padding: 12px 14px;
 }
 .chat-title {
   font-size: 14px;
@@ -243,6 +262,11 @@ async function handleUpload(dataUrl: string, fileName: string, caption: string) 
   border-bottom: 1px solid var(--border);
   color: var(--text-muted);
 }
+.chat-panel.compact .search-bar,
+.chat-panel.compact .edit-bar {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
 .search-bar input {
   flex: 1;
   background: transparent;
@@ -263,6 +287,13 @@ async function handleUpload(dataUrl: string, fileName: string, caption: string) 
   overflow-y: auto;
   padding: 8px 0;
 }
+.chat-panel.layout-compact .chat-messages {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+.chat-panel.layout-bubble .chat-messages {
+  padding-top: 10px;
+}
 .load-more {
   text-align: center;
   font-size: 12px;
@@ -282,6 +313,10 @@ async function handleUpload(dataUrl: string, fileName: string, caption: string) 
   padding: 8px 16px;
   font-size: 12px;
   color: var(--text-muted);
+}
+.chat-panel.compact .typing-indicator {
+  padding-top: 6px;
+  padding-bottom: 6px;
 }
 .typing-dots {
   display: flex;
@@ -309,6 +344,27 @@ async function handleUpload(dataUrl: string, fileName: string, caption: string) 
   }
   40% {
     transform: scale(1);
+  }
+}
+
+/* Mobile responsive styles */
+@media (max-width: 767px) {
+  .chat-panel {
+    width: 100% !important;
+    min-width: 100% !important;
+    border-left: none !important;
+  }
+  
+  .chat-panel.compact {
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+  
+  .chat-panel.layout-bubble,
+  .chat-panel.layout-modern {
+    width: 100% !important;
+    min-width: 100% !important;
+    border-left: none !important;
   }
 }
 </style>

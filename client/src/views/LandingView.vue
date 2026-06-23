@@ -3,17 +3,11 @@ import { ref, markRaw, onMounted, computed } from 'vue'
 import {
   Download,
   Globe2,
-  Headphones,
   Laptop,
   MessageCircle,
   MonitorUp,
-  Palette,
   PictureInPicture2,
-  Radio,
-  ShieldCheck,
   Smartphone,
-  CheckCircle,
-  AlertTriangle,
   Loader2,
   Users,
   Mic,
@@ -174,7 +168,7 @@ const filteredFeatures = computed(() => {
   return features.value.filter(f => f.category === currentFeatureTab.value)
 })
 
-const featureCategories = ref<{ id: string; label: string; icon: any }[]>([
+const featureCategories = ref<Array<{ id: 'all' | 'chat' | 'audio' | 'video' | 'social' | 'mobile' | 'security'; label: string; icon: any }>>([
   { id: 'all', label: 'Wszystkie', icon: markRaw(Star) },
   { id: 'audio', label: 'Dźwięk', icon: markRaw(Mic) },
   { id: 'video', label: 'Wideo', icon: markRaw(Video) },
@@ -216,7 +210,6 @@ function handleDownload(platform: string, href: string) {
   // Start actual download
   const link = document.createElement('a')
   link.href = href
-  link.download = true
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)

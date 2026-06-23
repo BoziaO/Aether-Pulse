@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { Send, X, Paperclip } from 'lucide-vue-next'
 import EmojiPicker from './EmojiPicker.vue'
 import { fileToDataUrl, validateFile } from '@/utils/files'
 import type { ReplyTarget } from '@/types/message.types'
+import { useSettingsStore } from '@/stores/settings.store'
 
 const props = defineProps<{
   roomId?: string
@@ -24,6 +25,11 @@ const input = ref(props.initialValue ?? '')
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
 const fileError = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
+const settings = useSettingsStore()
+const isCompactInput = computed(
+  () => settings.compactChatMode || settings.chatLayout === 'compact'
+)
+const layoutClass = computed(() => `layout-${settings.chatLayout}`)
 let typingTimeout: ReturnType<typeof setTimeout> | null = null
 
 function resizeTextarea() {
@@ -104,7 +110,7 @@ async function onFileSelected(e: Event) {
 </script>
 
 <template>
-  <div class="chat-input-area">
+  <div class="chat-input-area" :class="[layoutClass, { compact: isCompactInput }]">
     <div v-if="replyTo" class="reply-bar">
       <span
         >Replying to <strong>{{ replyTo.user?.displayName || 'Unknown' }}</strong></span
@@ -148,6 +154,22 @@ async function onFileSelected(e: Event) {
   border-top: 1px solid var(--border);
   background: var(--bg-surface);
 }
+.chat-input-area.compact .reply-bar {
+  padding-top: 6px;
+}
+.chat-input-area.layout-bubble {
+  margin: 0 12px 12px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
+}
+.chat-input-area.layout-modern {
+  border-top-color: rgba(139, 92, 246, 0.12);
+}
+.chat-input-area.layout-compact .chat-input-wrap {
+  padding-top: 10px;
+  padding-bottom: 6px;
+}
 .reply-bar {
   display: flex;
   align-items: center;
@@ -185,6 +207,9 @@ async function onFileSelected(e: Event) {
   gap: 8px;
   padding: 12px 16px 8px;
 }
+.chat-input-area.compact .chat-input-wrap {
+  gap: 6px;
+}
 .attach-btn {
   background: transparent;
   border: none;
@@ -216,6 +241,17 @@ async function onFileSelected(e: Event) {
   font-family: inherit;
   line-height: 1.45;
   min-height: 42px;
+}
+.chat-input-area.layout-bubble .chat-input {
+  background: var(--bg-surface-2);
+  border-radius: 999px;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+.chat-input-area.layout-compact .chat-input {
+  min-height: 38px;
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 .chat-input:focus {
   border-color: var(--accent-violet);
@@ -249,5 +285,18 @@ async function onFileSelected(e: Event) {
   padding: 0 16px 10px;
   font-size: 11px;
   color: var(--text-muted);
+}
+.chat-input-area.compact .input-hint {
+  padding-bottom: 8px;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 767px) {
+  .chat-input-area.layout-bubble {
+    margin: 0 !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+  }
 }
 </style>

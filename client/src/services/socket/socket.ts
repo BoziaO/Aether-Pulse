@@ -28,12 +28,9 @@ export function getSocket(): Socket {
       randomizationFactor: 0.5,
       // Timeout settings
       timeout: 20000, // 20 seconds
-      connectionTimeout: 15000, // 15 seconds
       // Transport settings for scalability
       transports: ['websocket', 'polling'],
       upgrade: true,
-      // Enable compression for better performance
-      enableCompression: true,
       // Custom headers for Electron compatibility
       extraHeaders: {
         'User-Agent': typeof navigator !== 'undefined' ? navigator.userAgent : 'AetherPulse'
@@ -209,7 +206,7 @@ export function isSocketConnected(): boolean {
 export function getConnectionState(): string {
   if (!_socket) return 'disconnected'
   if (_socket.connected) return 'connected'
-  if (_socket.connecting) return 'connecting'
+  if (_socket.active) return 'connecting'
   if (_socket.disconnected) return 'disconnected'
   return 'unknown'
 }

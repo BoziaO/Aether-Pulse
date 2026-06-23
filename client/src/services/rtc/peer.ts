@@ -135,8 +135,8 @@ export class PeerManager {
   ): InstanceType<typeof SimplePeer> {
     // Electron-specific WebRTC configuration for better compatibility
     const isElectron = typeof (window as any).process?.versions?.electron !== undefined
-    
-    const config: SimplePeer.Config = {
+
+    const peer = new SimplePeer({
       initiator,
       stream: this.localStream || undefined,
       trickle: true,
@@ -150,17 +150,12 @@ export class PeerManager {
         iceTransportPolicy: isElectron ? 'all' : 'all',
         bundlePolicy: 'max-bundle',
         rtcpMuxPolicy: 'require',
-        sdpSemantics: 'unified-plan',
       },
-      // Electron-specific optimizations
       wrtc: isElectron ? (window as any).wrtc : undefined,
-      // Reconnection and timeout settings
-      reconnectTimer: 5000,
-      iceCompleteTimeout: 10000,
-      sdpTransform: isElectron ? this.fixSdpForElectron : undefined,
-    }
+      sdpTransform: isElectron ? this.fixSdpForElectron.bind(this) : undefined,
+    })
 
-    peer.on('signal', (signal) => {
+    peer.on('signal', (signal: SimplePeer.SignalData) => {
       if (initiator) {
         this.socket.emit('offer', { to: socketId, fromUserId: this.localUserId, offer: signal })
       } else {
@@ -195,7 +190,7 @@ export class PeerManager {
       }
     })
 
-    peer.on('error', (err) => {
+    peer.on('error', (err: Error) => {
       console.warn('Peer error:', err)
     })
 
@@ -219,9 +214,9 @@ export class PeerManager {
     // Ensure proper codec ordering for Electron
     if (fixedSdp.includes('VP8')) {
       // Move VP8 to the top for better compatibility
-      const vp8Match = fixedSdp.match(/a=rtpmap:\s*(\d+)\s*VP8/96000\r\n/g)
+      const vp8Match = fixedSdp.match(/a=rtpmap:\s*\d+\s*VP8\/96000\r\n/g)
       if (vp8Match) {
-        fixedSdp = fixedSdp.replace(/a=rtpmap:\s*(\d+)\s*VP8/96000\r\n/g, '')
+        fixedSdp = fixedSdp.replace(/a=rtpmap:\s*\d+\s*VP8\/96000\r\n/g, '')
         fixedSdp = `a=rtpmap:96 VP8/96000\r\n` + fixedSdp
       }
     }

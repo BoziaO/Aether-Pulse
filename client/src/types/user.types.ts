@@ -1,3 +1,5 @@
+import type { ThemeMode } from './settings.types'
+
 export interface SocialLink {
   platform: string
   url: string
@@ -22,7 +24,7 @@ export interface User {
   profileGradient: string | null
   avatarFrame: string | null
   profileTheme: string | null
-  customTheme: string | null
+  customTheme: ThemeMode | null
   badges: string[]
   socialLinks: SocialLink[]
   timezone: string | null
@@ -30,7 +32,7 @@ export interface User {
   showTimezone: boolean
   showLastSeen: boolean
   showProfileViews: boolean
-  preferredTheme: string | null
+  preferredTheme: ThemeMode | null
   lastSeenAt: string | null
   profileViews: number | null
   createdAt: string
