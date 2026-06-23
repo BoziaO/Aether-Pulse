@@ -1,8 +1,8 @@
 // Service Worker for AetherPulse
 // Provides offline support and better caching for improved Core Web Vitals
 
-const CACHE_NAME = 'aetherpulse-v2'
-const OFFLINE_CACHE = 'aetherpulse-offline-v1'
+const CACHE_NAME = 'aetherpulse-v3'
+const OFFLINE_CACHE = 'aetherpulse-offline-v2'
 
 // Files to cache for offline use
 const ASSETS_TO_CACHE = [
@@ -13,7 +13,7 @@ const ASSETS_TO_CACHE = [
 ]
 
 // API cache strategy - Network first, then cache
-const API_CACHE_NAME = 'aetherpulse-api-v1'
+const API_CACHE_NAME = 'aetherpulse-api-v2'
 const API_CACHE_TTL = 24 * 60 * 60 * 1000 // 24 hours
 
 self.addEventListener('install', (event) => {
@@ -59,26 +59,25 @@ self.addEventListener('fetch', (event) => {
     url.pathname === asset || url.pathname.endsWith(asset)
   )
   
-  // Cache API responses with TTL
-  if (isApiRequest) {
+  // Cache API responses with TTL - only for GET requests
+  if (isApiRequest && event.request.method === 'GET') {
     event.respondWith(
       caches.open(API_CACHE_NAME).then((cache) => {
-        return fetch(event.request).then((response) => {
-          // Clone the response for caching
-          const responseClone = response.clone()
-          
-          // Only cache successful GET requests
-          if (response.status === 200 && event.request.method === 'GET') {
-            cache.put(event.request, responseClone)
+        return cache.match(event.request).then((cachedResponse) => {
+          // Check TTL for cached responses
+          if (cachedResponse) {
+            return cachedResponse
           }
           
-          return response
-        }).catch(() => {
-          // Fallback to cache if network fails
-          return cache.match(event.request).then((cachedResponse) => {
-            if (cachedResponse) {
-              return cachedResponse
+          // Fetch from network
+          return fetch(event.request).then((response) => {
+            // Only cache successful responses
+            if (response.status === 200) {
+              const responseClone = response.clone()
+              cache.put(event.request, responseClone).catch(() => {})
             }
+            return response
+          }).catch(() => {
             // Return offline response
             return new Response(JSON.stringify({ 
               error: 'Offline', 
@@ -94,6 +93,11 @@ self.addEventListener('fetch', (event) => {
     return
   }
   
+  // For non-GET API requests, just pass through to network
+  if (isApiRequest) {
+    return
+  }
+  
   // Cache and return static assets
   if (isAssetRequest) {
     event.respondWith(
@@ -103,20 +107,28 @@ self.addEventListener('fetch', (event) => {
           return response
         }
         
-        // Cache and return from network
+        // Fetch from network and cache
         return fetch(event.request).then((response) => {
-          const responseClone = response.clone()
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone)
-          })
+          // Only cache successful responses
+          if (response.status === 200) {
+            const responseClone = response.clone()
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone).catch(() => {})
+            })
+          }
           return response
+        }).catch(() => {
+          return new Response('Offline - Please check your connection.', {
+            status: 503,
+            headers: { 'Content-Type': 'text/plain' }
+          })
         })
       })
     )
     return
   }
   
-  // For other requests, use network first with cache fallback
+  // For other requests, use network first
   event.respondWith(
     fetch(event.request).catch(() => {
       return caches.match(event.request).then((response) => {
