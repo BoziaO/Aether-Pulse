@@ -1,25 +1,44 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { renderMarkdown } from '@/utils/markdown'
+  import { computed } from 'vue'
+  import MarkdownIt from 'markdown-it'
+  import hljs from 'highlight.js'
+  import DOMPurify from 'dompurify'
 
-const props = defineProps<{
-  content?: string
-  type?: string
-}>()
+  const props = defineProps<{
+    type: string
+    content: string
+  }>()
 
-const html = computed(() => {
-  if (!props.content) return ''
-  if (props.type === 'system') return props.content
-  return renderMarkdown(props.content)
-})
+  const md: MarkdownIt = new MarkdownIt({
+    linkify: true,
+    breaks: true,
+    highlight(str: string, lang: string): string | undefined {
+      if (lang && hljs.getLanguage(lang)) {
+        return `<pre class="md-codeblock"><code>${hljs.highlight(str,{language:lang}).value}</code></pre>`
+      }
+
+      return `<pre class="md-codeblock"><code>${md.utils.escapeHtml(str)}</code></pre>`
+    }
+  })
+
+  const html = computed(() =>
+    DOMPurify.sanitize(md.render(props.content || ''))
+  )
 </script>
 
 <template>
+  <!-- eslint-disable vue/no-v-html -->
   <div
     class="message-content"
     :class="{ system: type === 'system' }"
-    v-html="type === 'system' ? content : html"
-  />
+    v-html="html"
+  ></div>
+  <!-- eslint-enable vue/no-v-html -->
+
+  <div class="code-header">
+    <span>typescript</span>
+    <button>Copy</button>
+  </div>
 </template>
 
 <style scoped>

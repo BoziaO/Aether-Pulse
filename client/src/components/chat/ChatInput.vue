@@ -1,119 +1,120 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { Send, X, Paperclip } from 'lucide-vue-next'
-import EmojiPicker from './EmojiPicker.vue'
-import { fileToDataUrl, validateFile } from '@/utils/files'
-import type { ReplyTarget } from '@/types/message.types'
-import { useSettingsStore } from '@/stores/settings.store'
+  import { computed, ref, watch } from 'vue'
+  import { Send, X, Paperclip } from 'lucide-vue-next'
 
-const props = defineProps<{
-  roomId?: string
-  placeholder?: string
-  replyTo?: ReplyTarget | null
-  initialValue?: string
-  uploading?: boolean
-}>()
+  import EmojiPicker from './EmojiPicker.vue'
+  import { fileToDataUrl, validateFile } from '@/utils/files'
+  import type { ReplyTarget } from '@/types/message.types'
+  import { useSettingsStore } from '@/stores/settings.store'
 
-const emit = defineEmits<{
-  (e: 'send', content: string): void
-  (e: 'upload', dataUrl: string, fileName: string, caption: string): void
-  (e: 'typing', isTyping: boolean): void
-  (e: 'cancel-reply'): void
-}>()
+  const props = defineProps<{
+    roomId?: string
+    placeholder?: string
+    replyTo?: ReplyTarget | null
+    initialValue?: string
+    uploading?: boolean
+  }>()
 
-const input = ref(props.initialValue ?? '')
-const textareaRef = ref<HTMLTextAreaElement | null>(null)
-const fileError = ref('')
-const fileInput = ref<HTMLInputElement | null>(null)
-const settings = useSettingsStore()
-const isCompactInput = computed(
-  () => settings.compactChatMode || settings.chatLayout === 'compact'
-)
-const layoutClass = computed(() => `layout-${settings.chatLayout}`)
-let typingTimeout: ReturnType<typeof setTimeout> | null = null
+  const emit = defineEmits<{
+    (e: 'send', content: string): void
+    (e: 'upload', dataUrl: string, fileName: string, caption: string): void
+    (e: 'typing', isTyping: boolean): void
+    (e: 'cancel-reply'): void
+  }>()
 
-function resizeTextarea() {
-  if (!textareaRef.value) return
-  textareaRef.value.style.height = 'auto'
-  textareaRef.value.style.height = `${Math.min(textareaRef.value.scrollHeight, 140)}px`
-}
+  const input = ref(props.initialValue ?? '')
+  const textareaRef = ref<HTMLTextAreaElement | null>(null)
+  const fileError = ref('')
+  const fileInput = ref<HTMLInputElement | null>(null)
+  const settings = useSettingsStore()
+  const isCompactInput = computed(
+    () => settings.compactChatMode || settings.chatLayout === 'compact'
+  )
+  const layoutClass = computed(() => `layout-${settings.chatLayout}`)
+  let typingTimeout: ReturnType<typeof setTimeout> | null = null
 
-watch(input, () => {
-  setTimeout(resizeTextarea, 0)
-})
+  function resizeTextarea() {
+    if (!textareaRef.value) return
+    textareaRef.value.style.height = 'auto'
+    textareaRef.value.style.height = `${Math.min(textareaRef.value.scrollHeight, 140)}px`
+  }
 
-watch(
-  () => props.initialValue,
-  (v) => {
-    if (v != null) {
-      input.value = v
-      setTimeout(resizeTextarea, 0)
+  watch(input, () => {
+    setTimeout(resizeTextarea, 0)
+  })
+
+  watch(
+    () => props.initialValue,
+    (v) => {
+      if (v != null) {
+        input.value = v
+        setTimeout(resizeTextarea, 0)
+      }
+    }
+  )
+
+  function handleInput() {
+    resizeTextarea()
+    emit('typing', true)
+    if (typingTimeout) clearTimeout(typingTimeout)
+    typingTimeout = setTimeout(() => emit('typing', false), 2000)
+  }
+
+  function sendMessage() {
+    const content = input.value.trim()
+    if (!content) return
+    emit('send', content)
+    emit('typing', false)
+    input.value = ''
+    if (textareaRef.value) textareaRef.value.style.height = 'auto'
+    if (typingTimeout) clearTimeout(typingTimeout)
+  }
+
+  function handleKeydown(e: KeyboardEvent) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      sendMessage()
+    }
+    if (e.key === 'Escape' && props.replyTo) {
+      emit('cancel-reply')
     }
   }
-)
 
-function handleInput() {
-  resizeTextarea()
-  emit('typing', true)
-  if (typingTimeout) clearTimeout(typingTimeout)
-  typingTimeout = setTimeout(() => emit('typing', false), 2000)
-}
-
-function sendMessage() {
-  const content = input.value.trim()
-  if (!content) return
-  emit('send', content)
-  emit('typing', false)
-  input.value = ''
-  if (textareaRef.value) textareaRef.value.style.height = 'auto'
-  if (typingTimeout) clearTimeout(typingTimeout)
-}
-
-function handleKeydown(e: KeyboardEvent) {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault()
-    sendMessage()
-  }
-  if (e.key === 'Escape' && props.replyTo) {
-    emit('cancel-reply')
-  }
-}
-
-function insertEmoji(emoji: string) {
-  input.value += emoji
-  handleInput()
-}
-
-async function onFileSelected(e: Event) {
-  fileError.value = ''
-  const inputEl = e.target as HTMLInputElement
-  const file = inputEl.files?.[0]
-  if (!file) return
-
-  const err = validateFile(file)
-  if (err) {
-    fileError.value = err
-    inputEl.value = ''
-    return
+  function insertEmoji(emoji: string) {
+    input.value += emoji
+    handleInput()
   }
 
-  try {
-    const dataUrl = await fileToDataUrl(file)
-    emit('upload', dataUrl, file.name, input.value.trim())
-    input.value = ''
-  } catch {
-    fileError.value = 'Failed to read file'
-  } finally {
-    inputEl.value = ''
+  async function onFileSelected(e: Event) {
+    fileError.value = ''
+    const inputEl = e.target as HTMLInputElement
+    const file = inputEl.files?.[0]
+    if (!file) return
+
+    const err = validateFile(file)
+    if (err) {
+      fileError.value = err
+      inputEl.value = ''
+      return
+    }
+
+    try {
+      const dataUrl = await fileToDataUrl(file)
+      emit('upload', dataUrl, file.name, input.value.trim())
+      input.value = ''
+    } catch {
+      fileError.value = 'Failed to read file'
+    } finally {
+      inputEl.value = ''
+    }
   }
-}
 </script>
 
 <template>
   <div class="chat-input-area" :class="[layoutClass, { compact: isCompactInput }]">
     <div v-if="replyTo" class="reply-bar">
       <span
-        >Replying to <strong>{{ replyTo.user?.displayName || 'Unknown' }}</strong></span
+      >Replying to <strong>{{ replyTo.user?.displayName || 'Unknown' }}</strong></span
       >
       <button type="button" class="cancel-reply" @click="emit('cancel-reply')">
         <X :size="14" />

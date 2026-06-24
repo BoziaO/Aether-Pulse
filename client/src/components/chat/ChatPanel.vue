@@ -1,114 +1,115 @@
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue'
-import { Search, Users, X } from 'lucide-vue-next'
-import { useChatStore } from '@/stores/chat.store'
-import { useAuthStore } from '@/stores/auth.store'
-import { useSettingsStore } from '@/stores/settings.store'
-import { useRtcStore } from '@/stores/rtc.store'
-import { useToastStore } from '@/stores/toast.store'
-import ChatMessage from './ChatMessage.vue'
-import ChatInput from './ChatInput.vue'
-import UserProfileModal from '@/components/profile/UserProfileModal.vue'
-import type { Message } from '@/types/message.types'
+  import { ref, computed, watch, nextTick } from 'vue'
+  import { Search, Users, X } from 'lucide-vue-next'
 
-const props = defineProps<{
-  roomId: string
-  roomName?: string | undefined
-  members?: Array<{ id: string; displayName: string; status?: string | undefined }> | undefined
-}>()
+  import { useChatStore } from '@/stores/chat.store'
+  import { useAuthStore } from '@/stores/auth.store'
+  import { useSettingsStore } from '@/stores/settings.store'
+  import { useRtcStore } from '@/stores/rtc.store'
+  import { useToastStore } from '@/stores/toast.store'
+  import ChatMessage from './ChatMessage.vue'
+  import ChatInput from './ChatInput.vue'
+  import UserProfileModal from '@/components/profile/UserProfileModal.vue'
+  import type { Message } from '@/types/message.types'
 
-const emit = defineEmits<{
-  (e: 'toggle-members'): void
-}>()
+  const props = defineProps<{
+    roomId: string
+    roomName?: string | undefined
+    members?: Array<{ id: string; displayName: string; status?: string | undefined }> | undefined
+  }>()
 
-const chatStore = useChatStore()
-const auth = useAuthStore()
-const settings = useSettingsStore()
-const rtc = useRtcStore()
-const scrollEl = ref<HTMLElement | null>(null)
-const selectedUserId = ref<string | null>(null)
-const showSearch = ref(false)
-const searchInput = ref('')
-const editingMessage = ref<Message | null>(null)
-const editContent = ref('')
-const uploading = ref(false)
-let searchTimeout: ReturnType<typeof setTimeout> | null = null
+  const emit = defineEmits<{
+    (e: 'toggle-members'): void
+  }>()
 
-const typingList = computed(() => [...chatStore.typingUsers].filter((id) => id !== auth.user?.id))
+  const chatStore = useChatStore()
+  const auth = useAuthStore()
+  const settings = useSettingsStore()
+  const rtc = useRtcStore()
+  const scrollEl = ref<HTMLElement | null>(null)
+  const selectedUserId = ref<string | null>(null)
+  const showSearch = ref(false)
+  const searchInput = ref('')
+  const editingMessage = ref<Message | null>(null)
+  const editContent = ref('')
+  const uploading = ref(false)
+  let searchTimeout: ReturnType<typeof setTimeout> | null = null
 
-const displayMessages = computed(() =>
-  showSearch.value && searchInput.value.trim() ? chatStore.searchResults : chatStore.messages
-)
-const isCompactPanel = computed(
-  () => settings.compactChatMode || settings.chatLayout === 'compact'
-)
-const layoutClass = computed(() => `layout-${settings.chatLayout}`)
+  const typingList = computed(() => [...chatStore.typingUsers].filter((id) => id !== auth.user?.id))
 
-function scrollToBottom() {
-  nextTick(() => {
-    if (scrollEl.value) scrollEl.value.scrollTop = scrollEl.value.scrollHeight
-  })
-}
+  const displayMessages = computed(() =>
+    showSearch.value && searchInput.value.trim() ? chatStore.searchResults : chatStore.messages
+  )
+  const isCompactPanel = computed(
+    () => settings.compactChatMode || settings.chatLayout === 'compact'
+  )
+  const layoutClass = computed(() => `layout-${settings.chatLayout}`)
 
-watch(() => chatStore.messages.length, scrollToBottom)
-
-function handleScroll() {
-  if (!scrollEl.value || showSearch.value) return
-  if (scrollEl.value.scrollTop < 40 && chatStore.hasMore && !chatStore.loadingMore) {
-    const prevHeight = scrollEl.value.scrollHeight
-    chatStore.loadMore().then(() => {
-      nextTick(() => {
-        if (scrollEl.value) {
-          scrollEl.value.scrollTop = scrollEl.value.scrollHeight - prevHeight
-        }
-      })
+  function scrollToBottom() {
+    nextTick(() => {
+      if (scrollEl.value) scrollEl.value.scrollTop = scrollEl.value.scrollHeight
     })
   }
-}
 
-function handleSend(content: string) {
-  if (!auth.user) return
-  if (editingMessage.value) {
-    chatStore.editMessage(props.roomId, editingMessage.value.id, content)
+  watch(() => chatStore.messages.length, scrollToBottom)
+
+  function handleScroll() {
+    if (!scrollEl.value || showSearch.value) return
+    if (scrollEl.value.scrollTop < 40 && chatStore.hasMore && !chatStore.loadingMore) {
+      const prevHeight = scrollEl.value.scrollHeight
+      chatStore.loadMore().then(() => {
+        nextTick(() => {
+          if (scrollEl.value) {
+            scrollEl.value.scrollTop = scrollEl.value.scrollHeight - prevHeight
+          }
+        })
+      })
+    }
+  }
+
+  function handleSend(content: string) {
+    if (!auth.user) return
+    if (editingMessage.value) {
+      chatStore.editMessage(props.roomId, editingMessage.value.id, content)
+      editingMessage.value = null
+      editContent.value = ''
+      return
+    }
+    chatStore.sendMessage(props.roomId, auth.user.id, content)
+  }
+
+  function handleSearch() {
+    if (searchTimeout) clearTimeout(searchTimeout)
+    searchTimeout = setTimeout(() => {
+      chatStore.searchMessages(props.roomId, searchInput.value)
+    }, 300)
+  }
+
+  function closeSearch() {
+    showSearch.value = false
+    searchInput.value = ''
+  }
+
+  function startEdit(message: Message) {
+    editingMessage.value = message
+    editContent.value = message.content
+  }
+
+  function cancelEdit() {
     editingMessage.value = null
     editContent.value = ''
-    return
   }
-  chatStore.sendMessage(props.roomId, auth.user.id, content)
-}
 
-function handleSearch() {
-  if (searchTimeout) clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => {
-    chatStore.searchMessages(props.roomId, searchInput.value)
-  }, 300)
-}
-
-function closeSearch() {
-  showSearch.value = false
-  searchInput.value = ''
-}
-
-function startEdit(message: Message) {
-  editingMessage.value = message
-  editContent.value = message.content
-}
-
-function cancelEdit() {
-  editingMessage.value = null
-  editContent.value = ''
-}
-
-async function handleUpload(dataUrl: string, fileName: string, caption: string) {
-  uploading.value = true
-  try {
-    await chatStore.uploadFile(props.roomId, dataUrl, fileName, caption || undefined)
-  } catch (e) {
-    useToastStore().error(e instanceof Error ? e.message : 'Upload failed')
-  } finally {
-    uploading.value = false
+  async function handleUpload(dataUrl: string, fileName: string, caption: string) {
+    uploading.value = true
+    try {
+      await chatStore.uploadFile(props.roomId, dataUrl, fileName, caption || undefined)
+    } catch (e) {
+      useToastStore().error(e instanceof Error ? e.message : 'Upload failed')
+    } finally {
+      uploading.value = false
+    }
   }
-}
 </script>
 
 <template>

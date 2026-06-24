@@ -20,6 +20,7 @@ export interface MessageReplyPreview {
   content: string
   userId: string
   isDeleted: boolean
+  user?: { displayName?: string } | null
 }
 
 /** Minimal shape for reply bar in ChatInput */

@@ -1,63 +1,81 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { Reply, Pencil, Trash2, SmilePlus, Download, FileText } from 'lucide-vue-next'
-import type { Message } from '@/types/message.types'
-import { useSettingsStore } from '@/stores/settings.store'
-import UserAvatar from '@/components/profile/UserAvatar.vue'
-import MessageContent from './MessageContent.vue'
+  import { ref, computed } from 'vue'
+  import { Reply, Pencil, Trash2, SmilePlus, Download, FileText } from 'lucide-vue-next'
 
-const props = defineProps<{
-  message: Message
-  isOwn?: boolean | undefined
-  showAvatar?: boolean | undefined
-  roomId?: string | undefined
-  currentUserId?: string | undefined
-}>()
+  import type { Message } from '@/types/message.types'
+  import { useSettingsStore } from '@/stores/settings.store'
+  import UserAvatar from '@/components/profile/UserAvatar.vue'
+  import MessageContent from './MessageContent.vue'
 
-const emit = defineEmits<{
-  (e: 'open-profile', userId: string): void
-  (e: 'reply', message: Message): void
-  (e: 'edit', message: Message): void
-  (e: 'delete', messageId: string): void
-  (e: 'react', messageId: string, emoji: string): void
-}>()
+  const props = defineProps<{
+    message: Message
+    isOwn?: boolean | undefined
+    showAvatar?: boolean | undefined
+    roomId?: string | undefined
+    currentUserId?: string | undefined
+  }>()
 
-const showActions = ref(false)
-const showReactionPicker = ref(false)
-const settings = useSettingsStore()
+  const emit = defineEmits<{
+    (e: 'open-profile', userId: string): void
+    (e: 'reply', message: Message): void
+    (e: 'edit', message: Message): void
+    (e: 'delete', messageId: string): void
+    (e: 'react', messageId: string, emoji: string): void
+  }>()
 
-const QUICK_REACTIONS = ['👍', '❤️', '😂', '🔥', '🎉']
-const isCompactMessage = computed(
-  () => settings.compactChatMode || settings.chatLayout === 'compact'
-)
-const layoutClass = computed(() => `layout-${settings.chatLayout}`)
+  const showActions = ref(false)
+  const showReactionPicker = ref(false)
+  const settings = useSettingsStore()
 
-const displayName = computed(() => props.message.user?.displayName || 'Unknown')
+  const QUICK_REACTIONS = ['👍', '❤️', '😂', '🔥', '🎉']
+  const isCompactMessage = computed(
+    () => settings.compactChatMode || settings.chatLayout === 'compact'
+  )
+  const layoutClass = computed(() => `layout-${settings.chatLayout}`)
 
-function formatTime(iso: string) {
-  const d = new Date(iso)
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-}
+  const displayName = computed(() => props.message.user?.displayName || 'Unknown')
 
-function hasReacted(reaction: { emoji: string; userIds: string[] }) {
-  return props.currentUserId != null && reaction.userIds.includes(props.currentUserId)
-}
+  function formatTime(iso: string) {
+    const d = new Date(iso)
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }
 
-const isImage = computed(() => props.message.attachmentMime?.startsWith('image/') ?? false)
+  function hasReacted(reaction: { emoji: string; userIds: string[] }) {
+    return props.currentUserId != null && reaction.userIds.includes(props.currentUserId)
+  }
 
-function hideActions() {
-  showActions.value = false
-  showReactionPicker.value = false
-}
+  const isImage = computed(() => props.message.attachmentMime?.startsWith('image/') ?? false)
 
-function selectReaction(emoji: string) {
-  emit('react', props.message.id, emoji)
-  showReactionPicker.value = false
-}
+  const replyId = computed(() => props.message.replyTo?.id)
+
+  const truncatedContent = computed(() => {
+    const content = props.message.replyTo?.content
+    if (!content) return ''
+    return content.length > 100 ? content.slice(0, 100) + '...' : content
+  })
+
+  function scrollToMessage(id: string | undefined) {
+    if (!id) return
+    const el = document.getElementById('message-' + id)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }
+
+  function hideActions() {
+    showActions.value = false
+    showReactionPicker.value = false
+  }
+
+  function selectReaction(emoji: string) {
+    emit('react', props.message.id, emoji)
+    showReactionPicker.value = false
+  }
 </script>
 
 <template>
   <div
+    :id="'message-' + message.id"
     class="message"
     :class="[{ own: isOwn, system: message.type === 'system' }, layoutClass, { compact: isCompactMessage }]"
     @mouseenter="showActions = true"
@@ -69,8 +87,8 @@ function selectReaction(emoji: string) {
         v-if="message.user?.id"
         class="avatar-btn"
         type="button"
-        @click="emit('open-profile', message.user!.id)"
         title="View profile"
+        @click="emit('open-profile', message.user!.id)"
       >
         <UserAvatar :user="message.user" :size="36" />
       </button>
@@ -78,9 +96,10 @@ function selectReaction(emoji: string) {
     </div>
 
     <div class="message-body">
-      <div v-if="message.replyTo" class="reply-preview">
+      <div v-if="message.replyTo" class="reply-preview" @click="scrollToMessage(replyId)">
         <Reply :size="12" />
-        <span>{{ message.replyTo.isDeleted ? 'Message deleted' : message.replyTo.content }}</span>
+        <div class="reply-author">{{ message.replyTo.user?.displayName || 'Unknown' }}</div>
+        <div class="reply-content">{{ message.replyTo.isDeleted ? 'Message deleted' : truncatedContent }}</div>
       </div>
 
       <div v-if="showAvatar !== false && message.type !== 'system'" class="message-meta">
@@ -256,8 +275,18 @@ function selectReaction(emoji: string) {
   padding-left: 8px;
   margin-bottom: 4px;
   overflow: hidden;
+}
+.reply-author {
+  font-weight: 700;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.reply-content {
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  flex: 1;
+  min-width: 0;
 }
 .message-meta {
   display: flex;

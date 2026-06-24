@@ -38,5 +38,5 @@ export interface DmMessage {
   isDeleted?: boolean
   createdAt: string
   user?: DmMessageUser | null
-  replyTo?: { id: string; content: string; userId: string; isDeleted: boolean } | null
+  replyTo?: { id: string; content: string; userId: string; isDeleted: boolean; user?: { displayName?: string } | null } | null
 }
