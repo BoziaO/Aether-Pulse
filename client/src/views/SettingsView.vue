@@ -1,78 +1,79 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { Headphones, Mic, Shield, Bell, Palette } from 'lucide-vue-next'
-import { useSettingsStore } from '@/stores/settings.store'
-import { requestNotificationPermission } from '@/utils/notifications'
+  import { ref, computed } from 'vue'
+  import { Headphones, Mic, Shield, Bell, Palette } from 'lucide-vue-next'
 
-const settings = useSettingsStore()
-const activeSection = ref('voice')
+  import { useSettingsStore } from '@/stores/settings.store'
+  import { requestNotificationPermission } from '@/utils/notifications'
 
-async function onNotificationsToggle() {
-  if (settings.messageNotifications) {
-    const granted = await requestNotificationPermission()
-    if (!granted) settings.messageNotifications = false
+  const settings = useSettingsStore()
+  const activeSection = ref('voice')
+
+  async function onNotificationsToggle() {
+    if (settings.messageNotifications) {
+      const granted = await requestNotificationPermission()
+      if (!granted) settings.messageNotifications = false
+    }
   }
-}
 
-const sections = [
-  { id: 'voice', label: 'Voice & Video', icon: Mic },
-  { id: 'audio', label: 'Audio', icon: Headphones },
-  { id: 'appearance', label: 'Appearance', icon: Palette },
-  { id: 'notifications', label: 'Notifications', icon: Bell },
-  { id: 'privacy', label: 'Privacy', icon: Shield },
-]
+  const sections = [
+    { id: 'voice', label: 'Voice & Video', icon: Mic },
+    { id: 'audio', label: 'Audio', icon: Headphones },
+    { id: 'appearance', label: 'Appearance', icon: Palette },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
+    { id: 'privacy', label: 'Privacy', icon: Shield },
+  ]
 
-const soundstages = [
-  { id: 'alternating', name: 'Alternating', desc: 'Left & Right' },
-  { id: 'left', name: 'Left only', desc: 'All on the left' },
-  { id: 'right', name: 'Right only', desc: 'All on the right' },
-  { id: 'center', name: 'Center focus', desc: 'Spread around center' },
-] as const
+  const soundstages = [
+    { id: 'alternating', name: 'Alternating', desc: 'Left & Right' },
+    { id: 'left', name: 'Left only', desc: 'All on the left' },
+    { id: 'right', name: 'Right only', desc: 'All on the right' },
+    { id: 'center', name: 'Center focus', desc: 'Spread around center' },
+  ] as const
 
-const simulatedCallers = computed(() => {
-  const mode = settings.spatialAudioDirectionMode
-  const spreadAngle = settings.spatialAudioSpreadAngle
-  const distance = settings.spatialAudioDistance
+  const simulatedCallers = computed(() => {
+    const mode = settings.spatialAudioDirectionMode
+    const spreadAngle = settings.spatialAudioSpreadAngle
+    const distance = settings.spatialAudioDistance
 
-  // Center of visual container is (100, 100)
-  // Scaling radius: map distance (1-15m) to (30-85px)
-  const radiusPx = 30 + ((distance - 1) / 14) * 55
+    // Center of visual container is (100, 100)
+    // Scaling radius: map distance (1-15m) to (30-85px)
+    const radiusPx = 30 + ((distance - 1) / 14) * 55
 
-  return [0, 1, 2].map((index) => {
-    let angleRad = 0
-    if (mode === 'center') {
-      if (index > 0) {
-        const step = Math.ceil(index / 2)
-        const sign = index % 2 === 1 ? -1 : 1
-        angleRad = step * ((spreadAngle * Math.PI) / 180) * sign
+    return [0, 1, 2].map((index) => {
+      let angleRad = 0
+      if (mode === 'center') {
+        if (index > 0) {
+          const step = Math.ceil(index / 2)
+          const sign = index % 2 === 1 ? -1 : 1
+          angleRad = step * ((spreadAngle * Math.PI) / 180) * sign
+        }
+      } else if (mode === 'alternating') {
+        if (index % 2 === 0) {
+          const k = index / 2
+          angleRad = -Math.PI / 2 + k * ((spreadAngle * Math.PI) / 180)
+        } else {
+          const k = (index - 1) / 2
+          angleRad = Math.PI / 2 - k * ((spreadAngle * Math.PI) / 180)
+        }
+      } else if (mode === 'left') {
+        angleRad = -Math.PI / 2 + index * ((spreadAngle * Math.PI) / 180)
+      } else if (mode === 'right') {
+        angleRad = Math.PI / 2 - index * ((spreadAngle * Math.PI) / 180)
       }
-    } else if (mode === 'alternating') {
-      if (index % 2 === 0) {
-        const k = index / 2
-        angleRad = -Math.PI / 2 + k * ((spreadAngle * Math.PI) / 180)
-      } else {
-        const k = (index - 1) / 2
-        angleRad = Math.PI / 2 - k * ((spreadAngle * Math.PI) / 180)
+
+      const x = 100 + Math.sin(angleRad) * radiusPx
+      const y = 100 - Math.cos(angleRad) * radiusPx
+
+      return {
+        id: index,
+        label: `Call ${String.fromCharCode(65 + index)}`,
+        style: {
+          left: `${x}px`,
+          top: `${y}px`,
+        },
       }
-    } else if (mode === 'left') {
-      angleRad = -Math.PI / 2 + index * ((spreadAngle * Math.PI) / 180)
-    } else if (mode === 'right') {
-      angleRad = Math.PI / 2 - index * ((spreadAngle * Math.PI) / 180)
-    }
-
-    const x = 100 + Math.sin(angleRad) * radiusPx
-    const y = 100 - Math.cos(angleRad) * radiusPx
-
-    return {
-      id: index,
-      label: `Call ${String.fromCharCode(65 + index)}`,
-      style: {
-        left: `${x}px`,
-        top: `${y}px`,
-      },
-    }
+    })
   })
-})
 </script>
 
 <template>
@@ -102,7 +103,7 @@ const simulatedCallers = computed(() => {
               <div class="setting-desc">Reduce background noise during calls</div>
             </div>
             <label class="toggle">
-              <input type="checkbox" v-model="settings.noiseSuppressionEnabled" />
+              <input v-model="settings.noiseSuppressionEnabled" type="checkbox" />
               <span class="toggle-slider" />
             </label>
           </div>
@@ -114,8 +115,8 @@ const simulatedCallers = computed(() => {
             </div>
             <div class="slider-wrap">
               <input
-                type="range"
                 v-model.number="settings.inputVolume"
+                type="range"
                 min="0"
                 max="200"
                 class="range"
@@ -131,8 +132,8 @@ const simulatedCallers = computed(() => {
             </div>
             <div class="slider-wrap">
               <input
-                type="range"
                 v-model.number="settings.outputVolume"
+                type="range"
                 min="0"
                 max="200"
                 class="range"
@@ -173,8 +174,8 @@ const simulatedCallers = computed(() => {
               </div>
               <div class="slider-wrap">
                 <input
-                  type="range"
                   v-model.number="settings.spatialAudioDistance"
+                  type="range"
                   min="1"
                   max="15"
                   class="range"
@@ -190,8 +191,8 @@ const simulatedCallers = computed(() => {
               </div>
               <div class="slider-wrap">
                 <input
-                  type="range"
                   v-model.number="settings.spatialAudioSpreadAngle"
+                  type="range"
                   min="15"
                   max="90"
                   class="range"
@@ -257,8 +258,8 @@ const simulatedCallers = computed(() => {
               :key="themeOption.id"
               class="theme-card"
               :class="{ active: settings.theme === themeOption.id }"
-              @click="settings.setTheme(themeOption.id)"
               :title="themeOption.description"
+              @click="settings.setTheme(themeOption.id)"
             >
               <div class="theme-preview">
                 <div
@@ -279,7 +280,7 @@ const simulatedCallers = computed(() => {
               <div class="setting-desc">Reduce message spacing and composer padding</div>
             </div>
             <label class="toggle">
-              <input type="checkbox" v-model="settings.compactChatMode" />
+              <input v-model="settings.compactChatMode" type="checkbox" />
               <span class="toggle-slider" />
             </label>
           </div>
@@ -344,8 +345,8 @@ const simulatedCallers = computed(() => {
             </div>
             <label class="toggle">
               <input
-                type="checkbox"
                 v-model="settings.messageNotifications"
+                type="checkbox"
                 @change="onNotificationsToggle"
               />
               <span class="toggle-slider" />

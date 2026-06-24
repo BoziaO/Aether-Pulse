@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+
 import { useAuthStore } from '@/stores/auth.store'
 
 // True when running inside Electron or Capacitor (Android/iOS)

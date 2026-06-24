@@ -1,182 +1,183 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
-import {
-  X,
-  AtSign,
-  Link,
-  MapPin,
-  UserPlus,
-  MessageCircle,
-  Check,
-  Ban,
-  Globe,
-  Clock,
-  BarChart2,
-  Users,
-  MessageSquare,
-  Eye,
-} from 'lucide-vue-next'
-import { userApi, type UserStats } from '@/services/api/user.api'
-import { useAuthStore } from '@/stores/auth.store'
-import { useFriendsStore } from '@/stores/friends.store'
-import UserAvatar from './UserAvatar.vue'
-import ProfileBadge from './ProfileBadge.vue'
-import type { User } from '@/types/user.types'
-import type { FriendshipStatus } from '@/types/friend.types'
+  import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+  import { useRouter } from 'vue-router'
+  import {
+    X,
+    AtSign,
+    Link,
+    MapPin,
+    UserPlus,
+    MessageCircle,
+    Check,
+    Ban,
+    Globe,
+    Clock,
+    BarChart2,
+    Users,
+    MessageSquare,
+    Eye,
+  } from 'lucide-vue-next'
 
-const props = defineProps<{
-  userId: string
-}>()
+  import { userApi, type UserStats } from '@/services/api/user.api'
+  import { useAuthStore } from '@/stores/auth.store'
+  import { useFriendsStore } from '@/stores/friends.store'
+  import UserAvatar from './UserAvatar.vue'
+  import ProfileBadge from './ProfileBadge.vue'
+  import type { User } from '@/types/user.types'
+  import type { FriendshipStatus } from '@/types/friend.types'
 
-const emit = defineEmits<{
-  (e: 'close'): void
-}>()
+  const props = defineProps<{
+    userId: string
+  }>()
 
-const router = useRouter()
-const auth = useAuthStore()
-const friendsStore = useFriendsStore()
+  const emit = defineEmits<{
+    (e: 'close'): void
+  }>()
 
-const loading = ref(false)
-const error = ref('')
-const user = ref<User | null>(null)
-const stats = ref<UserStats | null>(null)
-const modalRef = ref<HTMLElement | null>(null)
-const friendStatus = ref<FriendshipStatus>('none')
-const actionLoading = ref(false)
+  const router = useRouter()
+  const auth = useAuthStore()
+  const friendsStore = useFriendsStore()
 
-const isSelf = computed(() => auth.user?.id === String(props.userId))
+  const loading = ref(false)
+  const error = ref('')
+  const user = ref<User | null>(null)
+  const stats = ref<UserStats | null>(null)
+  const modalRef = ref<HTMLElement | null>(null)
+  const friendStatus = ref<FriendshipStatus>('none')
+  const actionLoading = ref(false)
 
-async function load() {
-  loading.value = true
-  error.value = ''
-  stats.value = null
-  try {
-    user.value = await userApi.get(props.userId)
-    if (!isSelf.value) {
-      friendStatus.value = await friendsStore.getStatus(props.userId)
+  const isSelf = computed(() => auth.user?.id === String(props.userId))
+
+  async function load() {
+    loading.value = true
+    error.value = ''
+    stats.value = null
+    try {
+      user.value = await userApi.get(props.userId)
+      if (!isSelf.value) {
+        friendStatus.value = await friendsStore.getStatus(props.userId)
+      }
+      // Load stats in background (non-blocking)
+      userApi
+        .getStats(props.userId)
+        .then((s) => {
+          stats.value = s
+        })
+        .catch(() => {})
+    } catch (e: unknown) {
+      error.value = e instanceof Error ? e.message : 'Failed to load user profile.'
+      user.value = null
+    } finally {
+      loading.value = false
     }
-    // Load stats in background (non-blocking)
-    userApi
-      .getStats(props.userId)
-      .then((s) => {
-        stats.value = s
-      })
-      .catch(() => {})
-  } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : 'Failed to load user profile.'
-    user.value = null
-  } finally {
-    loading.value = false
   }
-}
 
-function onKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') emit('close')
-}
-
-onMounted(() => {
-  document.addEventListener('keydown', onKeydown)
-  modalRef.value?.focus()
-  load()
-})
-
-onUnmounted(() => {
-  document.removeEventListener('keydown', onKeydown)
-})
-
-watch(() => props.userId, load)
-
-// Animated banner support
-const ANIM_CLASSES: Record<string, string> = {
-  'animated:aurora': 'banner-aurora',
-  'animated:neon': 'banner-neon',
-  'animated:sunset': 'banner-sunset',
-  'animated:ocean': 'banner-ocean',
-  'animated:forest': 'banner-forest',
-  'animated:cosmic': 'banner-cosmic',
-}
-
-const bannerAnimClass = computed(() => {
-  const u = user.value
-  if (!u || u.bannerUrl) return ''
-  const g = u.profileGradient ?? ''
-  return ANIM_CLASSES[g] ?? ''
-})
-
-const bannerStyle = computed(() => {
-  const u = user.value
-  if (!u) return {}
-  if (u.bannerUrl) return { backgroundImage: `url(${u.bannerUrl})` }
-  if (u.profileGradient && !u.profileGradient.startsWith('animated:'))
-    return { background: u.profileGradient }
-  if (!u.profileGradient) return { background: u.accentColor || '#5865f2' }
-  return {}
-})
-
-function safeWebsite(url: string | null) {
-  const v = (url ?? '').trim()
-  if (!v) return ''
-  return /^https?:\/\//i.test(v) ? v : `https://${v}`
-}
-
-function displayWebsite(url: string | null) {
-  const v = (url ?? '').trim()
-  if (!v) return ''
-  return v.replace(/^https?:\/\//i, '').replace(/\/$/, '')
-}
-
-function formatLastSeen(isoStr: string | null | undefined): string {
-  if (!isoStr) return ''
-  const d = new Date(isoStr)
-  if (isNaN(d.getTime())) return ''
-  const now = Date.now()
-  const diff = now - d.getTime()
-  const mins = Math.floor(diff / 60_000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m ago`
-  const hrs = Math.floor(mins / 60)
-  if (hrs < 24) return `${hrs}h ago`
-  const days = Math.floor(hrs / 24)
-  if (days < 7) return `${days}d ago`
-  return d.toLocaleDateString()
-}
-
-const maxActivity = computed(() => {
-  if (!stats.value?.activityByDay?.length) return 1
-  return Math.max(...stats.value.activityByDay.map((d) => d.count), 1)
-})
-
-async function addFriend() {
-  actionLoading.value = true
-  try {
-    await friendsStore.sendRequest(props.userId)
-    friendStatus.value = await friendsStore.getStatus(props.userId)
-  } finally {
-    actionLoading.value = false
+  function onKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape') emit('close')
   }
-}
 
-async function acceptFriend() {
-  actionLoading.value = true
-  try {
-    await friendsStore.accept(props.userId)
-    friendStatus.value = 'friends'
-  } finally {
-    actionLoading.value = false
+  onMounted(() => {
+    document.addEventListener('keydown', onKeydown)
+    modalRef.value?.focus()
+    load()
+  })
+
+  onUnmounted(() => {
+    document.removeEventListener('keydown', onKeydown)
+  })
+
+  watch(() => props.userId, load)
+
+  // Animated banner support
+  const ANIM_CLASSES: Record<string, string> = {
+    'animated:aurora': 'banner-aurora',
+    'animated:neon': 'banner-neon',
+    'animated:sunset': 'banner-sunset',
+    'animated:ocean': 'banner-ocean',
+    'animated:forest': 'banner-forest',
+    'animated:cosmic': 'banner-cosmic',
   }
-}
 
-async function openMessage() {
-  emit('close')
-  router.push({ name: 'dm', params: { userId: props.userId } })
-}
+  const bannerAnimClass = computed(() => {
+    const u = user.value
+    if (!u || u.bannerUrl) return ''
+    const g = u.profileGradient ?? ''
+    return ANIM_CLASSES[g] ?? ''
+  })
 
-async function blockUser() {
-  if (!confirm('Block this user?')) return
-  await friendsStore.block(props.userId)
-  friendStatus.value = 'blocked'
-}
+  const bannerStyle = computed(() => {
+    const u = user.value
+    if (!u) return {}
+    if (u.bannerUrl) return { backgroundImage: `url(${u.bannerUrl})` }
+    if (u.profileGradient && !u.profileGradient.startsWith('animated:'))
+      return { background: u.profileGradient }
+    if (!u.profileGradient) return { background: u.accentColor || '#5865f2' }
+    return {}
+  })
+
+  function safeWebsite(url: string | null) {
+    const v = (url ?? '').trim()
+    if (!v) return ''
+    return /^https?:\/\//i.test(v) ? v : `https://${v}`
+  }
+
+  function displayWebsite(url: string | null) {
+    const v = (url ?? '').trim()
+    if (!v) return ''
+    return v.replace(/^https?:\/\//i, '').replace(/\/$/, '')
+  }
+
+  function formatLastSeen(isoStr: string | null | undefined): string {
+    if (!isoStr) return ''
+    const d = new Date(isoStr)
+    if (isNaN(d.getTime())) return ''
+    const now = Date.now()
+    const diff = now - d.getTime()
+    const mins = Math.floor(diff / 60_000)
+    if (mins < 1) return 'just now'
+    if (mins < 60) return `${mins}m ago`
+    const hrs = Math.floor(mins / 60)
+    if (hrs < 24) return `${hrs}h ago`
+    const days = Math.floor(hrs / 24)
+    if (days < 7) return `${days}d ago`
+    return d.toLocaleDateString()
+  }
+
+  const maxActivity = computed(() => {
+    if (!stats.value?.activityByDay?.length) return 1
+    return Math.max(...stats.value.activityByDay.map((d) => d.count), 1)
+  })
+
+  async function addFriend() {
+    actionLoading.value = true
+    try {
+      await friendsStore.sendRequest(props.userId)
+      friendStatus.value = await friendsStore.getStatus(props.userId)
+    } finally {
+      actionLoading.value = false
+    }
+  }
+
+  async function acceptFriend() {
+    actionLoading.value = true
+    try {
+      await friendsStore.accept(props.userId)
+      friendStatus.value = 'friends'
+    } finally {
+      actionLoading.value = false
+    }
+  }
+
+  async function openMessage() {
+    emit('close')
+    router.push({ name: 'dm', params: { userId: props.userId } })
+  }
+
+  async function blockUser() {
+    if (!confirm('Block this user?')) return
+    await friendsStore.block(props.userId)
+    friendStatus.value = 'blocked'
+  }
 </script>
 
 <template>
@@ -247,7 +248,7 @@ async function blockUser() {
                 <Check :size="14" /> Accept Request
               </button>
               <span v-if="friendStatus === 'pending_outgoing'" class="action-hint"
-                >Friend request sent</span
+              >Friend request sent</span
               >
               <button v-if="friendStatus === 'friends'" class="action-btn" @click="openMessage">
                 <MessageCircle :size="14" /> Message

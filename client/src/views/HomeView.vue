@@ -1,17 +1,18 @@
 <script setup lang="ts">
-import { ref, defineAsyncComponent } from 'vue'
-import { Hash, Plus, UserPlus } from 'lucide-vue-next'
-import { useAuthStore } from '@/stores/auth.store'
-import { useRoomStore } from '@/stores/room.store'
-import RoomCardSkeleton from '@/components/rooms/RoomCardSkeleton.vue'
+  import { ref, defineAsyncComponent } from 'vue'
+  import { Hash, Plus, UserPlus } from 'lucide-vue-next'
 
-// Lazy-loaded components for performance
-const RoomCard = defineAsyncComponent(() => import('@/components/rooms/RoomCard.vue'))
-const CreateRoomModal = defineAsyncComponent(() => import('@/components/rooms/CreateRoomModal.vue'))
+  import { useAuthStore } from '@/stores/auth.store'
+  import { useRoomStore } from '@/stores/room.store'
+  import RoomCardSkeleton from '@/components/rooms/RoomCardSkeleton.vue'
 
-const auth = useAuthStore()
-const roomStore = useRoomStore()
-const showCreate = ref(false)
+  // Lazy-loaded components for performance
+  const RoomCard = defineAsyncComponent(() => import('@/components/rooms/RoomCard.vue'))
+  const CreateRoomModal = defineAsyncComponent(() => import('@/components/rooms/CreateRoomModal.vue'))
+
+  const auth = useAuthStore()
+  const roomStore = useRoomStore()
+  const showCreate = ref(false)
 </script>
 
 <template>

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+
 import { roomApi } from '@/services/api/room.api'
 import { getSocket } from '@/services/socket/socket'
 import { notifyNewMessage } from '@/utils/notifications'

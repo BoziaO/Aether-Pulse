@@ -41,7 +41,8 @@
     "util": "^0.12.5",
     "util-browser": "^0.0.2",
     "vue": "^3.5.35",
-    "vue-router": "^5.1.0"
+    "vue-router": "^5.1.0",
+    "vue-virtual-scroller": "^3.0.4"
   },
   "devDependencies": {
     "@capacitor/cli": "^8.4.0",
@@ -54,6 +55,8 @@
     "@types/jsdom": "^21.1.7",
     "@types/node": "^25.9.1",
     "@types/simple-peer": "^9.11.9",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
     "@vitejs/plugin-vue": "^6.0.7",
     "@vue/eslint-config-standard": "^8.0.0",
     "@vue/eslint-config-typescript": "^13.0.0",
@@ -66,9 +69,6 @@
     "eslint-config-prettier": "^8.10.0",
     "eslint-plugin-import": "^2.29.0",
     "eslint-plugin-vue": "^9.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.0.0",
-    "@typescript-eslint/parser": "^8.0.0",
-    "vue-eslint-parser": "^9.0.0",
     "jsdom": "^25.0.1",
     "lightningcss": "^1.32.0",
     "tailwindcss": "^4.3.0",
@@ -76,6 +76,7 @@
     "typescript": "~6.0.3",
     "vite": "^6.4.2",
     "vitest": "^3.2.6",
+    "vue-eslint-parser": "^9.0.0",
     "vue-tsc": "^3.3.3",
     "wait-on": "^7.0.1"
   },
@@ -92,7 +93,12 @@
     ],
     "win": {
       "target": [
-        { "target": "nsis", "arch": ["x64"] }
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
       ],
       "icon": "dist-electron/.icon-ico/icon.ico"
     },
@@ -102,7 +108,12 @@
     },
     "linux": {
       "target": [
-        { "target": "zip", "arch": ["x64"] }
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
       ],
       "icon": "public/icons/logo.png"
     },

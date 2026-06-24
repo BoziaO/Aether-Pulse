@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
+
 import { spatialAudio } from '@/services/rtc/spatial-audio'
 import { useAuthStore } from './auth.store'
 import { useSystemTheme } from '@/composables/useSystemTheme'

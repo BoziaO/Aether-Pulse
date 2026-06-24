@@ -45,4 +45,5 @@ export interface Message {
   attachmentUrl?: string | null
   attachmentName?: string | null
   attachmentMime?: string | null
+  status?: 'sending' | 'delivered' | 'read'
 }

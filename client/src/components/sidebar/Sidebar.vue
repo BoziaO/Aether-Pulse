@@ -1,58 +1,59 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { Hash, Plus, Settings, LogOut, Mic, MicOff, Users, MessageCircle } from 'lucide-vue-next'
-import { useAuthStore } from '@/stores/auth.store'
-import { useRoomStore } from '@/stores/room.store'
-import { useRtcStore } from '@/stores/rtc.store'
-import { useFriendsStore } from '@/stores/friends.store'
-import { useDmStore } from '@/stores/dm.store'
-import UserAvatar from '@/components/profile/UserAvatar.vue'
-import CreateRoomModal from '@/components/rooms/CreateRoomModal.vue'
+  import { ref, onMounted } from 'vue'
+  import { useRouter, useRoute } from 'vue-router'
+  import { Hash, Plus, Settings, LogOut, Mic, MicOff, Users, MessageCircle } from 'lucide-vue-next'
 
-const router = useRouter()
-const route = useRoute()
-const auth = useAuthStore()
-const roomStore = useRoomStore()
-const rtcStore = useRtcStore()
-const friendsStore = useFriendsStore()
-const dmStore = useDmStore()
+  import { useAuthStore } from '@/stores/auth.store'
+  import { useRoomStore } from '@/stores/room.store'
+  import { useRtcStore } from '@/stores/rtc.store'
+  import { useFriendsStore } from '@/stores/friends.store'
+  import { useDmStore } from '@/stores/dm.store'
+  import UserAvatar from '@/components/profile/UserAvatar.vue'
+  import CreateRoomModal from '@/components/rooms/CreateRoomModal.vue'
 
-const showCreateModal = ref(false)
+  const router = useRouter()
+  const route = useRoute()
+  const auth = useAuthStore()
+  const roomStore = useRoomStore()
+  const rtcStore = useRtcStore()
+  const friendsStore = useFriendsStore()
+  const dmStore = useDmStore()
 
-function goToRoom(roomId: string) {
-  router.push(`/app/room/${roomId}`)
-}
+  const showCreateModal = ref(false)
 
-function goToDm(userId: string) {
-  router.push({ name: 'dm', params: { userId } })
-}
+  function goToRoom(roomId: string) {
+    router.push(`/app/room/${roomId}`)
+  }
 
-function isActiveRoom(roomId: string) {
-  return route.params.roomId === roomId
-}
+  function goToDm(userId: string) {
+    router.push({ name: 'dm', params: { userId } })
+  }
 
-function isActiveDm(userId: string) {
-  return route.name === 'dm' && route.params.userId === userId
-}
+  function isActiveRoom(roomId: string) {
+    return route.params.roomId === roomId
+  }
 
-function dmPreview(conv: import('@/types/dm.types').DmConversation) {
-  const lm = conv.lastMessage
-  if (!lm) return 'No messages yet'
-  if (lm.type === 'file') return lm.attachmentName || 'Attachment'
-  const text = lm.content
-  const snippet = text.length > 36 ? `${text.slice(0, 36)}…` : text
-  return lm.userId === auth.user?.id ? `You: ${snippet}` : snippet
-}
+  function isActiveDm(userId: string) {
+    return route.name === 'dm' && route.params.userId === userId
+  }
 
-async function handleLogout() {
-  await auth.logout()
-  router.push('/auth')
-}
+  function dmPreview(conv: import('@/types/dm.types').DmConversation) {
+    const lm = conv.lastMessage
+    if (!lm) return 'No messages yet'
+    if (lm.type === 'file') return lm.attachmentName || 'Attachment'
+    const text = lm.content
+    const snippet = text.length > 36 ? `${text.slice(0, 36)}…` : text
+    return lm.userId === auth.user?.id ? `You: ${snippet}` : snippet
+  }
 
-onMounted(() => {
-  friendsStore.bindSocketEvents()
-})
+  async function handleLogout() {
+    await auth.logout()
+    router.push('/auth')
+  }
+
+  onMounted(() => {
+    friendsStore.bindSocketEvents()
+  })
 </script>
 
 <template>
@@ -119,8 +120,8 @@ onMounted(() => {
       <div class="call-controls">
         <button
           class="call-btn"
-          @click="rtcStore.toggleMute()"
           :title="rtcStore.isMuted ? 'Unmute' : 'Mute'"
+          @click="rtcStore.toggleMute()"
         >
           <MicOff v-if="rtcStore.isMuted" :size="14" />
           <Mic v-else :size="14" />
@@ -129,7 +130,7 @@ onMounted(() => {
     </div>
 
     <div class="sidebar-user">
-      <div class="user-info" @click="router.push('/app/profile')" style="cursor: pointer">
+      <div class="user-info" style="cursor: pointer" @click="router.push('/app/profile')">
         <UserAvatar :user="auth.user" :size="32" />
         <div class="user-details">
           <div class="user-name">{{ auth.user?.displayName }}</div>
@@ -137,10 +138,10 @@ onMounted(() => {
         </div>
       </div>
       <div class="user-actions">
-        <button class="icon-btn" @click="router.push('/app/settings')" title="Settings">
+        <button class="icon-btn" title="Settings" @click="router.push('/app/settings')">
           <Settings :size="16" />
         </button>
-        <button class="icon-btn danger" @click="handleLogout" title="Log out">
+        <button class="icon-btn danger" title="Log out" @click="handleLogout">
           <LogOut :size="16" />
         </button>
       </div>

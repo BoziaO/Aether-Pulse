@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { ref, computed } from 'vue'
-  import { Reply, Pencil, Trash2, SmilePlus, Download, FileText } from 'lucide-vue-next'
+  import { Reply, Pencil, Trash2, SmilePlus, Download, FileText, Check, CheckCheck, Loader } from 'lucide-vue-next'
 
   import type { Message } from '@/types/message.types'
   import { useSettingsStore } from '@/stores/settings.store'
@@ -11,6 +11,7 @@
     message: Message
     isOwn?: boolean | undefined
     showAvatar?: boolean | undefined
+    showAuthor?: boolean | undefined
     roomId?: string | undefined
     currentUserId?: string | undefined
   }>()
@@ -71,18 +72,42 @@
     emit('react', props.message.id, emoji)
     showReactionPicker.value = false
   }
+
+  const statusIcon = computed(() => {
+    if (!props.isOwn) return null
+    switch (props.message.status) {
+      case 'sending': return Loader
+      case 'delivered': return Check
+      case 'read': return CheckCheck
+      default: return null
+    }
+  })
+
+  const statusLabel = computed(() => {
+    if (!props.isOwn) return ''
+    switch (props.message.status) {
+      case 'sending': return 'Sending'
+      case 'delivered': return 'Delivered'
+      case 'read': return 'Read'
+      default: return ''
+    }
+  })
 </script>
 
 <template>
   <div
     :id="'message-' + message.id"
     class="message"
-    :class="[{ own: isOwn, system: message.type === 'system' }, layoutClass, { compact: isCompactMessage }]"
+    :class="[
+      { own: isOwn, system: message.type === 'system', grouped: !showAvatar && message.type !== 'system' },
+      layoutClass,
+      { compact: isCompactMessage }
+    ]"
     @mouseenter="showActions = true"
     @mouseleave="hideActions"
     @dblclick="isOwn && !message.isDeleted && emit('edit', message)"
   >
-    <div v-if="showAvatar !== false && message.type !== 'system'" class="message-avatar">
+    <div v-if="showAvatar && message.type !== 'system'" class="message-avatar">
       <button
         v-if="message.user?.id"
         class="avatar-btn"
@@ -102,7 +127,7 @@
         <div class="reply-content">{{ message.replyTo.isDeleted ? 'Message deleted' : truncatedContent }}</div>
       </div>
 
-      <div v-if="showAvatar !== false && message.type !== 'system'" class="message-meta">
+      <div v-if="showAuthor && message.type !== 'system'" class="message-meta">
         <button
           v-if="message.user?.id"
           class="author-btn"
@@ -125,6 +150,9 @@
         </span>
         <span class="message-time">{{ formatTime(message.createdAt) }}</span>
         <span v-if="message.editedAt" class="edited-tag">edited</span>
+        <span v-if="statusIcon" class="message-status" :title="statusLabel">
+          <component :is="statusIcon" :size="12" />
+        </span>
       </div>
 
       <div v-if="message.isDeleted" class="deleted-msg">Message deleted</div>
@@ -136,7 +164,7 @@
           rel="noreferrer"
           class="attachment-image"
         >
-          <img :src="message.attachmentUrl" :alt="message.attachmentName || 'Image'" />
+          <img :src="message.attachmentUrl" :alt="message.attachmentName || 'Image'" loading="lazy" decoding="async" />
         </a>
         <a
           v-else
@@ -219,6 +247,10 @@
   gap: 10px;
   padding-top: 4px;
   padding-bottom: 4px;
+}
+.message.grouped {
+  padding-top: 2px;
+  padding-bottom: 2px;
 }
 .message.layout-compact {
   padding-left: 12px;
@@ -318,6 +350,11 @@
 .message-time,
 .edited-tag {
   font-size: 11px;
+  color: var(--text-muted);
+}
+.message-status {
+  display: inline-flex;
+  align-items: center;
   color: var(--text-muted);
 }
 .deleted-msg {

@@ -1,6 +1,8 @@
 <script setup lang="ts">
   import { ref, computed, watch, nextTick } from 'vue'
   import { Search, Users, X } from 'lucide-vue-next'
+  import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller'
+  import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 
   import { useChatStore } from '@/stores/chat.store'
   import { useAuthStore } from '@/stores/auth.store'
@@ -26,13 +28,14 @@
   const auth = useAuthStore()
   const settings = useSettingsStore()
   const rtc = useRtcStore()
-  const scrollEl = ref<HTMLElement | null>(null)
+  const scrollerRef = ref<any>(null)
   const selectedUserId = ref<string | null>(null)
   const showSearch = ref(false)
   const searchInput = ref('')
   const editingMessage = ref<Message | null>(null)
   const editContent = ref('')
   const uploading = ref(false)
+  const nearBottom = ref(true)
   let searchTimeout: ReturnType<typeof setTimeout> | null = null
 
   const typingList = computed(() => [...chatStore.typingUsers].filter((id) => id !== auth.user?.id))
@@ -40,6 +43,55 @@
   const displayMessages = computed(() =>
     showSearch.value && searchInput.value.trim() ? chatStore.searchResults : chatStore.messages
   )
+
+  const GROUP_WINDOW = 5 * 60 * 1000
+
+  const messageMeta = computed(() => {
+    const msgs = displayMessages.value
+    const meta = new Map<string, { showAvatar: boolean; showAuthor: boolean; isGrouped: boolean }>()
+
+    for (let i = 0; i < msgs.length; i++) {
+      const msg = msgs[i]
+      if (msg.type === 'system') {
+        meta.set(msg.id, { showAvatar: true, showAuthor: true, isGrouped: false })
+        continue
+      }
+
+      const prev = i > 0 ? msgs[i - 1] : null
+      const next = i < msgs.length - 1 ? msgs[i + 1] : null
+
+      const sameAsPrev = prev != null && prev.userId === msg.userId && prev.type !== 'system'
+      const sameAsNext = next != null && next.userId === msg.userId && next.type !== 'system'
+
+      if (!sameAsPrev && !sameAsNext) {
+        meta.set(msg.id, { showAvatar: true, showAuthor: true, isGrouped: false })
+        continue
+      }
+
+      const currTime = new Date(msg.createdAt).getTime()
+
+      let inGroup = false
+      if (sameAsPrev) {
+        const prevTime = new Date(prev!.createdAt).getTime()
+        inGroup = currTime - prevTime < GROUP_WINDOW
+      }
+      if (!inGroup && sameAsNext) {
+        const nextTime = new Date(next!.createdAt).getTime()
+        inGroup = nextTime - currTime < GROUP_WINDOW
+      }
+
+      if (!inGroup) {
+        meta.set(msg.id, { showAvatar: true, showAuthor: true, isGrouped: false })
+      } else {
+        const showAvatar = !sameAsPrev
+        const showAuthor = !sameAsPrev
+        meta.set(msg.id, { showAvatar, showAuthor, isGrouped: !showAvatar })
+      }
+    }
+
+    return meta
+  })
+
   const isCompactPanel = computed(
     () => settings.compactChatMode || settings.chatLayout === 'compact'
   )
@@ -47,25 +99,38 @@
 
   function scrollToBottom() {
     nextTick(() => {
-      if (scrollEl.value) scrollEl.value.scrollTop = scrollEl.value.scrollHeight
+      if (scrollerRef.value) {
+        scrollerRef.value.scrollToBottom()
+      }
     })
   }
 
-  watch(() => chatStore.messages.length, scrollToBottom)
+  // Smart autoscroll: only when near bottom
+  function checkNearBottom() {
+    if (!scrollerRef.value) return
+    const el = (scrollerRef.value as any).$el as HTMLElement | undefined
+    if (!el) return
+    const threshold = 150
+    nearBottom.value = el.scrollHeight - el.scrollTop - el.clientHeight < threshold
+  }
 
-  function handleScroll() {
-    if (!scrollEl.value || showSearch.value) return
-    if (scrollEl.value.scrollTop < 40 && chatStore.hasMore && !chatStore.loadingMore) {
-      const prevHeight = scrollEl.value.scrollHeight
-      chatStore.loadMore().then(() => {
-        nextTick(() => {
-          if (scrollEl.value) {
-            scrollEl.value.scrollTop = scrollEl.value.scrollHeight - prevHeight
-          }
-        })
-      })
+  function handleScrollerScroll() {
+    checkNearBottom()
+    if (!scrollerRef.value || showSearch.value) return
+  }
+
+  function handleScrollerUpdate(_startIndex: number, _endIndex: number, visibleStartIndex: number, _visibleEndIndex: number) {
+    if (visibleStartIndex < 3 && chatStore.hasMore && !chatStore.loadingMore && !showSearch.value) {
+      chatStore.loadMore()
     }
   }
+
+  // Auto-scroll on new messages when near bottom
+  watch(() => chatStore.messages.length, () => {
+    if (nearBottom.value) {
+      scrollToBottom()
+    }
+  })
 
   function handleSend(content: string) {
     if (!auth.user) return
@@ -145,28 +210,44 @@
       <button type="button" @click="cancelEdit"><X :size="14" /></button>
     </div>
 
-    <div class="chat-messages" ref="scrollEl" @scroll="handleScroll">
-      <div v-if="chatStore.loadingMore" class="load-more">Loading older messages...</div>
+    <div class="chat-messages">
+      <DynamicScroller
+        v-if="!chatStore.loading"
+        ref="scrollerRef"
+        :items="displayMessages"
+        :min-item-size="isCompactPanel ? 48 : 64"
+        key-field="id"
+        @scroll="handleScrollerScroll"
+        @update="handleScrollerUpdate"
+      >
+        <template #default="{ item, active }">
+          <DynamicScrollerItem :item="item" :active="active" :size-dirty="false">
+            <ChatMessage
+              v-memo="[item.id, item.content, item.editedAt, item.reactions, item.isDeleted, item.status, item.attachmentUrl]"
+              :message="item"
+              :room-id="roomId"
+              :current-user-id="auth.user?.id"
+              :is-own="item.userId === auth.user?.id"
+              :show-avatar="messageMeta.get(item.id)?.showAvatar ?? true"
+              :show-author="messageMeta.get(item.id)?.showAuthor ?? true"
+              @open-profile="selectedUserId = $event"
+              @reply="chatStore.setReply($event)"
+              @edit="startEdit"
+              @delete="chatStore.deleteMessage(roomId, $event)"
+              @react="(id, emoji) => chatStore.toggleReaction(roomId, id, emoji)"
+            />
+          </DynamicScrollerItem>
+        </template>
+        <template #before>
+          <div v-if="chatStore.loadingMore" class="load-more">Loading older messages...</div>
+        </template>
+        <template #empty>
+          <div class="chat-empty">
+            {{ showSearch && searchInput ? 'No results found.' : 'No messages yet. Say hello! 👋' }}
+          </div>
+        </template>
+      </DynamicScroller>
       <div v-if="chatStore.loading" class="chat-empty">Loading...</div>
-      <div v-else-if="displayMessages.length === 0" class="chat-empty">
-        {{ showSearch && searchInput ? 'No results found.' : 'No messages yet. Say hello! 👋' }}
-      </div>
-      <ChatMessage
-        v-for="(msg, i) in displayMessages"
-        :key="msg.id"
-        :message="msg"
-        :room-id="roomId"
-        :current-user-id="auth.user?.id"
-        :is-own="msg.userId === auth.user?.id"
-        :show-avatar="
-          i === 0 || displayMessages[i - 1]?.userId !== msg.userId || msg.type === 'system'
-        "
-        @open-profile="selectedUserId = $event"
-        @reply="chatStore.setReply($event)"
-        @edit="startEdit"
-        @delete="chatStore.deleteMessage(roomId, $event)"
-        @react="(id, emoji) => chatStore.toggleReaction(roomId, id, emoji)"
-      />
       <div v-if="typingList.length > 0" class="typing-indicator">
         <span class="typing-dots"><span /><span /><span /></span>
         <span>{{
@@ -285,15 +366,14 @@
 }
 .chat-messages {
   flex: 1;
-  overflow-y: auto;
-  padding: 8px 0;
+  overflow: hidden;
+  position: relative;
 }
-.chat-panel.layout-compact .chat-messages {
-  padding-top: 4px;
-  padding-bottom: 4px;
+.chat-messages :deep(.vue-recycle-scroller) {
+  height: 100%;
 }
-.chat-panel.layout-bubble .chat-messages {
-  padding-top: 10px;
+.chat-messages :deep(.vue-recycle-scroller__item-wrapper) {
+  overflow: visible;
 }
 .load-more {
   text-align: center;
@@ -348,6 +428,21 @@
   }
 }
 
+/* Message enter animation */
+.chat-messages :deep(.message) {
+  animation: message-enter 0.2s ease-out;
+}
+@keyframes message-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Mobile responsive styles */
 @media (max-width: 767px) {
   .chat-panel {
@@ -355,12 +450,10 @@
     min-width: 100% !important;
     border-left: none !important;
   }
-  
   .chat-panel.compact {
     width: 100% !important;
     min-width: 100% !important;
   }
-  
   .chat-panel.layout-bubble,
   .chat-panel.layout-modern {
     width: 100% !important;

@@ -1,109 +1,110 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, defineAsyncComponent } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { Phone, ArrowLeft, Link2, Settings, Users, Radio, PictureInPicture2, Loader2 } from 'lucide-vue-next'
-import { useAuthStore } from '@/stores/auth.store'
-import { useRoomStore } from '@/stores/room.store'
-import { useRtcStore } from '@/stores/rtc.store'
+  import { ref, onMounted, onUnmounted, computed, defineAsyncComponent } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
+  import { Phone, ArrowLeft, Link2, Settings, Users, Radio, PictureInPicture2, Loader2 } from 'lucide-vue-next'
 
-// Lazy-loaded components for performance
-const VideoTile = defineAsyncComponent(() => import('@/components/call/VideoTile.vue'))
-const CallControls = defineAsyncComponent(() => import('@/components/call/CallControls.vue'))
-const ChatPanel = defineAsyncComponent(() => import('@/components/chat/ChatPanel.vue'))
-const MemberSidebar = defineAsyncComponent(() => import('@/components/rooms/MemberSidebar.vue'))
-const InviteModal = defineAsyncComponent(() => import('@/components/modals/InviteModal.vue'))
-const RoomSettingsModal = defineAsyncComponent(
-  () => import('@/components/rooms/RoomSettingsModal.vue')
-)
-const UserProfileModal = defineAsyncComponent(
-  () => import('@/components/profile/UserProfileModal.vue')
-)
+  import { useAuthStore } from '@/stores/auth.store'
+  import { useRoomStore } from '@/stores/room.store'
+  import { useRtcStore } from '@/stores/rtc.store'
 
-const route = useRoute()
-const router = useRouter()
-const auth = useAuthStore()
-const roomStore = useRoomStore()
-const rtc = useRtcStore()
+  // Lazy-loaded components for performance
+  const VideoTile = defineAsyncComponent(() => import('@/components/call/VideoTile.vue'))
+  const CallControls = defineAsyncComponent(() => import('@/components/call/CallControls.vue'))
+  const ChatPanel = defineAsyncComponent(() => import('@/components/chat/ChatPanel.vue'))
+  const MemberSidebar = defineAsyncComponent(() => import('@/components/rooms/MemberSidebar.vue'))
+  const InviteModal = defineAsyncComponent(() => import('@/components/modals/InviteModal.vue'))
+  const RoomSettingsModal = defineAsyncComponent(
+    () => import('@/components/rooms/RoomSettingsModal.vue')
+  )
+  const UserProfileModal = defineAsyncComponent(
+    () => import('@/components/profile/UserProfileModal.vue')
+  )
 
-const showInvite = ref(false)
-const showSettings = ref(false)
-const showMembers = ref(true)
-const callError = ref('')
-const showJoinWithoutMicrophone = ref(false)
-const isCheckingMicrophone = ref(false)
-const selectedUserId = ref<string | null>(null)
-const activeTab = ref<'voice' | 'chat'>('voice')
+  const route = useRoute()
+  const router = useRouter()
+  const auth = useAuthStore()
+  const roomStore = useRoomStore()
+  const rtc = useRtcStore()
 
-const roomId = computed(() => route.params.roomId as string)
-const room = computed(() => roomStore.currentRoom)
-const membersForChat = computed(() =>
-  (room.value?.members ?? []).map((m) => ({
-    id: m.id,
-    displayName: m.displayName,
-    status: m.status,
-  }))
-)
-const members = computed(() => room.value?.members ?? [])
-const remoteEntries = computed(() => [...rtc.remoteStreams.entries()])
-const inVoiceCount = computed(() => rtc.callUsers.size + (rtc.inCall ? 1 : 0))
-const isAndroidNative = computed(
-  () =>
-    typeof (window as any).Capacitor !== 'undefined' && (window as any).Capacitor.isNativePlatform()
-)
+  const showInvite = ref(false)
+  const showSettings = ref(false)
+  const showMembers = ref(true)
+  const callError = ref('')
+  const showJoinWithoutMicrophone = ref(false)
+  const isCheckingMicrophone = ref(false)
+  const selectedUserId = ref<string | null>(null)
+  const activeTab = ref<'voice' | 'chat'>('voice')
 
-onMounted(async () => {
-  if (!auth.user) return
-  try {
-    await roomStore.loadRoom(roomId.value)
-    await rtc.joinRoom(roomId.value, auth.user.id)
-  } catch (e) {
-    console.error('Failed to join room:', e)
+  const roomId = computed(() => route.params.roomId as string)
+  const room = computed(() => roomStore.currentRoom)
+  const membersForChat = computed(() =>
+    (room.value?.members ?? []).map((m) => ({
+      id: m.id,
+      displayName: m.displayName,
+      status: m.status,
+    }))
+  )
+  const members = computed(() => room.value?.members ?? [])
+  const remoteEntries = computed(() => [...rtc.remoteStreams.entries()])
+  const inVoiceCount = computed(() => rtc.callUsers.size + (rtc.inCall ? 1 : 0))
+  const isAndroidNative = computed(
+    () =>
+      typeof (window as any).Capacitor !== 'undefined' && (window as any).Capacitor.isNativePlatform()
+  )
+
+  onMounted(async () => {
+    if (!auth.user) return
+    try {
+      await roomStore.loadRoom(roomId.value)
+      await rtc.joinRoom(roomId.value, auth.user.id)
+    } catch (e) {
+      console.error('Failed to join room:', e)
+    }
+  })
+
+  onUnmounted(() => {
+    if (auth.user) rtc.leaveRoom(auth.user.id)
+  })
+
+  async function handleJoinCall() {
+    callError.value = ''
+    try {
+      await rtc.startCall()
+    } catch (e: unknown) {
+      callError.value = e instanceof Error ? e.message : 'Nie można uzyskać dostępu do mikrofonu'
+    }
   }
-})
 
-onUnmounted(() => {
-  if (auth.user) rtc.leaveRoom(auth.user.id)
-})
-
-async function handleJoinCall() {
-  callError.value = ''
-  try {
-    await rtc.startCall()
-  } catch (e: unknown) {
-    callError.value = e instanceof Error ? e.message : 'Nie można uzyskać dostępu do mikrofonu'
+  async function handleJoinWithoutMicrophone() {
+    callError.value = ''
+    try {
+      isCheckingMicrophone.value = true
+      await rtc.startCall(true) // allowWithoutMicrophone = true
+      showJoinWithoutMicrophone.value = false
+    } catch (e: unknown) {
+      callError.value = e instanceof Error ? e.message : 'Nie można dołączyć bez mikrofonu'
+    } finally {
+      isCheckingMicrophone.value = false
+    }
   }
-}
 
-async function handleJoinWithoutMicrophone() {
-  callError.value = ''
-  try {
-    isCheckingMicrophone.value = true
-    await rtc.startCall(true) // allowWithoutMicrophone = true
-    showJoinWithoutMicrophone.value = false
-  } catch (e: unknown) {
-    callError.value = e instanceof Error ? e.message : 'Nie można dołączyć bez mikrofonu'
-  } finally {
-    isCheckingMicrophone.value = false
+  function goBack() {
+    router.push('/app')
   }
-}
 
-function goBack() {
-  router.push('/app')
-}
+  function openUserProfile(userId: string) {
+    selectedUserId.value = userId
+  }
 
-function openUserProfile(userId: string) {
-  selectedUserId.value = userId
-}
+  function handleLeftRoom() {
+    showSettings.value = false
+    router.push('/app')
+  }
 
-function handleLeftRoom() {
-  showSettings.value = false
-  router.push('/app')
-}
-
-function handleDeletedRoom() {
-  showSettings.value = false
-  router.push('/')
-}
+  function handleDeletedRoom() {
+    showSettings.value = false
+    router.push('/')
+  }
 </script>
 
 <template>
@@ -157,8 +158,8 @@ function handleDeletedRoom() {
             <div v-if="!showJoinWithoutMicrophone" class="join-options">
               <button 
                 class="btn-primary join-btn"
-                @click="handleJoinCall"
                 :disabled="isCheckingMicrophone"
+                @click="handleJoinCall"
               >
                 <Phone :size="18" />
                 Dołącz z mikrofonem
@@ -180,8 +181,8 @@ function handleDeletedRoom() {
               <div class="confirm-buttons">
                 <button 
                   class="btn-primary"
-                  @click="handleJoinWithoutMicrophone"
                   :disabled="isCheckingMicrophone"
+                  @click="handleJoinWithoutMicrophone"
                 >
                   <Loader2 v-if="isCheckingMicrophone" class="loader" :size="18" />
                   <span v-else>Potwierdź i dołącz</span>

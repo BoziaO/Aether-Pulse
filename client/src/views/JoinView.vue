@@ -1,46 +1,47 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { UserPlus, ArrowLeft } from 'lucide-vue-next'
-import { useAuthStore } from '@/stores/auth.store'
-import { useRoomStore } from '@/stores/room.store'
+  import { ref, onMounted } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
+  import { UserPlus, ArrowLeft } from 'lucide-vue-next'
 
-const route = useRoute()
-const router = useRouter()
-const auth = useAuthStore()
-const roomStore = useRoomStore()
-const inviteCode = ref('')
-const loading = ref(false)
-const error = ref('')
+  import { useAuthStore } from '@/stores/auth.store'
+  import { useRoomStore } from '@/stores/room.store'
 
-onMounted(async () => {
-  if (route.params.code) {
-    inviteCode.value = route.params.code as string
-  }
-  if (!auth.user) {
-    await auth.fetchMe()
+  const route = useRoute()
+  const router = useRouter()
+  const auth = useAuthStore()
+  const roomStore = useRoomStore()
+  const inviteCode = ref('')
+  const loading = ref(false)
+  const error = ref('')
+
+  onMounted(async () => {
+    if (route.params.code) {
+      inviteCode.value = route.params.code as string
+    }
     if (!auth.user) {
-      router.push('/auth')
-      return
+      await auth.fetchMe()
+      if (!auth.user) {
+        router.push('/auth')
+        return
+      }
+    }
+    if (inviteCode.value) {
+      await joinRoom()
+    }
+  })
+
+  async function joinRoom() {
+    if (!inviteCode.value.trim()) return
+    loading.value = true
+    error.value = ''
+    try {
+      const room = await roomStore.joinByCode(inviteCode.value.trim())
+      router.push(`/app/room/${room.id}`)
+    } catch (e: unknown) {
+      error.value = e instanceof Error ? e.message : 'Invalid invite code'
+      loading.value = false
     }
   }
-  if (inviteCode.value) {
-    await joinRoom()
-  }
-})
-
-async function joinRoom() {
-  if (!inviteCode.value.trim()) return
-  loading.value = true
-  error.value = ''
-  try {
-    const room = await roomStore.joinByCode(inviteCode.value.trim())
-    router.push(`/app/room/${room.id}`)
-  } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : 'Invalid invite code'
-    loading.value = false
-  }
-}
 </script>
 
 <template>
@@ -68,9 +69,9 @@ async function joinRoom() {
               v-model="inviteCode"
               class="input code-input"
               placeholder="e.g. a1b2c3d4"
-              @keydown.enter="joinRoom"
               maxlength="32"
               autofocus
+              @keydown.enter="joinRoom"
             />
           </div>
           <p v-if="error" class="error-msg">{{ error }}</p>

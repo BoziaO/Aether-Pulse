@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+
 import { dmApi } from '@/services/api/dm.api'
 import { getSocket, connectSocket } from '@/services/socket/socket'
 import { notifyNewMessage } from '@/utils/notifications'

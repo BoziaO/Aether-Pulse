@@ -1,32 +1,33 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { X } from 'lucide-vue-next'
-import { useRoomStore } from '@/stores/room.store'
+  import { ref } from 'vue'
+  import { useRouter } from 'vue-router'
+  import { X } from 'lucide-vue-next'
 
-const emit = defineEmits<{ (e: 'close'): void }>()
-const router = useRouter()
-const roomStore = useRoomStore()
-const name = ref('')
-const quality = ref('1080p')
-const QUALITIES = ['360p', '480p', '720p', '1080p', '1440p']
-const loading = ref(false)
-const error = ref('')
+  import { useRoomStore } from '@/stores/room.store'
 
-async function create() {
-  if (!name.value.trim()) return
-  loading.value = true
-  error.value = ''
-  try {
-    const room = await roomStore.createRoom(name.value.trim(), quality.value)
-    emit('close')
-    router.push(`/app/room/${room.id}`)
-  } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : 'Failed to create room'
-  } finally {
-    loading.value = false
+  const emit = defineEmits<{ (e: 'close'): void }>()
+  const router = useRouter()
+  const roomStore = useRoomStore()
+  const name = ref('')
+  const quality = ref('1080p')
+  const QUALITIES = ['360p', '480p', '720p', '1080p', '1440p']
+  const loading = ref(false)
+  const error = ref('')
+
+  async function create() {
+    if (!name.value.trim()) return
+    loading.value = true
+    error.value = ''
+    try {
+      const room = await roomStore.createRoom(name.value.trim(), quality.value)
+      emit('close')
+      router.push(`/app/room/${room.id}`)
+    } catch (e: unknown) {
+      error.value = e instanceof Error ? e.message : 'Failed to create room'
+    } finally {
+      loading.value = false
+    }
   }
-}
 </script>
 
 <template>
@@ -42,8 +43,8 @@ async function create() {
           v-model="name"
           class="input"
           placeholder="My awesome room"
-          @keydown.enter="create"
           autofocus
+          @keydown.enter="create"
         />
         <label class="label">Stream quality</label>
         <select v-model="quality" class="input">

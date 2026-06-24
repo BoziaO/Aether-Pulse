@@ -1,34 +1,35 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import type { User } from '@/types/user.types'
-import type { MessageUser } from '@/types/message.types'
+  import { computed } from 'vue'
 
-const props = defineProps<{
-  user: User | MessageUser | null | undefined
-  size?: number
-}>()
+  import type { User } from '@/types/user.types'
+  import type { MessageUser } from '@/types/message.types'
 
-const sz = computed(() => props.size ?? 36)
-const initials = computed(() => {
-  const u = props.user
-  const name = u?.displayName || (u && 'username' in u ? u.username : null) || '?'
-  return name
-    .split(' ')
-    .map((w: string) => w[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
-})
-const gradient = computed(() => {
-  if (props.user?.profileGradient) return props.user.profileGradient
-  const color = props.user?.accentColor || '#8b5cf6'
-  return `linear-gradient(135deg, ${color}, #3b82f6)`
-})
-const statusClass = computed(() => props.user?.status || 'offline')
-const frameClass = computed(() => {
-  const f = props.user && 'avatarFrame' in props.user ? props.user.avatarFrame : null
-  return f ? `frame-${f}` : ''
-})
+  const props = defineProps<{
+    user: User | MessageUser | null | undefined
+    size?: number
+  }>()
+
+  const sz = computed(() => props.size ?? 36)
+  const initials = computed(() => {
+    const u = props.user
+    const name = u?.displayName || (u && 'username' in u ? u.username : null) || '?'
+    return name
+      .split(' ')
+      .map((w: string) => w[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
+  })
+  const gradient = computed(() => {
+    if (props.user?.profileGradient) return props.user.profileGradient
+    const color = props.user?.accentColor || '#8b5cf6'
+    return `linear-gradient(135deg, ${color}, #3b82f6)`
+  })
+  const statusClass = computed(() => props.user?.status || 'offline')
+  const frameClass = computed(() => {
+    const f = props.user && 'avatarFrame' in props.user ? props.user.avatarFrame : null
+    return f ? `frame-${f}` : ''
+  })
 </script>
 
 <template>

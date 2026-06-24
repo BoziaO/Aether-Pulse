@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+
 import { useSettingsStore } from './settings.store'
 
 describe('Settings Store', () => {

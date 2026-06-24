@@ -1,54 +1,55 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { Search, UserPlus, X, Check, Clock } from 'lucide-vue-next'
-import { useFriendsStore } from '@/stores/friends.store'
-import { friendsApi } from '@/services/api/friends.api'
-import { useRouter } from 'vue-router'
-import UserAvatar from '@/components/profile/UserAvatar.vue'
-import type { UserSearchResult } from '@/types/friend.types'
+  import { ref } from 'vue'
+  import { Search, UserPlus, X, Check, Clock } from 'lucide-vue-next'
+  import { useRouter } from 'vue-router'
 
-const friendsStore = useFriendsStore()
-const router = useRouter()
-const searchQuery = ref('')
-const searchResults = ref<UserSearchResult[]>([])
-const searching = ref(false)
-let searchTimeout: ReturnType<typeof setTimeout> | null = null
+  import { useFriendsStore } from '@/stores/friends.store'
+  import { friendsApi } from '@/services/api/friends.api'
+  import UserAvatar from '@/components/profile/UserAvatar.vue'
+  import type { UserSearchResult } from '@/types/friend.types'
 
-async function handleSearch() {
-  if (searchTimeout) clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(async () => {
-    const q = searchQuery.value.trim()
-    if (q.length < 2) {
-      searchResults.value = []
-      return
-    }
-    searching.value = true
-    try {
-      searchResults.value = await friendsApi.search(q)
-    } catch {
-      searchResults.value = []
-    } finally {
-      searching.value = false
-    }
-  }, 300)
-}
+  const friendsStore = useFriendsStore()
+  const router = useRouter()
+  const searchQuery = ref('')
+  const searchResults = ref<UserSearchResult[]>([])
+  const searching = ref(false)
+  let searchTimeout: ReturnType<typeof setTimeout> | null = null
 
-async function sendRequest(userId: string) {
-  await friendsStore.sendRequest(userId)
-  await handleSearch()
-}
+  async function handleSearch() {
+    if (searchTimeout) clearTimeout(searchTimeout)
+    searchTimeout = setTimeout(async () => {
+      const q = searchQuery.value.trim()
+      if (q.length < 2) {
+        searchResults.value = []
+        return
+      }
+      searching.value = true
+      try {
+        searchResults.value = await friendsApi.search(q)
+      } catch {
+        searchResults.value = []
+      } finally {
+        searching.value = false
+      }
+    }, 300)
+  }
 
-async function accept(userId: string) {
-  await friendsStore.accept(userId)
-}
+  async function sendRequest(userId: string) {
+    await friendsStore.sendRequest(userId)
+    await handleSearch()
+  }
 
-async function reject(userId: string) {
-  await friendsStore.reject(userId)
-}
+  async function accept(userId: string) {
+    await friendsStore.accept(userId)
+  }
 
-function openDm(userId: string) {
-  router.push({ name: 'dm', params: { userId } })
-}
+  async function reject(userId: string) {
+    await friendsStore.reject(userId)
+  }
+
+  function openDm(userId: string) {
+    router.push({ name: 'dm', params: { userId } })
+  }
 </script>
 
 <template>
@@ -88,7 +89,7 @@ function openDm(userId: string) {
         </button>
         <span v-else-if="result.status === 'friends'" class="badge friends">Friends</span>
         <span v-else-if="result.status === 'pending_outgoing'" class="badge pending"
-          ><Clock :size="12" /> Pending</span
+        ><Clock :size="12" /> Pending</span
         >
         <button
           v-else-if="result.status === 'pending_incoming'"

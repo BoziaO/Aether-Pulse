@@ -1,145 +1,146 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { ArrowLeft, X } from 'lucide-vue-next'
-import { useAuthStore } from '@/stores/auth.store'
-import { useDmStore } from '@/stores/dm.store'
-import { useFriendsStore } from '@/stores/friends.store'
-import { useSettingsStore } from '@/stores/settings.store'
-import { useToastStore } from '@/stores/toast.store'
-import ChatMessage from '@/components/chat/ChatMessage.vue'
-import ChatInput from '@/components/chat/ChatInput.vue'
-import UserAvatar from '@/components/profile/UserAvatar.vue'
-import UserProfileModal from '@/components/profile/UserProfileModal.vue'
-import type { Message } from '@/types/message.types'
-import type { DmMessage } from '@/types/dm.types'
+  import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
+  import { ArrowLeft, X } from 'lucide-vue-next'
 
-const route = useRoute()
-const router = useRouter()
-const auth = useAuthStore()
-const dm = useDmStore()
-const friends = useFriendsStore()
-const settings = useSettingsStore()
+  import { useAuthStore } from '@/stores/auth.store'
+  import { useDmStore } from '@/stores/dm.store'
+  import { useFriendsStore } from '@/stores/friends.store'
+  import { useSettingsStore } from '@/stores/settings.store'
+  import { useToastStore } from '@/stores/toast.store'
+  import ChatMessage from '@/components/chat/ChatMessage.vue'
+  import ChatInput from '@/components/chat/ChatInput.vue'
+  import UserAvatar from '@/components/profile/UserAvatar.vue'
+  import UserProfileModal from '@/components/profile/UserProfileModal.vue'
+  import type { Message } from '@/types/message.types'
+  import type { DmMessage } from '@/types/dm.types'
 
-const otherUserId = computed(() => route.params.userId as string)
-const conversationId = ref<string | null>(null)
-const otherUser = ref(friends.friends.find((f) => f.user.id === otherUserId.value)?.user ?? null)
-const scrollEl = ref<HTMLElement | null>(null)
-const selectedUserId = ref<string | null>(null)
-const uploading = ref(false)
-const editingMessage = ref<Message | null>(null)
-const editContent = ref('')
+  const route = useRoute()
+  const router = useRouter()
+  const auth = useAuthStore()
+  const dm = useDmStore()
+  const friends = useFriendsStore()
+  const settings = useSettingsStore()
 
-const isOtherTyping = computed(() => {
-  return otherUser.value && dm.typingUsers.has(otherUser.value.id)
-})
+  const otherUserId = computed(() => route.params.userId as string)
+  const conversationId = ref<string | null>(null)
+  const otherUser = ref(friends.friends.find((f) => f.user.id === otherUserId.value)?.user ?? null)
+  const scrollEl = ref<HTMLElement | null>(null)
+  const selectedUserId = ref<string | null>(null)
+  const uploading = ref(false)
+  const editingMessage = ref<Message | null>(null)
+  const editContent = ref('')
 
-function startEdit(message: Message) {
-  editingMessage.value = message
-  editContent.value = message.content
-}
-
-function cancelEdit() {
-  editingMessage.value = null
-  editContent.value = ''
-}
-
-const replyForInput = computed(() => {
-  const r = dm.replyTo
-  if (!r) return null
-  return {
-    id: r.id,
-    user: r.user ? { displayName: r.user.displayName } : null,
-  }
-})
-
-function dmToMessage(msg: DmMessage): Message {
-  return {
-    id: msg.id,
-    roomId: msg.conversationId,
-    userId: msg.userId,
-    content: msg.content,
-    type: msg.type,
-    replyToId: msg.replyToId ?? null,
-    editedAt: msg.editedAt ?? null,
-    isDeleted: msg.isDeleted ?? false,
-    createdAt: msg.createdAt,
-    user: msg.user ?? null,
-    replyTo: msg.replyTo ?? null,
-    attachmentUrl: msg.attachmentUrl ?? null,
-    attachmentName: msg.attachmentName ?? null,
-    attachmentMime: msg.attachmentMime ?? null,
-  }
-}
-
-const displayMessages = computed(() => dm.messages.map(dmToMessage))
-const isCompactView = computed(
-  () => settings.compactChatMode || settings.chatLayout === 'compact'
-)
-const layoutClass = computed(() => `layout-${settings.chatLayout}`)
-
-onMounted(async () => {
-  if (!auth.user || !otherUserId.value) return
-  try {
-    const conv = await dm.openWith(otherUserId.value)
-    conversationId.value = conv.id
-    otherUser.value = conv.otherUser ?? otherUser.value
-    dm.joinConversation(conv.id)
-    await dm.loadMessages(conv.id)
-    scrollToBottom()
-  } catch (e) {
-    useToastStore().error(e instanceof Error ? e.message : 'Failed to open conversation')
-    router.push('/app/friends')
-  }
-})
-
-onUnmounted(() => dm.leaveConversation())
-
-watch(() => dm.messages.length, scrollToBottom)
-
-function scrollToBottom() {
-  nextTick(() => {
-    if (scrollEl.value) scrollEl.value.scrollTop = scrollEl.value.scrollHeight
+  const isOtherTyping = computed(() => {
+    return otherUser.value && dm.typingUsers.has(otherUser.value.id)
   })
-}
 
-function handleScroll() {
-  if (!scrollEl.value || dm.loadingMessages || !dm.hasMore) return
-  if (scrollEl.value.scrollTop < 40) {
-    const prevHeight = scrollEl.value.scrollHeight
-    dm.loadMore().then(() => {
-      nextTick(() => {
-        if (scrollEl.value) {
-          scrollEl.value.scrollTop = scrollEl.value.scrollHeight - prevHeight
-        }
-      })
+  function startEdit(message: Message) {
+    editingMessage.value = message
+    editContent.value = message.content
+  }
+
+  function cancelEdit() {
+    editingMessage.value = null
+    editContent.value = ''
+  }
+
+  const replyForInput = computed(() => {
+    const r = dm.replyTo
+    if (!r) return null
+    return {
+      id: r.id,
+      user: r.user ? { displayName: r.user.displayName } : null,
+    }
+  })
+
+  function dmToMessage(msg: DmMessage): Message {
+    return {
+      id: msg.id,
+      roomId: msg.conversationId,
+      userId: msg.userId,
+      content: msg.content,
+      type: msg.type,
+      replyToId: msg.replyToId ?? null,
+      editedAt: msg.editedAt ?? null,
+      isDeleted: msg.isDeleted ?? false,
+      createdAt: msg.createdAt,
+      user: msg.user ?? null,
+      replyTo: msg.replyTo ?? null,
+      attachmentUrl: msg.attachmentUrl ?? null,
+      attachmentName: msg.attachmentName ?? null,
+      attachmentMime: msg.attachmentMime ?? null,
+    }
+  }
+
+  const displayMessages = computed(() => dm.messages.map(dmToMessage))
+  const isCompactView = computed(
+    () => settings.compactChatMode || settings.chatLayout === 'compact'
+  )
+  const layoutClass = computed(() => `layout-${settings.chatLayout}`)
+
+  onMounted(async () => {
+    if (!auth.user || !otherUserId.value) return
+    try {
+      const conv = await dm.openWith(otherUserId.value)
+      conversationId.value = conv.id
+      otherUser.value = conv.otherUser ?? otherUser.value
+      dm.joinConversation(conv.id)
+      await dm.loadMessages(conv.id)
+      scrollToBottom()
+    } catch (e) {
+      useToastStore().error(e instanceof Error ? e.message : 'Failed to open conversation')
+      router.push('/app/friends')
+    }
+  })
+
+  onUnmounted(() => dm.leaveConversation())
+
+  watch(() => dm.messages.length, scrollToBottom)
+
+  function scrollToBottom() {
+    nextTick(() => {
+      if (scrollEl.value) scrollEl.value.scrollTop = scrollEl.value.scrollHeight
     })
   }
-}
 
-function handleSend(content: string) {
-  if (!conversationId.value) return
-  if (editingMessage.value) {
-    dm.editMessage(conversationId.value, editingMessage.value.id, content)
-    cancelEdit()
-    return
+  function handleScroll() {
+    if (!scrollEl.value || dm.loadingMessages || !dm.hasMore) return
+    if (scrollEl.value.scrollTop < 40) {
+      const prevHeight = scrollEl.value.scrollHeight
+      dm.loadMore().then(() => {
+        nextTick(() => {
+          if (scrollEl.value) {
+            scrollEl.value.scrollTop = scrollEl.value.scrollHeight - prevHeight
+          }
+        })
+      })
+    }
   }
-  dm.sendMessage(conversationId.value, content)
-  scrollToBottom()
-}
 
-async function handleUpload(dataUrl: string, fileName: string, caption: string) {
-  if (!conversationId.value) return
-  uploading.value = true
-  try {
-    await dm.uploadFile(conversationId.value, dataUrl, fileName, caption || undefined)
+  function handleSend(content: string) {
+    if (!conversationId.value) return
+    if (editingMessage.value) {
+      dm.editMessage(conversationId.value, editingMessage.value.id, content)
+      cancelEdit()
+      return
+    }
+    dm.sendMessage(conversationId.value, content)
     scrollToBottom()
-  } catch (e) {
-    useToastStore().error(e instanceof Error ? e.message : 'Upload failed')
-  } finally {
-    uploading.value = false
   }
-}
+
+  async function handleUpload(dataUrl: string, fileName: string, caption: string) {
+    if (!conversationId.value) return
+    uploading.value = true
+    try {
+      await dm.uploadFile(conversationId.value, dataUrl, fileName, caption || undefined)
+      scrollToBottom()
+    } catch (e) {
+      useToastStore().error(e instanceof Error ? e.message : 'Upload failed')
+    } finally {
+      uploading.value = false
+    }
+  }
 </script>
 
 <template>
@@ -158,7 +159,7 @@ async function handleUpload(dataUrl: string, fileName: string, caption: string) 
       <button type="button" @click="cancelEdit"><X :size="14" /></button>
     </div>
 
-    <div class="dm-messages" ref="scrollEl" @scroll="handleScroll">
+    <div ref="scrollEl" class="dm-messages" @scroll="handleScroll">
       <div v-if="dm.loadingMessages && displayMessages.length === 0" class="empty">Loading...</div>
       <div v-else-if="dm.loadingMessages" class="load-more">Loading older messages...</div>
       <div v-else-if="displayMessages.length === 0" class="empty">

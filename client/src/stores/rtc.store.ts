@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, shallowRef, watch } from 'vue'
+
 import { getSocket, connectSocket } from '@/services/socket/socket'
 import { PeerManager } from '@/services/rtc/peer'
 import { spatialAudio } from '@/services/rtc/spatial-audio'
@@ -476,7 +477,7 @@ let lastRemovedCameraTrack: MediaStreamTrack | null = null
       if (hasMicrophone || allowWithoutMicrophone) {
         try {
           // Try to get audio stream, but if it fails and allowWithoutMicrophone is true, continue without it
-          let audioConstraints = {
+          const audioConstraints = {
             echoCancellation: true,
             noiseSuppression: settings.noiseSuppressionEnabled,
             autoGainControl: true,
@@ -648,7 +649,7 @@ let lastRemovedCameraTrack: MediaStreamTrack | null = null
   function exitPiP() {
     try {
       if ((document as any).pictureInPictureElement) {
-        ;(document as any).exitPictureInPicture().catch(() => {})
+        (document as any).exitPictureInPicture().catch(() => {})
       }
     } catch {}
     if (pipVideo) {

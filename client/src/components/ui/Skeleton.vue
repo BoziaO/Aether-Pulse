@@ -3,27 +3,27 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+  import { computed } from 'vue'
 
-const props = defineProps<{
-  type?: 'text' | 'circular' | 'rectangular' | 'line'
-  width?: string
-  height?: string
-  size?: string
-  dark?: boolean
-  lines?: number
-}>()
+  const props = defineProps<{
+    type?: 'text' | 'circular' | 'rectangular' | 'line'
+    width?: string
+    height?: string
+    size?: string
+    dark?: boolean
+    lines?: number
+  }>()
 
-const style = computed(() => {
-  const s: Record<string, string> = {}
-  if (props.width) s.width = props.width
-  if (props.height) s.height = props.height
-  if (props.size) {
-    s.width = props.size
-    s.height = props.size
-  }
-  return s
-})
+  const style = computed(() => {
+    const s: Record<string, string> = {}
+    if (props.width) s.width = props.width
+    if (props.height) s.height = props.height
+    if (props.size) {
+      s.width = props.size
+      s.height = props.size
+    }
+    return s
+  })
 </script>
 
 <style scoped>

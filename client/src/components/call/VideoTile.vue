@@ -1,82 +1,83 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
-import { MicOff } from 'lucide-vue-next'
-import UserAvatar from '@/components/profile/UserAvatar.vue'
-import { userApi } from '@/services/api/user.api'
-import type { User } from '@/types/user.types'
+  import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+  import { MicOff } from 'lucide-vue-next'
 
-const props = defineProps<{
-  stream: MediaStream | null
-  user?: User | null
-  label?: string
-  isMuted?: boolean
-  isLocal?: boolean
-  userId?: string
-}>()
+  import UserAvatar from '@/components/profile/UserAvatar.vue'
+  import { userApi } from '@/services/api/user.api'
+  import type { User } from '@/types/user.types'
 
-const emit = defineEmits<{
-  (e: 'profile-click', userId: string): void
-}>()
+  const props = defineProps<{
+    stream: MediaStream | null
+    user?: User | null
+    label?: string
+    isMuted?: boolean
+    isLocal?: boolean
+    userId?: string
+  }>()
 
-const videoEl = ref<HTMLVideoElement | null>(null)
-const remoteUser = ref<User | null>(null)
+  const emit = defineEmits<{
+    (e: 'profile-click', userId: string): void
+  }>()
 
-const displayUser = computed(() => props.user ?? remoteUser.value)
+  const videoEl = ref<HTMLVideoElement | null>(null)
+  const remoteUser = ref<User | null>(null)
 
-function attachStream() {
-  if (videoEl.value && props.stream) {
-    videoEl.value.srcObject = props.stream
+  const displayUser = computed(() => props.user ?? remoteUser.value)
+
+  function attachStream() {
+    if (videoEl.value && props.stream) {
+      videoEl.value.srcObject = props.stream
+    }
   }
-}
 
-let boundStream: MediaStream | null = null
-function onTracksChanged() {
-  attachStream()
-}
-
-function bindStreamEvents(stream: MediaStream | null) {
-  if (boundStream) {
-    boundStream.removeEventListener('addtrack', onTracksChanged)
-    boundStream.removeEventListener('removetrack', onTracksChanged)
-  }
-  boundStream = stream
-  if (boundStream) {
-    boundStream.addEventListener('addtrack', onTracksChanged)
-    boundStream.addEventListener('removetrack', onTracksChanged)
-  }
-}
-
-async function loadRemoteUser() {
-  if (props.user || !props.userId || props.isLocal) return
-  try {
-    remoteUser.value = await userApi.get(props.userId)
-  } catch {
-    remoteUser.value = null
-  }
-}
-
-function handleClick() {
-  if (props.userId && !props.isLocal) {
-    emit('profile-click', props.userId)
-  }
-}
-
-watch(() => props.userId, loadRemoteUser, { immediate: true })
-
-onMounted(() => {
-  bindStreamEvents(props.stream ?? null)
-  attachStream()
-})
-
-onBeforeUnmount(() => bindStreamEvents(null))
-
-watch(
-  () => props.stream,
-  (next) => {
-    bindStreamEvents(next ?? null)
+  let boundStream: MediaStream | null = null
+  function onTracksChanged() {
     attachStream()
   }
-)
+
+  function bindStreamEvents(stream: MediaStream | null) {
+    if (boundStream) {
+      boundStream.removeEventListener('addtrack', onTracksChanged)
+      boundStream.removeEventListener('removetrack', onTracksChanged)
+    }
+    boundStream = stream
+    if (boundStream) {
+      boundStream.addEventListener('addtrack', onTracksChanged)
+      boundStream.addEventListener('removetrack', onTracksChanged)
+    }
+  }
+
+  async function loadRemoteUser() {
+    if (props.user || !props.userId || props.isLocal) return
+    try {
+      remoteUser.value = await userApi.get(props.userId)
+    } catch {
+      remoteUser.value = null
+    }
+  }
+
+  function handleClick() {
+    if (props.userId && !props.isLocal) {
+      emit('profile-click', props.userId)
+    }
+  }
+
+  watch(() => props.userId, loadRemoteUser, { immediate: true })
+
+  onMounted(() => {
+    bindStreamEvents(props.stream ?? null)
+    attachStream()
+  })
+
+  onBeforeUnmount(() => bindStreamEvents(null))
+
+  watch(
+    () => props.stream,
+    (next) => {
+      bindStreamEvents(next ?? null)
+      attachStream()
+    }
+  )
 </script>
 
 <template>

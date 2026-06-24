@@ -1,403 +1,404 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
-import {
-  AtSign,
-  Check,
-  Circle,
-  EyeOff,
-  Link,
-  MapPin,
-  MessageSquare,
-  Palette,
-  RotateCcw,
-  Save,
-  UserRound,
-  X,
-} from 'lucide-vue-next'
-import { useAuthStore } from '@/stores/auth.store'
-import UserAvatar from '@/components/profile/UserAvatar.vue'
-import GradientPicker from '@/components/profile/GradientPicker.vue'
-import ProfileBadge from '@/components/profile/ProfileBadge.vue'
-import type { User } from '@/types/user.types'
-import { userApi } from '@/services/api/user.api'
+  import { computed, reactive, ref, watch } from 'vue'
+  import {
+    AtSign,
+    Check,
+    Circle,
+    EyeOff,
+    Link,
+    MapPin,
+    MessageSquare,
+    Palette,
+    RotateCcw,
+    Save,
+    UserRound,
+    X,
+  } from 'lucide-vue-next'
 
-type ProfileStatus = User['status']
-type EditorTab = 'identity' | 'appearance' | 'presence'
+  import { useAuthStore } from '@/stores/auth.store'
+  import UserAvatar from '@/components/profile/UserAvatar.vue'
+  import GradientPicker from '@/components/profile/GradientPicker.vue'
+  import ProfileBadge from '@/components/profile/ProfileBadge.vue'
+  import type { User } from '@/types/user.types'
+  import { userApi } from '@/services/api/user.api'
 
-const auth = useAuthStore()
-const saving = ref(false)
-const saved = ref(false)
-const error = ref('')
-const activeTab = ref<EditorTab>('identity')
-const uploadingAvatar = ref(false)
-const uploadingBanner = ref(false)
+  type ProfileStatus = User['status']
+  type EditorTab = 'identity' | 'appearance' | 'presence'
 
-const emptyUser: User = {
-  id: '',
-  username: 'username',
-  displayName: 'Display Name',
-  avatarUrl: null,
-  bannerUrl: null,
-  bio: null,
-  pronouns: null,
-  website: null,
-  location: null,
-  status: 'offline',
-  customStatus: null,
-  accentColor: '#8b5cf6',
-  primaryColor: null,
-  displayNameStyle: null,
-  profileGradient: null,
-  avatarFrame: null,
-  profileTheme: null,
-  customTheme: null,
-  badges: [],
-  socialLinks: [],
-  timezone: null,
-  profilePrivacy: 'public',
-  showTimezone: true,
-  showLastSeen: true,
-  showProfileViews: true,
-  preferredTheme: null,
-  lastSeenAt: null,
-  profileViews: null,
-  createdAt: new Date().toISOString(),
-}
+  const auth = useAuthStore()
+  const saving = ref(false)
+  const saved = ref(false)
+  const error = ref('')
+  const activeTab = ref<EditorTab>('identity')
+  const uploadingAvatar = ref(false)
+  const uploadingBanner = ref(false)
 
-const initialUser = computed(() => auth.user ?? emptyUser)
-
-const form = reactive({
-  displayName: '',
-  bio: '',
-  pronouns: '',
-  website: '',
-  location: '',
-  customStatus: '',
-  avatarUrl: '',
-  bannerUrl: '',
-  accentColor: '#8b5cf6',
-  primaryColor: null as string | null,
-  displayNameStyle: null as string | null,
-  badges: [] as string[],
-  profileGradient: null as string | null,
-  status: 'offline' as ProfileStatus,
-  avatarFrame: null as string | null,
-  profileTheme: 'default' as string | null,
-})
-
-function syncFormFromUser() {
-  const user = initialUser.value
-  if (!user.id) return
-  form.displayName = user.displayName
-  form.bio = user.bio ?? ''
-  form.pronouns = user.pronouns ?? ''
-  form.website = user.website ?? ''
-  form.location = user.location ?? ''
-  form.customStatus = user.customStatus ?? ''
-  form.avatarUrl = user.avatarUrl ?? ''
-  form.bannerUrl = user.bannerUrl ?? ''
-  form.accentColor = user.accentColor ?? '#8b5cf6'
-  form.primaryColor = user.primaryColor ?? null
-  form.displayNameStyle = user.displayNameStyle ?? null
-  form.badges = [...(user.badges ?? [])]
-  form.profileGradient = user.profileGradient
-  form.status = user.status
-  form.avatarFrame = user.avatarFrame ?? null
-  form.profileTheme = user.profileTheme ?? 'default'
-}
-
-watch(initialUser, syncFormFromUser, { immediate: true })
-
-const TABS: Array<{ value: EditorTab; label: string; icon: typeof UserRound }> = [
-  { value: 'identity', label: 'Profile', icon: UserRound },
-  { value: 'appearance', label: 'Style', icon: Palette },
-  { value: 'presence', label: 'Presence', icon: MessageSquare },
-]
-
-const STATUSES: Array<{
-  value: ProfileStatus
-  label: string
-  detail: string
-  icon: typeof Circle
-}> = [
-  { value: 'online', label: 'Online', detail: 'Visible and ready', icon: Circle },
-  { value: 'away', label: 'Idle', detail: 'Shown as away', icon: Circle },
-  { value: 'busy', label: 'Do Not Disturb', detail: 'Red status badge', icon: Circle },
-  { value: 'offline', label: 'Invisible', detail: 'Appear offline', icon: EyeOff },
-]
-
-const AVAILABLE_BADGES = [
-  { id: 'nitro', name: 'Nitro Supporter' },
-  { id: 'booster', name: 'Server Booster' },
-  { id: 'developer', name: 'Active Developer' },
-  { id: 'staff', name: 'Aether-Pulse Staff' },
-  { id: 'bug_hunter', name: 'Bug Hunter' },
-  { id: 'early_supporter', name: 'Early Supporter' },
-  { id: 'hypesquad_balance', name: 'HypeSquad Balance' },
-  { id: 'hypesquad_bravery', name: 'HypeSquad Bravery' },
-  { id: 'hypesquad_brilliance', name: 'HypeSquad Brilliance' },
-]
-
-const DISPLAY_NAME_STYLES = [
-  { value: null, label: 'None (Default)' },
-  { value: 'glow', label: 'Neon Glow' },
-  { value: 'rainbow', label: 'Rainbow' },
-  { value: 'hacker', label: 'Retro Hacker' },
-  { value: 'glitch', label: 'Glitch Effect' },
-  { value: 'sparkle', label: 'Luxury Sparkle' },
-]
-
-const previewUser = computed<User>(() => ({
-  ...emptyUser,
-  ...initialUser.value,
-  displayName: form.displayName.trim() || 'Display Name',
-  avatarUrl: cleanNullable(form.avatarUrl),
-  bannerUrl: cleanNullable(form.bannerUrl),
-  bio: cleanNullable(form.bio),
-  pronouns: cleanNullable(form.pronouns),
-  website: cleanNullable(form.website),
-  location: cleanNullable(form.location),
-  customStatus: cleanNullable(form.customStatus),
-  accentColor: form.accentColor,
-  primaryColor: form.primaryColor,
-  displayNameStyle: form.displayNameStyle,
-  badges: form.badges,
-  profileGradient: form.profileGradient,
-  status: form.status,
-  avatarFrame: form.avatarFrame,
-  profileTheme: form.profileTheme,
-}))
-
-const normalizedWebsite = computed(() => {
-  const website = form.website.trim()
-  if (!website) return ''
-  return /^https?:\/\//i.test(website) ? website : `https://${website}`
-})
-
-const bannerStyle = computed(() => {
-  if (form.bannerUrl.trim()) {
-    return { backgroundImage: `url(${form.bannerUrl.trim()})` }
+  const emptyUser: User = {
+    id: '',
+    username: 'username',
+    displayName: 'Display Name',
+    avatarUrl: null,
+    bannerUrl: null,
+    bio: null,
+    pronouns: null,
+    website: null,
+    location: null,
+    status: 'offline',
+    customStatus: null,
+    accentColor: '#8b5cf6',
+    primaryColor: null,
+    displayNameStyle: null,
+    profileGradient: null,
+    avatarFrame: null,
+    profileTheme: null,
+    customTheme: null,
+    badges: [],
+    socialLinks: [],
+    timezone: null,
+    profilePrivacy: 'public',
+    showTimezone: true,
+    showLastSeen: true,
+    showProfileViews: true,
+    preferredTheme: null,
+    lastSeenAt: null,
+    profileViews: null,
+    createdAt: new Date().toISOString(),
   }
-  if (form.profileGradient) return { background: form.profileGradient }
-  return { background: form.accentColor }
-})
 
-const dirty = computed(() => {
-  const user = initialUser.value
-  return (
-    form.displayName !== user.displayName ||
-    form.bio !== (user.bio ?? '') ||
-    form.pronouns !== (user.pronouns ?? '') ||
-    form.website !== (user.website ?? '') ||
-    form.location !== (user.location ?? '') ||
-    form.customStatus !== (user.customStatus ?? '') ||
-    form.avatarUrl !== (user.avatarUrl ?? '') ||
-    form.bannerUrl !== (user.bannerUrl ?? '') ||
-    form.accentColor !== (user.accentColor ?? '#8b5cf6') ||
-    form.primaryColor !== user.primaryColor ||
-    form.displayNameStyle !== user.displayNameStyle ||
-    JSON.stringify(form.badges) !== JSON.stringify(user.badges ?? []) ||
-    form.profileGradient !== user.profileGradient ||
-    form.status !== user.status ||
-    form.avatarFrame !== user.avatarFrame ||
-    form.profileTheme !== (user.profileTheme ?? 'default')
-  )
-})
+  const initialUser = computed(() => auth.user ?? emptyUser)
 
-function cleanNullable(value: string) {
-  const trimmed = value.trim()
-  return trimmed.length ? trimmed : null
-}
+  const form = reactive({
+    displayName: '',
+    bio: '',
+    pronouns: '',
+    website: '',
+    location: '',
+    customStatus: '',
+    avatarUrl: '',
+    bannerUrl: '',
+    accentColor: '#8b5cf6',
+    primaryColor: null as string | null,
+    displayNameStyle: null as string | null,
+    badges: [] as string[],
+    profileGradient: null as string | null,
+    status: 'offline' as ProfileStatus,
+    avatarFrame: null as string | null,
+    profileTheme: 'default' as string | null,
+  })
 
-function toggleBadge(badgeId: string) {
-  const idx = form.badges.indexOf(badgeId)
-  if (idx >= 0) {
-    form.badges.splice(idx, 1)
-  } else {
-    form.badges.push(badgeId)
+  function syncFormFromUser() {
+    const user = initialUser.value
+    if (!user.id) return
+    form.displayName = user.displayName
+    form.bio = user.bio ?? ''
+    form.pronouns = user.pronouns ?? ''
+    form.website = user.website ?? ''
+    form.location = user.location ?? ''
+    form.customStatus = user.customStatus ?? ''
+    form.avatarUrl = user.avatarUrl ?? ''
+    form.bannerUrl = user.bannerUrl ?? ''
+    form.accentColor = user.accentColor ?? '#8b5cf6'
+    form.primaryColor = user.primaryColor ?? null
+    form.displayNameStyle = user.displayNameStyle ?? null
+    form.badges = [...(user.badges ?? [])]
+    form.profileGradient = user.profileGradient
+    form.status = user.status
+    form.avatarFrame = user.avatarFrame ?? null
+    form.profileTheme = user.profileTheme ?? 'default'
   }
-}
 
-function resetForm() {
-  const user = initialUser.value
-  form.displayName = user.displayName
-  form.bio = user.bio ?? ''
-  form.pronouns = user.pronouns ?? ''
-  form.website = user.website ?? ''
-  form.location = user.location ?? ''
-  form.customStatus = user.customStatus ?? ''
-  form.avatarUrl = user.avatarUrl ?? ''
-  form.bannerUrl = user.bannerUrl ?? ''
-  form.accentColor = user.accentColor ?? '#8b5cf6'
-  form.primaryColor = user.primaryColor ?? null
-  form.displayNameStyle = user.displayNameStyle ?? null
-  form.badges = [...(user.badges ?? [])]
-  form.profileGradient = user.profileGradient
-  form.status = user.status
-  form.avatarFrame = user.avatarFrame ?? null
-  form.profileTheme = user.profileTheme ?? 'default'
-  error.value = ''
-}
+  watch(initialUser, syncFormFromUser, { immediate: true })
 
-function validateForm() {
-  if (!form.displayName.trim()) return 'Display name is required.'
-  if (form.website.trim()) {
+  const TABS: Array<{ value: EditorTab; label: string; icon: typeof UserRound }> = [
+    { value: 'identity', label: 'Profile', icon: UserRound },
+    { value: 'appearance', label: 'Style', icon: Palette },
+    { value: 'presence', label: 'Presence', icon: MessageSquare },
+  ]
+
+  const STATUSES: Array<{
+    value: ProfileStatus
+    label: string
+    detail: string
+    icon: typeof Circle
+  }> = [
+    { value: 'online', label: 'Online', detail: 'Visible and ready', icon: Circle },
+    { value: 'away', label: 'Idle', detail: 'Shown as away', icon: Circle },
+    { value: 'busy', label: 'Do Not Disturb', detail: 'Red status badge', icon: Circle },
+    { value: 'offline', label: 'Invisible', detail: 'Appear offline', icon: EyeOff },
+  ]
+
+  const AVAILABLE_BADGES = [
+    { id: 'nitro', name: 'Nitro Supporter' },
+    { id: 'booster', name: 'Server Booster' },
+    { id: 'developer', name: 'Active Developer' },
+    { id: 'staff', name: 'Aether-Pulse Staff' },
+    { id: 'bug_hunter', name: 'Bug Hunter' },
+    { id: 'early_supporter', name: 'Early Supporter' },
+    { id: 'hypesquad_balance', name: 'HypeSquad Balance' },
+    { id: 'hypesquad_bravery', name: 'HypeSquad Bravery' },
+    { id: 'hypesquad_brilliance', name: 'HypeSquad Brilliance' },
+  ]
+
+  const DISPLAY_NAME_STYLES = [
+    { value: null, label: 'None (Default)' },
+    { value: 'glow', label: 'Neon Glow' },
+    { value: 'rainbow', label: 'Rainbow' },
+    { value: 'hacker', label: 'Retro Hacker' },
+    { value: 'glitch', label: 'Glitch Effect' },
+    { value: 'sparkle', label: 'Luxury Sparkle' },
+  ]
+
+  const previewUser = computed<User>(() => ({
+    ...emptyUser,
+    ...initialUser.value,
+    displayName: form.displayName.trim() || 'Display Name',
+    avatarUrl: cleanNullable(form.avatarUrl),
+    bannerUrl: cleanNullable(form.bannerUrl),
+    bio: cleanNullable(form.bio),
+    pronouns: cleanNullable(form.pronouns),
+    website: cleanNullable(form.website),
+    location: cleanNullable(form.location),
+    customStatus: cleanNullable(form.customStatus),
+    accentColor: form.accentColor,
+    primaryColor: form.primaryColor,
+    displayNameStyle: form.displayNameStyle,
+    badges: form.badges,
+    profileGradient: form.profileGradient,
+    status: form.status,
+    avatarFrame: form.avatarFrame,
+    profileTheme: form.profileTheme,
+  }))
+
+  const normalizedWebsite = computed(() => {
+    const website = form.website.trim()
+    if (!website) return ''
+    return /^https?:\/\//i.test(website) ? website : `https://${website}`
+  })
+
+  const bannerStyle = computed(() => {
+    if (form.bannerUrl.trim()) {
+      return { backgroundImage: `url(${form.bannerUrl.trim()})` }
+    }
+    if (form.profileGradient) return { background: form.profileGradient }
+    return { background: form.accentColor }
+  })
+
+  const dirty = computed(() => {
+    const user = initialUser.value
+    return (
+      form.displayName !== user.displayName ||
+      form.bio !== (user.bio ?? '') ||
+      form.pronouns !== (user.pronouns ?? '') ||
+      form.website !== (user.website ?? '') ||
+      form.location !== (user.location ?? '') ||
+      form.customStatus !== (user.customStatus ?? '') ||
+      form.avatarUrl !== (user.avatarUrl ?? '') ||
+      form.bannerUrl !== (user.bannerUrl ?? '') ||
+      form.accentColor !== (user.accentColor ?? '#8b5cf6') ||
+      form.primaryColor !== user.primaryColor ||
+      form.displayNameStyle !== user.displayNameStyle ||
+      JSON.stringify(form.badges) !== JSON.stringify(user.badges ?? []) ||
+      form.profileGradient !== user.profileGradient ||
+      form.status !== user.status ||
+      form.avatarFrame !== user.avatarFrame ||
+      form.profileTheme !== (user.profileTheme ?? 'default')
+    )
+  })
+
+  function cleanNullable(value: string) {
+    const trimmed = value.trim()
+    return trimmed.length ? trimmed : null
+  }
+
+  function toggleBadge(badgeId: string) {
+    const idx = form.badges.indexOf(badgeId)
+    if (idx >= 0) {
+      form.badges.splice(idx, 1)
+    } else {
+      form.badges.push(badgeId)
+    }
+  }
+
+  function resetForm() {
+    const user = initialUser.value
+    form.displayName = user.displayName
+    form.bio = user.bio ?? ''
+    form.pronouns = user.pronouns ?? ''
+    form.website = user.website ?? ''
+    form.location = user.location ?? ''
+    form.customStatus = user.customStatus ?? ''
+    form.avatarUrl = user.avatarUrl ?? ''
+    form.bannerUrl = user.bannerUrl ?? ''
+    form.accentColor = user.accentColor ?? '#8b5cf6'
+    form.primaryColor = user.primaryColor ?? null
+    form.displayNameStyle = user.displayNameStyle ?? null
+    form.badges = [...(user.badges ?? [])]
+    form.profileGradient = user.profileGradient
+    form.status = user.status
+    form.avatarFrame = user.avatarFrame ?? null
+    form.profileTheme = user.profileTheme ?? 'default'
+    error.value = ''
+  }
+
+  function validateForm() {
+    if (!form.displayName.trim()) return 'Display name is required.'
+    if (form.website.trim()) {
+      try {
+        new URL(normalizedWebsite.value)
+      } catch {
+        return 'Website must be a valid URL.'
+      }
+    }
+    return ''
+  }
+
+  async function save() {
+    const validationError = validateForm()
+    if (validationError) {
+      error.value = validationError
+      return
+    }
+
+    saving.value = true
+    error.value = ''
+
     try {
-      new URL(normalizedWebsite.value)
-    } catch {
-      return 'Website must be a valid URL.'
+      await auth.updateProfile({
+        displayName: form.displayName.trim(),
+        bio: cleanNullable(form.bio),
+        pronouns: cleanNullable(form.pronouns),
+        website: cleanNullable(normalizedWebsite.value),
+        location: cleanNullable(form.location),
+        customStatus: cleanNullable(form.customStatus),
+        avatarUrl: cleanNullable(form.avatarUrl),
+        bannerUrl: cleanNullable(form.bannerUrl),
+        accentColor: form.accentColor,
+        primaryColor: form.primaryColor,
+        displayNameStyle: form.displayNameStyle,
+        badges: form.badges,
+        profileGradient: form.profileGradient,
+        status: form.status,
+        avatarFrame: form.avatarFrame,
+        profileTheme: form.profileTheme,
+      })
+      saved.value = true
+      setTimeout(() => {
+        saved.value = false
+      }, 2200)
+    } catch (e: unknown) {
+      error.value = e instanceof Error ? e.message : 'Failed to save profile.'
+    } finally {
+      saving.value = false
     }
   }
-  return ''
-}
 
-async function save() {
-  const validationError = validateForm()
-  if (validationError) {
-    error.value = validationError
-    return
+  async function handleAvatarFile(e: Event) {
+    const input = e.target as HTMLInputElement
+    const file = input.files?.[0]
+    if (!file || !auth.user) return
+    uploadingAvatar.value = true
+    error.value = ''
+    try {
+      const dataUrl = await compressImageIfNeeded(file)
+      const res = await userApi.uploadAvatar(auth.user.id, dataUrl)
+      form.avatarUrl = res.avatarUrl
+      auth.user.avatarUrl = res.avatarUrl
+    } catch (e: unknown) {
+      error.value = e instanceof Error ? e.message : 'Failed to upload avatar.'
+    } finally {
+      uploadingAvatar.value = false
+      input.value = ''
+    }
   }
 
-  saving.value = true
-  error.value = ''
+  async function handleBannerFile(e: Event) {
+    const input = e.target as HTMLInputElement
+    const file = input.files?.[0]
+    if (!file || !auth.user) return
+    uploadingBanner.value = true
+    error.value = ''
+    try {
+      const dataUrl = await compressImageIfNeeded(file)
+      const res = await userApi.uploadBanner(auth.user.id, dataUrl)
+      form.bannerUrl = res.bannerUrl
+      auth.user.bannerUrl = res.bannerUrl
+    } catch (e: unknown) {
+      error.value = e instanceof Error ? e.message : 'Failed to upload banner.'
+    } finally {
+      uploadingBanner.value = false
+      input.value = ''
+    }
+  }
 
-  try {
-    await auth.updateProfile({
-      displayName: form.displayName.trim(),
-      bio: cleanNullable(form.bio),
-      pronouns: cleanNullable(form.pronouns),
-      website: cleanNullable(normalizedWebsite.value),
-      location: cleanNullable(form.location),
-      customStatus: cleanNullable(form.customStatus),
-      avatarUrl: cleanNullable(form.avatarUrl),
-      bannerUrl: cleanNullable(form.bannerUrl),
-      accentColor: form.accentColor,
-      primaryColor: form.primaryColor,
-      displayNameStyle: form.displayNameStyle,
-      badges: form.badges,
-      profileGradient: form.profileGradient,
-      status: form.status,
-      avatarFrame: form.avatarFrame,
-      profileTheme: form.profileTheme,
+  function fileToDataUrl(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onerror = () => reject(new Error('Failed to read file.'))
+      reader.onload = () => resolve(String(reader.result || ''))
+      reader.readAsDataURL(file)
     })
-    saved.value = true
-    setTimeout(() => {
-      saved.value = false
-    }, 2200)
-  } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : 'Failed to save profile.'
-  } finally {
-    saving.value = false
-  }
-}
-
-async function handleAvatarFile(e: Event) {
-  const input = e.target as HTMLInputElement
-  const file = input.files?.[0]
-  if (!file || !auth.user) return
-  uploadingAvatar.value = true
-  error.value = ''
-  try {
-    const dataUrl = await compressImageIfNeeded(file)
-    const res = await userApi.uploadAvatar(auth.user.id, dataUrl)
-    form.avatarUrl = res.avatarUrl
-    auth.user.avatarUrl = res.avatarUrl
-  } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : 'Failed to upload avatar.'
-  } finally {
-    uploadingAvatar.value = false
-    input.value = ''
-  }
-}
-
-async function handleBannerFile(e: Event) {
-  const input = e.target as HTMLInputElement
-  const file = input.files?.[0]
-  if (!file || !auth.user) return
-  uploadingBanner.value = true
-  error.value = ''
-  try {
-    const dataUrl = await compressImageIfNeeded(file)
-    const res = await userApi.uploadBanner(auth.user.id, dataUrl)
-    form.bannerUrl = res.bannerUrl
-    auth.user.bannerUrl = res.bannerUrl
-  } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : 'Failed to upload banner.'
-  } finally {
-    uploadingBanner.value = false
-    input.value = ''
-  }
-}
-
-function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onerror = () => reject(new Error('Failed to read file.'))
-    reader.onload = () => resolve(String(reader.result || ''))
-    reader.readAsDataURL(file)
-  })
-}
-
-function compressImageIfNeeded(file: File): Promise<string> {
-  if (file.type === 'image/gif') {
-    return fileToDataUrl(file)
   }
 
-  return new Promise((resolve, reject) => {
-    const img = new window.Image()
-    img.src = URL.createObjectURL(file)
-    img.onload = () => {
-      URL.revokeObjectURL(img.src)
-      const canvas = document.createElement('canvas')
-      let width = img.width
-      let height = img.height
+  function compressImageIfNeeded(file: File): Promise<string> {
+    if (file.type === 'image/gif') {
+      return fileToDataUrl(file)
+    }
 
-      const MAX_SIZE = 1000
-      if (width > MAX_SIZE || height > MAX_SIZE) {
-        if (width > height) {
-          height = Math.round((height * MAX_SIZE) / width)
-          width = MAX_SIZE
-        } else {
-          width = Math.round((width * MAX_SIZE) / height)
-          height = MAX_SIZE
+    return new Promise((resolve, reject) => {
+      const img = new window.Image()
+      img.src = URL.createObjectURL(file)
+      img.onload = () => {
+        URL.revokeObjectURL(img.src)
+        const canvas = document.createElement('canvas')
+        let width = img.width
+        let height = img.height
+
+        const MAX_SIZE = 1000
+        if (width > MAX_SIZE || height > MAX_SIZE) {
+          if (width > height) {
+            height = Math.round((height * MAX_SIZE) / width)
+            width = MAX_SIZE
+          } else {
+            width = Math.round((width * MAX_SIZE) / height)
+            height = MAX_SIZE
+          }
         }
+
+        canvas.width = width
+        canvas.height = height
+
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          reject(new Error('Failed to create canvas context'))
+          return
+        }
+
+        ctx.drawImage(img, 0, 0, width, height)
+        const mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg'
+        const dataUrl = canvas.toDataURL(mimeType, 0.85)
+        resolve(dataUrl)
       }
-
-      canvas.width = width
-      canvas.height = height
-
-      const ctx = canvas.getContext('2d')
-      if (!ctx) {
-        reject(new Error('Failed to create canvas context'))
-        return
+      img.onerror = () => {
+        URL.revokeObjectURL(img.src)
+        reject(new Error('Failed to load image for compression.'))
       }
+    })
+  }
 
-      ctx.drawImage(img, 0, 0, width, height)
-      const mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg'
-      const dataUrl = canvas.toDataURL(mimeType, 0.85)
-      resolve(dataUrl)
-    }
-    img.onerror = () => {
-      URL.revokeObjectURL(img.src)
-      reject(new Error('Failed to load image for compression.'))
-    }
-  })
-}
+  const AVATAR_FRAMES = [
+    { value: null, label: 'None', detail: 'Classic round border' },
+    { value: 'neon-glow', label: 'Neon Glow', detail: 'Electric pink/teal blur' },
+    { value: 'rainbow-pulse', label: 'Rainbow Pulse', detail: 'Rotating gradient cycle' },
+    { value: 'pixel-retro', label: 'Retro Pixel', detail: 'Chunky terminal borders' },
+    { value: 'gold-crown', label: 'Gold Crown', detail: 'Imperial floating crown' },
+  ]
 
-const AVATAR_FRAMES = [
-  { value: null, label: 'None', detail: 'Classic round border' },
-  { value: 'neon-glow', label: 'Neon Glow', detail: 'Electric pink/teal blur' },
-  { value: 'rainbow-pulse', label: 'Rainbow Pulse', detail: 'Rotating gradient cycle' },
-  { value: 'pixel-retro', label: 'Retro Pixel', detail: 'Chunky terminal borders' },
-  { value: 'gold-crown', label: 'Gold Crown', detail: 'Imperial floating crown' },
-]
-
-const PROFILE_THEMES = [
-  { value: 'default', label: 'Classic Dark', detail: 'Clean, dark slate design' },
-  { value: 'glowing-glass', label: 'Glassmorphism', detail: 'Vibrant blur & soft shadows' },
-  { value: 'pixel-classic', label: 'Pixel Console', detail: 'Double-bordered terminal' },
-  { value: 'cyberpunk-grid', label: 'Cyberpunk Tech', detail: 'Yellow hazard neon grids' },
-]
+  const PROFILE_THEMES = [
+    { value: 'default', label: 'Classic Dark', detail: 'Clean, dark slate design' },
+    { value: 'glowing-glass', label: 'Glassmorphism', detail: 'Vibrant blur & soft shadows' },
+    { value: 'pixel-classic', label: 'Pixel Console', detail: 'Double-bordered terminal' },
+    { value: 'cyberpunk-grid', label: 'Cyberpunk Tech', detail: 'Yellow hazard neon grids' },
+  ]
 </script>
 
 <template>
@@ -584,9 +585,9 @@ const PROFILE_THEMES = [
               <input
                 id="primary-color"
                 :value="form.primaryColor || '#111318'"
-                @input="form.primaryColor = ($event.target as HTMLInputElement).value"
                 type="color"
                 class="color-input"
+                @input="form.primaryColor = ($event.target as HTMLInputElement).value"
               />
               <span>{{ form.primaryColor || 'Default (#111318)' }}</span>
               <button

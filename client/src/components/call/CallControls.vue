@@ -1,40 +1,41 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import {
-  Mic, MicOff, Video, VideoOff, Monitor, MonitorOff,
-  PhoneOff, Headphones, PictureInPicture2,
-} from 'lucide-vue-next'
-import { useRtcStore } from '@/stores/rtc.store'
-import { useSettingsStore } from '@/stores/settings.store'
-import type { ScreenShareQuality } from '@/services/rtc/screen-share'
+  import { ref, computed } from 'vue'
+  import {
+    Mic, MicOff, Video, VideoOff, Monitor, MonitorOff,
+    PhoneOff, Headphones, PictureInPicture2,
+  } from 'lucide-vue-next'
 
-const rtc = useRtcStore()
-const settings = useSettingsStore()
-const showShareMenu = ref(false)
+  import { useRtcStore } from '@/stores/rtc.store'
+  import { useSettingsStore } from '@/stores/settings.store'
+  import type { ScreenShareQuality } from '@/services/rtc/screen-share'
 
-const isAndroid =
-  typeof (window as any).Capacitor !== 'undefined' &&
-  (window as any).Capacitor.isNativePlatform()
+  const rtc = useRtcStore()
+  const settings = useSettingsStore()
+  const showShareMenu = ref(false)
 
-const pipSupported = computed(() =>
-  !isAndroid && !!(document as any).pictureInPictureEnabled
-)
+  const isAndroid =
+    typeof (window as any).Capacitor !== 'undefined' &&
+    (window as any).Capacitor.isNativePlatform()
 
-const shareOptions: { quality: ScreenShareQuality; label: string }[] = [
-  { quality: 'gaming',   label: '🎮 Gaming (1080p 60fps)' },
-  { quality: 'movie',    label: '🎬 Movie (1080p 30fps)'  },
-  { quality: 'standard', label: '🖥️ Standard (720p 30fps)' },
-]
+  const pipSupported = computed(() =>
+    !isAndroid && !!(document as any).pictureInPictureEnabled
+  )
 
-async function handleShare(quality: ScreenShareQuality) {
-  showShareMenu.value = false
-  try { await rtc.shareScreen(quality) } catch {}
-}
+  const shareOptions: { quality: ScreenShareQuality; label: string }[] = [
+    { quality: 'gaming',   label: '🎮 Gaming (1080p 60fps)' },
+    { quality: 'movie',    label: '🎬 Movie (1080p 30fps)'  },
+    { quality: 'standard', label: '🖥️ Standard (720p 30fps)' },
+  ]
 
-async function togglePiP() {
-  if (rtc.isPiP) rtc.exitPiP()
-  else await rtc.enterPiP()
-}
+  async function handleShare(quality: ScreenShareQuality) {
+    showShareMenu.value = false
+    try { await rtc.shareScreen(quality) } catch {}
+  }
+
+  async function togglePiP() {
+    if (rtc.isPiP) rtc.exitPiP()
+    else await rtc.enterPiP()
+  }
 </script>
 
 <template>
@@ -48,8 +49,8 @@ async function togglePiP() {
       <button
         class="ctrl-btn"
         :class="{ active: !rtc.isMuted, danger: rtc.isMuted }"
-        @click="rtc.toggleMute()"
         :title="rtc.isMuted ? 'Unmute' : 'Mute'"
+        @click="rtc.toggleMute()"
       >
         <MicOff v-if="rtc.isMuted" :size="20" />
         <Mic v-else :size="20" />
@@ -59,8 +60,8 @@ async function togglePiP() {
       <button
         class="ctrl-btn"
         :class="{ active: rtc.isVideoOn }"
-        @click="rtc.toggleVideo()"
         title="Toggle camera"
+        @click="rtc.toggleVideo()"
       >
         <VideoOff v-if="!rtc.isVideoOn" :size="20" />
         <Video v-else :size="20" />
@@ -71,12 +72,12 @@ async function togglePiP() {
         <button
           v-if="!rtc.isScreenSharing"
           class="ctrl-btn"
-          @click="showShareMenu = !showShareMenu"
           title="Share screen"
+          @click="showShareMenu = !showShareMenu"
         >
           <Monitor :size="20" />
         </button>
-        <button v-else class="ctrl-btn danger" @click="rtc.stopScreenShare()" title="Stop sharing">
+        <button v-else class="ctrl-btn danger" title="Stop sharing" @click="rtc.stopScreenShare()">
           <MonitorOff :size="20" />
         </button>
         <div v-if="showShareMenu" class="share-menu">
@@ -96,8 +97,8 @@ async function togglePiP() {
         v-if="isAndroid"
         class="ctrl-btn"
         :class="{ danger: rtc.isScreenSharing }"
-        @click="rtc.isScreenSharing ? rtc.stopScreenShare() : handleShare('standard')"
         title="Share camera"
+        @click="rtc.isScreenSharing ? rtc.stopScreenShare() : handleShare('standard')"
       >
         <MonitorOff v-if="rtc.isScreenSharing" :size="20" />
         <Monitor v-else :size="20" />
@@ -107,8 +108,8 @@ async function togglePiP() {
       <button
         class="ctrl-btn"
         :class="{ active: settings.spatialAudioEnabled }"
-        @click="settings.toggleSpatialAudio()"
         title="Spatial audio"
+        @click="settings.toggleSpatialAudio()"
       >
         <Headphones :size="20" />
       </button>
@@ -118,14 +119,14 @@ async function togglePiP() {
         v-if="pipSupported"
         class="ctrl-btn"
         :class="{ active: rtc.isPiP }"
-        @click="togglePiP"
         title="Picture in Picture"
+        @click="togglePiP"
       >
         <PictureInPicture2 :size="20" />
       </button>
 
       <!-- End call -->
-      <button class="ctrl-btn end-call" @click="rtc.endCall()" title="End call">
+      <button class="ctrl-btn end-call" title="End call" @click="rtc.endCall()">
         <PhoneOff :size="20" />
       </button>
     </div>

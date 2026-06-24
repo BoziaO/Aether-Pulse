@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+
 import { roomApi } from '@/services/api/room.api'
 import { useAuthStore } from './auth.store'
 import type { Room } from '@/types/room.types'

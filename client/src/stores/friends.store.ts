@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+
 import { friendsApi } from '@/services/api/friends.api'
 import { connectSocket } from '@/services/socket/socket'
 import { useAuthStore } from '@/stores/auth.store'

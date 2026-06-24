@@ -1,35 +1,36 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { Eye, EyeOff } from 'lucide-vue-next'
-import { useAuthStore } from '@/stores/auth.store'
+  import { ref } from 'vue'
+  import { useRouter } from 'vue-router'
+  import { Eye, EyeOff } from 'lucide-vue-next'
 
-const router = useRouter()
-const auth = useAuthStore()
-const tab = ref<'login' | 'register'>('login')
-const username = ref('')
-const password = ref('')
-const displayName = ref('')
-const showPw = ref(false)
-const loading = ref(false)
-const error = ref('')
+  import { useAuthStore } from '@/stores/auth.store'
 
-async function submit() {
-  error.value = ''
-  loading.value = true
-  try {
-    if (tab.value === 'login') {
-      await auth.login(username.value, password.value)
-    } else {
-      await auth.register(username.value, password.value, displayName.value || username.value)
+  const router = useRouter()
+  const auth = useAuthStore()
+  const tab = ref<'login' | 'register'>('login')
+  const username = ref('')
+  const password = ref('')
+  const displayName = ref('')
+  const showPw = ref(false)
+  const loading = ref(false)
+  const error = ref('')
+
+  async function submit() {
+    error.value = ''
+    loading.value = true
+    try {
+      if (tab.value === 'login') {
+        await auth.login(username.value, password.value)
+      } else {
+        await auth.register(username.value, password.value, displayName.value || username.value)
+      }
+      router.push('/app')
+    } catch (e: unknown) {
+      error.value = e instanceof Error ? e.message : 'Something went wrong'
+    } finally {
+      loading.value = false
     }
-    router.push('/app')
-  } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : 'Something went wrong'
-  } finally {
-    loading.value = false
   }
-}
 </script>
 
 <template>
@@ -58,8 +59,8 @@ async function submit() {
               class="input"
               type="text"
               placeholder="Enter your username"
-              @keydown.enter="submit"
               autocomplete="username"
+              @keydown.enter="submit"
             />
           </div>
 
@@ -82,10 +83,10 @@ async function submit() {
                 class="input"
                 :type="showPw ? 'text' : 'password'"
                 placeholder="Enter your password"
-                @keydown.enter="submit"
                 autocomplete="current-password"
+                @keydown.enter="submit"
               />
-              <button class="pw-toggle" @click="showPw = !showPw" type="button">
+              <button class="pw-toggle" type="button" @click="showPw = !showPw">
                 <EyeOff v-if="showPw" :size="16" />
                 <Eye v-else :size="16" />
               </button>
