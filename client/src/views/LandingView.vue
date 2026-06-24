@@ -21,7 +21,7 @@
   } from 'lucide-vue-next'
 
   interface DownloadItem {
-    icon: any
+    icon: unknown
     platform: string
     meta: string
     href: string
@@ -33,7 +33,7 @@
   }
 
   interface FeatureItem {
-    icon: any
+    icon: unknown
     title: string
     desc: string
     category?: string
@@ -160,7 +160,7 @@
     return features.value.filter(f => f.category === currentFeatureTab.value)
   })
 
-  const featureCategories = ref<Array<{ id: 'all' | 'chat' | 'audio' | 'video' | 'social' | 'mobile' | 'security'; label: string; icon: any }>>([
+  const featureCategories = ref<Array<{ id: 'all' | 'chat' | 'audio' | 'video' | 'social' | 'mobile' | 'security'; label: string; icon: unknown }>>([
     { id: 'all', label: 'Wszystkie', icon: markRaw(Star) },
     { id: 'audio', label: 'Dźwięk', icon: markRaw(Mic) },
     { id: 'video', label: 'Wideo', icon: markRaw(Video) },
@@ -172,7 +172,7 @@
 
   onMounted(() => {
     // Check if running in Electron
-    isElectron.value = typeof window !== 'undefined' && 'electron' in window.process?.versions
+    isElectron.value = typeof window !== 'undefined' && window.process?.versions && 'electron' in window.process.versions
 
     // Check if mobile device
     if (typeof window !== 'undefined') {
@@ -241,8 +241,8 @@
 
         <button
           class="mobile-menu-btn"
-          @click="mobileMenuOpen = !mobileMenuOpen"
           aria-label="Menu"
+          @click="mobileMenuOpen = !mobileMenuOpen"
         >
           <Menu v-if="!mobileMenuOpen" :size="24" />
           <X v-else :size="24" />
@@ -317,12 +317,12 @@
 
         <!-- Hero Image / Preview -->
         <div class="hero-visual">
-          <img
+          <!-- <img
             src="/images/app-preview.webp"
             alt="AetherPulse Preview"
             loading="lazy"
             decoding="async"
-          />
+          />-->
         </div>
       </div>
 
