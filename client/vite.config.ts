@@ -3,7 +3,10 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
+import { fileURLToPath } from 'node:url'
 import runtimeErrorOverlay from '@replit/vite-plugin-runtime-error-modal'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const port = Number(process.env.CLIENT_PORT) || 5174
 // Default server port is 3000 (from server's default configuration)
@@ -36,13 +39,13 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': path.resolve(import.meta.dirname, 'src'),
+      '@': path.resolve(__dirname, 'src'),
       util: 'util-browser',
     },
   },
-  root: path.resolve(import.meta.dirname),
+  root: path.resolve(__dirname),
   build: {
-    outDir: path.resolve(import.meta.dirname, 'dist'),
+    outDir: path.resolve(__dirname, 'dist'),
     emptyOutDir: true,
     rollupOptions: {
       output: {
