@@ -100,7 +100,7 @@
           ]
         }
       ],
-      "icon": "dist-electron/.icon-ico/icon.ico"
+      "icon": "public/icons/logo.png"
     },
     "mac": {
       "target": "dmg",
@@ -109,13 +109,20 @@
     "linux": {
       "target": [
         {
+          "target": "AppImage",
+          "arch": ["x64"]
+        },
+        {
+          "target": "deb",
+          "arch": ["x64"]
+        },
+        {
           "target": "zip",
-          "arch": [
-            "x64"
-          ]
+          "arch": ["x64"]
         }
       ],
-      "icon": "public/icons/logo.png"
+      "icon": "public/icons/logo.png",
+      "category": "Network"
     },
     "nsis": {
       "oneClick": false,

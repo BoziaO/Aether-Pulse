@@ -3,5 +3,6 @@
   "outputDirectory": "client/dist",
   "installCommand": "pnpm install",
   "framework": null,
-  "rewrites": [{ "source": "/((?!assets|icons|api/).*)", "destination": "/client/dist/index.html" }]
+  "nodeVersion": "22",
+  "rewrites": [{ "source": "/((?!assets/|icons/|api/).*)", "destination": "/index.html" }]
 }

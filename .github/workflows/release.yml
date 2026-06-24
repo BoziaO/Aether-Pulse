@@ -1,0 +1,100 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-electron:
+    name: Build Electron (${{ matrix.os }})
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            script: electron:build
+            extension: exe
+          - os: ubuntu-latest
+            script: electron:build:linux
+            extension: AppImage
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 11
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Electron (${{ matrix.os }})
+        run: pnpm ${{ matrix.script }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: aetherpulse-${{ matrix.os }}
+          path: client/dist-electron/
+
+  create-release:
+    name: Create GitHub Release
+    needs: build-electron
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: aetherpulse-windows-latest
+          path: artifacts/windows
+
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: aetherpulse-ubuntu-latest
+          path: artifacts/linux
+
+      - name: List artifacts
+        run: find artifacts -type f
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: AetherPulse ${{ github.ref_name }}
+          body: |
+            ## AetherPulse ${{ github.ref_name }}
+
+            ### Pobierz
+            - **Windows**: `AetherPulse Setup *.exe` (w załącznikach)
+            - **Linux**: `AetherPulse *.AppImage` (w załącznikach)
+
+            ### Instalacja
+            **Windows**: Uruchom installer `.exe` i postępuj zgodnie z instrukcjami.
+
+            **Linux**: Nadaj uprawnienia `chmod +x *.AppImage` i uruchom.
+
+            ### Uwagi
+            - Wymagane Node.js >= 22
+            - Połącz się z serwerem AetherPulse (domyślnie: https://aetherpulse-server.onrender.com)
+          files: |
+            artifacts/**/*
+          draft: true
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
