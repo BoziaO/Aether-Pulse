@@ -1,241 +1,226 @@
 <script setup lang="ts">
-import { ref, markRaw, onMounted, computed } from 'vue'
-import {
-  Download,
-  Globe2,
-  Laptop,
-  MessageCircle,
-  MonitorUp,
-  PictureInPicture2,
-  Smartphone,
-  Loader2,
-  Users,
-  Mic,
-  Video,
-  Shield,
-  Zap,
-  Star,
-  ArrowRight,
-  Code2,
-} from 'lucide-vue-next'
+  import { ref, markRaw, onMounted, computed } from 'vue'
+  import {
+    Download,
+    Globe2,
+    Laptop,
+    MessageCircle,
+    MonitorUp,
+    PictureInPicture2,
+    Smartphone,
+    Users,
+    Mic,
+    Video,
+    Shield,
+    Zap,
+    Star,
+    ArrowRight,
+    Code2,
+    Menu,
+    X,
+  } from 'lucide-vue-next'
 
-interface DownloadItem {
-  icon: any
-  platform: string
-  meta: string
-  href: string
-  label: string
-  primary: boolean
-  version?: string
-  size?: string
-  badge?: string
-}
-
-interface FeatureItem {
-  icon: any
-  title: string
-  desc: string
-  category?: string
-}
-
-interface Testimonial {
-  avatar: string
-  name: string
-  username: string
-  quote: string
-  stars: number
-}
-
-const downloads = ref<DownloadItem[]>([
-  {
-    icon: markRaw(MonitorUp),
-    platform: 'Windows',
-    meta: 'Windows 10+',
-    href: 'https://github.com/BoziaO/Aether-Pulse/releases/latest/download/AetherPulse-setup.exe',
-    label: 'Pobierz',
-    primary: true,
-    version: 'Najnowsza',
-    size: '120MB',
-    badge: 'POPULARNY',
-  },
-  {
-    icon: markRaw(Smartphone),
-    platform: 'Android',
-    meta: 'APK',
-    href: 'https://github.com/BoziaO/Aether-Pulse/releases/latest/download/AetherPulse.apk',
-    label: 'Pobierz',
-    primary: false,
-    version: 'Najnowsza',
-    size: '45MB',
-    badge: 'MOBILNY',
-  },
-  {
-    icon: markRaw(Laptop),
-    platform: 'Linux',
-    meta: 'x64',
-    href: 'https://github.com/BoziaO/Aether-Pulse/releases/latest/download/AetherPulse-linux-x64.zip',
-    label: 'Pobierz',
-    primary: false,
-    version: 'Najnowsza',
-    size: '140MB',
-    badge: 'DEVELOPER',
-  },
-])
-
-const features = ref<FeatureItem[]>([
-  {
-    icon: markRaw(Mic),
-    title: 'Krystalicznie czysty dźwięk',
-    desc: 'Dźwięk przestrzenny z redukcją szumów i ech, by każda rozmowa brzmiała profesjonalnie.',
-    category: 'audio',
-  },
-  {
-    icon: markRaw(Video),
-    title: 'Streaming w HD',
-    desc: 'Udostępniaj swój ekran lub kamerę w jakości do 1080p z niską latencją.',
-    category: 'video',
-  },
-  {
-    icon: markRaw(MessageCircle),
-    title: 'Chat w czasie rzeczywistym',
-    desc: 'Szybkie wiadomości, reakcje i prywatne pokoje dla Twojej załogi.',
-    category: 'chat',
-  },
-  {
-    icon: markRaw(Users),
-    title: 'Pokoje głosowe',
-    desc: 'Tworzenie prywatnych i publicznych pokoi z kontrolą dostępu.',
-    category: 'social',
-  },
-  {
-    icon: markRaw(PictureInPicture2),
-    title: 'Picture-in-Picture',
-    desc: 'Oglądaj streamy w mini playerze, nawet gdy przełączysz aplikację.',
-    category: 'mobile',
-  },
-  {
-    icon: markRaw(Shield),
-    title: 'Bezpieczeństwo',
-    desc: 'E2E szyfrowanie, JWT autentykacja i ochrona przed nadużyciami.',
-    category: 'security',
-  },
-])
-
-const testimonials = ref<Testimonial[]>([
-  {
-    avatar: '🎮',
-    name: 'GamerX',
-    username: '@gamerx',
-    quote: 'AetherPulse to rewolucja! Wreszcie mogę streamować z przyjaciółmi bez lagów i z doskonałą jakością dźwięku.',
-    stars: 5,
-  },
-  {
-    avatar: '💼',
-    name: 'Anna K.',
-    username: '@annak',
-    quote: 'Używamy AetherPulse do zdalnej współpracy. Idealne rozwiązanie dla naszego zespołu.',
-    stars: 5,
-  },
-  {
-    avatar: '🎵',
-    name: 'DJ Mark',
-    username: '@djmark',
-    quote: 'Dźwięk przestrzenny sprawia, że czuję się jakbym był w studiu nagraniowym. Niesamowite!',
-    stars: 5,
-  },
-])
-
-const stats = ref([
-  { number: '50K+', label: 'Użytkowników' },
-  { number: '10K+', label: 'Pokoi utworzonych' },
-  { number: '99.9%', label: 'Czas dostępności' },
-  { number: '24/7', label: 'Wsparcie' },
-])
-
-const isLoading = ref<boolean>(false)
-const downloadProgress = ref<number>(0)
-const downloadStatus = ref<string>('')
-const selectedPlatform = ref<string>('')
-const currentFeatureTab = ref<'all' | 'audio' | 'video' | 'chat' | 'social' | 'mobile' | 'security'>('all')
-const isScrolled = ref<boolean>(false)
-
-// Browser compatibility check
-const isElectron = ref<boolean>(false)
-const isMobile = ref<boolean>(false)
-
-const filteredFeatures = computed(() => {
-  if (currentFeatureTab.value === 'all') return features.value
-  return features.value.filter(f => f.category === currentFeatureTab.value)
-})
-
-const featureCategories = ref<Array<{ id: 'all' | 'chat' | 'audio' | 'video' | 'social' | 'mobile' | 'security'; label: string; icon: any }>>([
-  { id: 'all', label: 'Wszystkie', icon: markRaw(Star) },
-  { id: 'audio', label: 'Dźwięk', icon: markRaw(Mic) },
-  { id: 'video', label: 'Wideo', icon: markRaw(Video) },
-  { id: 'chat', label: 'Chat', icon: markRaw(MessageCircle) },
-  { id: 'social', label: 'Społeczność', icon: markRaw(Users) },
-  { id: 'mobile', label: 'Mobilne', icon: markRaw(Smartphone) },
-  { id: 'security', label: 'Bezpieczeństwo', icon: markRaw(Shield) },
-])
-
-onMounted(() => {
-  // Check if running in Electron
-  isElectron.value = typeof window !== 'undefined' && 'electron' in window.process?.versions
-  
-  // Check if mobile device
-  if (typeof window !== 'undefined') {
-    isMobile.value = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  interface DownloadItem {
+    icon: any
+    platform: string
+    meta: string
+    href: string
+    label: string
+    primary: boolean
+    version?: string
+    size?: string
+    badge?: string
   }
-  
-  // Handle scroll for navbar
-  window.addEventListener('scroll', () => {
-    isScrolled.value = window.scrollY > 50
+
+  interface FeatureItem {
+    icon: any
+    title: string
+    desc: string
+    category?: string
+  }
+
+  interface Testimonial {
+    avatar: string
+    name: string
+    username: string
+    quote: string
+    stars: number
+  }
+
+  const downloads = ref<DownloadItem[]>([
+    {
+      icon: markRaw(MonitorUp),
+      platform: 'Windows',
+      meta: 'Windows 10+',
+      href: 'https://github.com/BoziaO/Aether-Pulse/releases/download/v1.0/AetherPulse-setup-Windows-v1.0.exe',
+      label: 'Pobierz',
+      primary: true,
+      version: 'Najnowsza',
+      size: '120MB',
+      badge: 'POPULARNY',
+    },
+    {
+      icon: markRaw(Smartphone),
+      platform: 'Android',
+      meta: 'APK',
+      href: '',
+      label: 'Wkrótce',
+      primary: false,
+      version: 'Najnowsza',
+      size: '45MB',
+      badge: 'MOBILNY',
+    },
+    {
+      icon: markRaw(Laptop),
+      platform: 'Linux',
+      meta: 'x64',
+      href: 'https://github.com/BoziaO/Aether-Pulse/releases/download/v1.0/AetherPulse-setup-Linux-v1.0.zip',
+      label: 'Pobierz',
+      primary: false,
+      version: 'Najnowsza',
+      size: '140MB',
+      badge: 'DEVELOPER',
+    },
+  ])
+
+  const features = ref<FeatureItem[]>([
+    {
+      icon: markRaw(Mic),
+      title: 'Krystalicznie czysty dźwięk',
+      desc: 'Dźwięk przestrzenny z redukcją szumów i ech, by każda rozmowa brzmiała profesjonalnie.',
+      category: 'audio',
+    },
+    {
+      icon: markRaw(Video),
+      title: 'Streaming w HD',
+      desc: 'Udostępniaj swój ekran lub kamerę w jakości do 1080p z niską latencją.',
+      category: 'video',
+    },
+    {
+      icon: markRaw(MessageCircle),
+      title: 'Chat w czasie rzeczywistym',
+      desc: 'Szybkie wiadomości, reakcje i prywatne pokoje dla Twojej załogi.',
+      category: 'chat',
+    },
+    {
+      icon: markRaw(Users),
+      title: 'Pokoje głosowe',
+      desc: 'Tworzenie prywatnych i publicznych pokoi z kontrolą dostępu.',
+      category: 'social',
+    },
+    {
+      icon: markRaw(PictureInPicture2),
+      title: 'Picture-in-Picture',
+      desc: 'Oglądaj streamy w mini playerze, nawet gdy przełączysz aplikację.',
+      category: 'mobile',
+    },
+    {
+      icon: markRaw(Shield),
+      title: 'Bezpieczeństwo',
+      desc: 'E2E szyfrowanie, JWT autentykacja i ochrona przed nadużyciami.',
+      category: 'security',
+    },
+  ])
+
+  const testimonials = ref<Testimonial[]>([
+    {
+      avatar: '🎮',
+      name: 'GamerX',
+      username: '@gamerx',
+      quote: 'AetherPulse to rewolucja! Wreszcie mogę streamować z przyjaciółmi bez lagów i z doskonałą jakością dźwięku.',
+      stars: 5,
+    },
+    {
+      avatar: '💼',
+      name: 'Anna K.',
+      username: '@annak',
+      quote: 'Używamy AetherPulse do zdalnej współpracy. Idealne rozwiązanie dla naszego zespołu.',
+      stars: 5,
+    },
+    {
+      avatar: '🎵',
+      name: 'DJ Mark',
+      username: '@djmark',
+      quote: 'Dźwięk przestrzenny sprawia, że czuję się jakbym był w studiu nagraniowym. Niesamowite!',
+      stars: 5,
+    },
+  ])
+
+  const selectedPlatform = ref<string>('')
+  const currentFeatureTab = ref<'all' | 'audio' | 'video' | 'chat' | 'social' | 'mobile' | 'security'>('all')
+  const isScrolled = ref<boolean>(false)
+  const mobileMenuOpen = ref<boolean>(false)
+
+  // Browser compatibility check
+  const isElectron = ref<boolean>(false)
+  const isMobile = ref<boolean>(false)
+
+  const filteredFeatures = computed(() => {
+    if (currentFeatureTab.value === 'all') return features.value
+    return features.value.filter(f => f.category === currentFeatureTab.value)
   })
-})
 
-function handleDownload(platform: string, href: string) {
-  selectedPlatform.value = platform
-  isLoading.value = true
-  downloadProgress.value = 0
-  downloadStatus.value = `Pobieranie ${platform}...`
-  
-  // Simulate progress
-  const interval = setInterval(() => {
-    downloadProgress.value += Math.random() * 15
-    if (downloadProgress.value >= 90) {
-      clearInterval(interval)
+  const featureCategories = ref<Array<{ id: 'all' | 'chat' | 'audio' | 'video' | 'social' | 'mobile' | 'security'; label: string; icon: any }>>([
+    { id: 'all', label: 'Wszystkie', icon: markRaw(Star) },
+    { id: 'audio', label: 'Dźwięk', icon: markRaw(Mic) },
+    { id: 'video', label: 'Wideo', icon: markRaw(Video) },
+    { id: 'chat', label: 'Chat', icon: markRaw(MessageCircle) },
+    { id: 'social', label: 'Społeczność', icon: markRaw(Users) },
+    { id: 'mobile', label: 'Mobilne', icon: markRaw(Smartphone) },
+    { id: 'security', label: 'Bezpieczeństwo', icon: markRaw(Shield) },
+  ])
+
+  onMounted(() => {
+    // Check if running in Electron
+    isElectron.value = typeof window !== 'undefined' && 'electron' in window.process?.versions
+
+    // Check if mobile device
+    if (typeof window !== 'undefined') {
+      isMobile.value = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
     }
-  }, 300)
-  
-  // Start actual download
-  const link = document.createElement('a')
-  link.href = href
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  
-  // Reset after delay
-  setTimeout(() => {
-    isLoading.value = false
-    downloadProgress.value = 100
-    downloadStatus.value = `✅ Pobrano!`
-    setTimeout(() => {
-      downloadProgress.value = 0
-      downloadStatus.value = ''
-    }, 2000)
-  }, 3000)
-}
 
-function scrollToSection(sectionId: string) {
-  const element = document.getElementById(sectionId)
-  if (element) {
-    element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    // Handle scroll for navbar
+    window.addEventListener('scroll', () => {
+      isScrolled.value = window.scrollY > 50
+    })
+  })
+
+  function handleDownload(platform: string, href: string) {
+    selectedPlatform.value = platform
+
+    try {
+      window.open(href, '_blank', "noopener,noreferrer")
+    } catch {
+      window.location.href = href
+    }
   }
-}
 
-function getStarRating(stars: number): string {
-  return '⭐'.repeat(stars) + '☆'.repeat(5 - stars)
-}
+  function scrollToSection(sectionId: string) {
+    const element = document.getElementById(sectionId)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+
+  function getStarRating(stars: number): string {
+    return '⭐'.repeat(stars) + '☆'.repeat(5 - stars)
+  }
+
+  const recommendedPlatform = computed(() => {
+    const ua = navigator.userAgent
+
+    if (/Android/i.test(ua)) return 'Android'
+    if (/Windows/i.test(ua)) return 'Windows'
+    if (/Linux/i.test(ua)) return 'Linux'
+
+    return 'Windows'
+  })
+
+  const recommendedDownload = computed(() =>
+    downloads.value.find(
+      d => d.platform === recommendedPlatform.value
+    ) || downloads.value[0]
+  )
 </script>
 
 <template>
@@ -247,13 +232,36 @@ function getStarRating(stars: number): string {
           <img src="/icons/logo.png" alt="AetherPulse" loading="lazy" />
           <span>AetherPulse</span>
         </a>
-        
+
         <div class="nav-links">
           <button class="nav-link" @click="scrollToSection('features')">Funkcje</button>
           <button class="nav-link" @click="scrollToSection('download')">Pobierz</button>
           <button class="nav-link" @click="scrollToSection('testimonials')">Opinie</button>
         </div>
-        
+
+        <button
+          class="mobile-menu-btn"
+          @click="mobileMenuOpen = !mobileMenuOpen"
+          aria-label="Menu"
+        >
+          <Menu v-if="!mobileMenuOpen" :size="24" />
+          <X v-else :size="24" />
+        </button>
+
+        <div
+          v-if="mobileMenuOpen"
+          class="mobile-menu"
+        >
+          <button class="nav-link" @click="scrollToSection('features'); mobileMenuOpen = false">Funkcje</button>
+          <button class="nav-link" @click="scrollToSection('download'); mobileMenuOpen = false">Pobierz</button>
+          <button class="nav-link" @click="scrollToSection('testimonials'); mobileMenuOpen = false">Opinie</button>
+          <a href="/auth" class="btn secondary" @click="mobileMenuOpen = false">Zaloguj się</a>
+          <a href="/auth" class="btn primary" @click="mobileMenuOpen = false">
+            <Zap :size="16" />
+            Otwórz AetherPulse
+          </a>
+        </div>
+
         <div class="nav-actions">
           <a href="/auth" class="btn secondary">Zaloguj się</a>
           <a href="/auth" class="btn primary">
@@ -272,27 +280,26 @@ function getStarRating(stars: number): string {
             <span class="badge-dot" />
             Najwyżej oceniana platforma do rozmów głosowych
           </div>
-          
+
           <h1 class="hero-title">
             <span class="hero-title-inner">AetherPulse</span>
           </h1>
-          
+
           <p class="hero-subtitle">
-            Twój prywatny space do rozmów głosowych, streamingu i collaboration. 
+            Twój prywatny space do rozmów głosowych, streamingu i collaboration.
             <strong>Działa na wszystkim.</strong>
           </p>
-          
+
           <div class="hero-actions">
-            <button 
-              class="btn primary large"
-              @click="handleDownload('Windows', downloads[0].href)"
-              :disabled="isLoading && selectedPlatform === 'Windows'"
-            >
-              <Download v-if="!(isLoading && selectedPlatform === 'Windows')" :size="20" />
-              <Loader2 v-else class="loader" :size="20" />
-              <span>{{ isLoading && selectedPlatform === 'Windows' ? 'Pobieranie...' : 'Pobierz dla Windows' }}</span>
+            <button
+              class="btn primary large" @click="handleDownload(
+                recommendedDownload.platform,
+                recommendedDownload.href
+              )">
+              <Download :size="20" />
+              <span>Pobierz dla {{ recommendedDownload.platform }}</span>
             </button>
-            
+
             <div class="hero-secondary-actions">
               <a href="/auth" class="btn secondary large">
                 <Globe2 :size="20" />
@@ -306,75 +313,24 @@ function getStarRating(stars: number): string {
               </div>
             </div>
           </div>
-          
-          <!-- Progress bar -->
-          <div v-if="isLoading && downloadProgress > 0" class="hero-progress">
-            <div class="progress-bar" :style="{ width: `${downloadProgress}%` }" />
-            <span class="progress-text">{{ downloadStatus }}</span>
-          </div>
         </div>
-        
+
         <!-- Hero Image / Preview -->
         <div class="hero-visual">
-          <div class="app-preview">
-            <div class="app-window">
-              <div class="window-header">
-                <div class="window-dots">
-                  <span class="dot red" />
-                  <span class="dot yellow" />
-                  <span class="dot green" />
-                </div>
-                <span class="window-title">AetherPulse - #general</span>
-              </div>
-              <div class="window-content">
-                <div class="preview-sidebar">
-                  <div class="server-list">
-                    <div class="server active">🎮</div>
-                    <div class="server">💼</div>
-                    <div class="server">🎵</div>
-                    <div class="server">+</div>
-                  </div>
-                </div>
-                <div class="preview-main">
-                  <div class="user-list">
-                    <div class="user online">
-                      <span class="user-avatar">👤</span>
-                      <span class="user-name">User1</span>
-                      <span class="user-status">🎤</span>
-                    </div>
-                    <div class="user online">
-                      <span class="user-avatar">👤</span>
-                      <span class="user-name">User2</span>
-                      <span class="user-status">🎤</span>
-                    </div>
-                    <div class="user">
-                      <span class="user-avatar">👤</span>
-                      <span class="user-name">User3</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <img
+            src="/images/app-preview.webp"
+            alt="AetherPulse Preview"
+            loading="lazy"
+            decoding="async"
+          />
         </div>
       </div>
-      
+
       <!-- Decorative elements -->
       <div class="hero-decoration">
         <div class="floating-element e1" />
         <div class="floating-element e2" />
         <div class="floating-element e3" />
-      </div>
-    </section>
-
-    <!-- Stats Section -->
-    <section class="stats-section">
-      <div class="stats-container">
-        <div v-for="(stat, index) in stats" :key="stat.label" class="stat-item">
-          <div class="stat-number">{{ stat.number }}</div>
-          <div class="stat-label">{{ stat.label }}</div>
-          <div class="stat-divider" v-if="index < stats.length - 1" />
-        </div>
       </div>
     </section>
 
@@ -385,25 +341,21 @@ function getStarRating(stars: number): string {
           <span class="section-badge">✨ Funkcjonalności</span>
           <h2 class="section-title">Wszystko, czego potrzebujesz<br>w jednym miejscu</h2>
           <p class="section-subtitle">
-            Od rozmów głosowych po streaming - AetherPulse oferuje kompletne rozwiązanie 
+            Od rozmów głosowych po streaming - AetherPulse oferuje kompletne rozwiązanie
             dla Twojej społeczności.
           </p>
         </div>
-        
+
         <!-- Feature Categories -->
         <div class="feature-tabs">
-          <button 
-            v-for="tab in featureCategories" 
-            :key="tab.id" 
-            class="feature-tab"
-            :class="{ active: currentFeatureTab === tab.id }"
-            @click="currentFeatureTab = tab.id"
-          >
+          <button
+            v-for="tab in featureCategories" :key="tab.id" class="feature-tab"
+            :class="{ active: currentFeatureTab === tab.id }" @click="currentFeatureTab = tab.id">
             <component :is="tab.icon" :size="18" />
             {{ tab.label }}
           </button>
         </div>
-        
+
         <!-- Features Grid -->
         <div class="features-grid">
           <article v-for="feature in filteredFeatures" :key="feature.title" class="feature-card">
@@ -425,19 +377,15 @@ function getStarRating(stars: number): string {
           <span class="section-badge">📥 Pobierz</span>
           <h2 class="section-title">Dołącz do społeczności<br>już teraz</h2>
           <p class="section-subtitle">
-            Dostępne na Windows, Android, Linux i w przeglądarce. 
+            Dostępne na Windows, Android, Linux i w przeglądarce.
             Wybierz swoją platformę i zaczynaj przygodę.
           </p>
         </div>
-        
+
         <div class="download-platforms">
-          <div 
-            v-for="item in downloads" 
-            :key="item.platform" 
-            class="download-card"
-            :class="{ featured: item.primary }"
-            @click="handleDownload(item.platform, item.href)"
-          >
+          <div
+            v-for="item in downloads" :key="item.platform" class="download-card" :class="{ featured: item.primary }"
+            @click="handleDownload(item.platform, item.href)">
             <div class="download-icon">
               <component :is="item.icon" :size="32" />
             </div>
@@ -453,14 +401,9 @@ function getStarRating(stars: number): string {
               <Download :size="18" />
               {{ item.label }}
             </button>
-            
-            <!-- Progress for current download -->
-            <div v-if="isLoading && selectedPlatform === item.platform" class="download-progress-inner">
-              <div class="progress-fill" :style="{ width: `${downloadProgress}%` }" />
-            </div>
           </div>
         </div>
-        
+
         <!-- Browser option -->
         <div class="browser-promo">
           <div class="browser-promo-content">
@@ -484,7 +427,7 @@ function getStarRating(stars: number): string {
           <span class="section-badge">💬 Opinie</span>
           <h2 class="section-title">Co mówią nasi użytkownicy</h2>
         </div>
-        
+
         <div class="testimonials-grid">
           <div v-for="testimonial in testimonials" :key="testimonial.username" class="testimonial-card">
             <div class="testimonial-header">
@@ -532,7 +475,7 @@ function getStarRating(stars: number): string {
             <img src="/icons/logo.png" alt="AetherPulse" loading="lazy" />
             <span>AetherPulse</span>
           </a>
-          
+
           <div class="footer-links">
             <div class="footer-column">
               <h4>Produkt</h4>
@@ -552,7 +495,7 @@ function getStarRating(stars: number): string {
             </div>
           </div>
         </div>
-        
+
         <div class="footer-bottom">
           <p>© {{ new Date().getFullYear() }} AetherPulse. Wszelkie prawa zastrzeżone.</p>
           <div class="footer-social">
@@ -563,6 +506,13 @@ function getStarRating(stars: number): string {
         </div>
       </div>
     </footer>
+
+    <div class="mobile-download-bar">
+      <button class="btn primary large" @click="handleDownload('Windows', downloads[0].href)">
+        <Download :size="18" />
+        Pobierz aplikację
+      </button>
+    </div>
   </div>
 </template>
 
@@ -594,7 +544,8 @@ function getStarRating(stars: number): string {
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   scroll-behavior: smooth;
@@ -610,7 +561,11 @@ html, body {
 }
 
 /* Typography */
-h1, h2, h3, h4, p {
+h1,
+h2,
+h3,
+h4,
+p {
   margin: 0;
   line-height: 1.5;
 }
@@ -756,6 +711,44 @@ a {
   gap: 12px;
 }
 
+.mobile-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.mobile-menu-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.mobile-menu {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-top: 8px;
+}
+
+.mobile-menu .nav-link {
+  width: 100%;
+  text-align: center;
+  padding: 12px;
+}
+
+.mobile-menu .btn {
+  width: 100%;
+  justify-content: center;
+}
+
 /* Hero Section */
 .hero {
   padding: 120px 24px 80px;
@@ -798,8 +791,15 @@ a {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .hero-title {
@@ -855,30 +855,6 @@ a {
   transform: scale(1.1);
 }
 
-.hero-progress {
-  margin-top: 24px;
-  width: 100%;
-  max-width: 300px;
-  height: 4px;
-  background: var(--bg-tertiary);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.progress-bar {
-  height: 100%;
-  background: var(--primary-gradient);
-  border-radius: 2px;
-  transition: width 0.3s ease;
-}
-
-.progress-text {
-  display: block;
-  margin-top: 8px;
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
 /* Hero Visual */
 .hero-visual {
   position: relative;
@@ -887,139 +863,26 @@ a {
   align-items: center;
 }
 
-.app-preview {
-  position: relative;
-  max-width: 600px;
+.screenshot-placeholder {
   width: 100%;
-}
-
-.app-window {
+  max-width: 600px;
+  aspect-ratio: 16/10;
   background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: 12px;
-  overflow: hidden;
-  box-shadow: var(--shadow-lg);
-}
-
-.window-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: var(--bg-tertiary);
-  border-bottom: 1px solid var(--border);
-}
-
-.window-dots {
-  display: flex;
-  gap: 6px;
-}
-
-.dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-}
-
-.dot.red { background: #FF5F56; }
-.dot.yellow { background: #FFBD2E; }
-.dot.green { background: #27C93F; }
-
-.window-title {
-  flex: 1;
-  font-size: 13px;
-  color: var(--text-secondary);
-  text-align: center;
-}
-
-.window-content {
-  display: flex;
-  min-height: 300px;
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(6, 182, 212, 0.05));
-}
-
-.preview-sidebar {
-  width: 80px;
-  background: var(--bg-tertiary);
-  padding: 16px 0;
-  border-right: 1px solid var(--border);
-}
-
-.server-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: center;
-}
-
-.server {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
-  background: var(--bg-secondary);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.server:hover {
-  background: var(--bg-tertiary);
-  transform: scale(1.05);
-}
-
-.server.active {
-  background: var(--primary);
-  border: 2px solid white;
-}
-
-.preview-main {
-  flex: 1;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.user-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.user {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
-  background: var(--bg-tertiary);
-  border-radius: 8px;
-  transition: background 0.2s ease;
-}
-
-.user:hover {
-  background: var(--bg-secondary);
-}
-
-.user.online {
-  border-left: 2px solid var(--secondary);
-}
-
-.user-avatar {
-  font-size: 20px;
-}
-
-.user-name {
-  flex: 1;
-  font-size: 13px;
-  color: var(--text-primary);
-}
-
-.user-status {
-  font-size: 12px;
   color: var(--text-muted);
+  font-size: 14px;
+}
+
+.hero-visual img {
+  width: 100%;
+  max-width: 600px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
 }
 
 /* Decorative Elements */
@@ -1037,7 +900,7 @@ a {
   position: absolute;
   border-radius: 50%;
   background: var(--primary);
-  opacity: 0.05;
+  opacity: 0.02;
   filter: blur(80px);
 }
 
@@ -1066,56 +929,15 @@ a {
 }
 
 @keyframes float {
-  0%, 100% { transform: translate(0, 0) rotate(0deg); }
-  50% { transform: translate(20px, -20px) rotate(5deg); }
-}
 
-/* Stats Section */
-.stats-section {
-  padding: 64px 24px;
-  background: linear-gradient(180deg, transparent, rgba(30, 30, 46, 0.3));
-}
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
 
-.stats-container {
-  max-width: 1280px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 64px;
-  flex-wrap: wrap;
-  border: 1px solid var(--border);
-  background: var(--bg-secondary);
-  padding: 40px;
-  border-radius: 16px;
-}
-
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  position: relative;
-}
-
-.stat-number {
-  font-size: 36px;
-  font-weight: 800;
-  color: var(--text-primary);
-}
-
-.stat-label {
-  font-size: 13px;
-  color: var(--text-muted);
-  font-weight: 500;
-}
-
-.stat-divider {
-  width: 1px;
-  height: 40px;
-  background: var(--border);
-  position: absolute;
-  right: -32px;
+  50% {
+    transform: translate(20px, -20px) rotate(5deg);
+  }
 }
 
 /* Features Section */
@@ -1609,20 +1431,32 @@ a {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-.hero-content > * {
+.hero-content>* {
   animation: fadeInUp 0.6s ease-out both;
 }
 
-.hero-content > *:nth-child(1) { animation-delay: 0.1s; }
-.hero-content > *:nth-child(2) { animation-delay: 0.2s; }
-.hero-content > *:nth-child(3) { animation-delay: 0.3s; }
-.hero-content > *:nth-child(4) { animation-delay: 0.4s; }
+.hero-content>*:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.hero-content>*:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.hero-content>*:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.hero-content>*:nth-child(4) {
+  animation-delay: 0.4s;
+}
 
 /* Responsive Design */
 @media (max-width: 1024px) {
@@ -1630,79 +1464,92 @@ a {
     grid-template-columns: 1fr;
     text-align: center;
   }
-  
+
   .hero-content {
     order: 2;
   }
-  
+
   .hero-visual {
     order: 1;
     margin-bottom: 48px;
   }
-  
+
   .hero-actions {
     justify-content: center;
   }
-  
+
   .hero-secondary-actions {
     align-items: center;
   }
-  
+
   .nav-links {
     display: none;
   }
-  
-  .stats-container {
-    flex-direction: column;
-    gap: 32px;
+
+  .mobile-menu-btn {
+    display: flex;
   }
-  
-  .stat-divider {
-    display: none;
+
+  .mobile-menu {
+    display: flex;
   }
 }
 
 @media (max-width: 768px) {
   .nav-actions {
-    gap: 8px;
+    display: none;
   }
-  
+
+  .hero-container {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .hero-content {
+    order: 2;
+  }
+
+  .hero-visual {
+    order: -1;
+    margin-bottom: 32px;
+  }
+
+  .hero-title {
+    font-size: 48px;
+  }
+
   .btn.large {
     padding: 12px 20px;
     font-size: 13px;
   }
-  
+
   .hero {
     padding: 80px 24px 60px;
   }
-  
+
   .hero-badge {
     font-size: 12px;
     padding: 4px 10px;
   }
-  
-  .app-window {
-    transform: scale(0.8);
-  }
-  
+
   .download-platforms {
     grid-template-columns: 1fr;
   }
-  
+
   .browser-promo {
     flex-direction: column;
     text-align: center;
   }
-  
+
   .footer-main {
     flex-direction: column;
     text-align: center;
   }
-  
+
   .footer-links {
     justify-content: center;
   }
-  
+
   .footer-bottom {
     flex-direction: column;
     text-align: center;
@@ -1713,32 +1560,32 @@ a {
   .hero-actions {
     flex-direction: column;
   }
-  
+
   .btn {
     width: 100%;
   }
-  
+
   .hero-subtitle {
     font-size: 16px;
   }
-  
+
   .section-title {
     font-size: 28px;
   }
-  
+
   .feature-tabs {
     justify-content: center;
   }
-  
+
   .feature-tab {
     padding: 8px 12px;
     font-size: 12px;
   }
-  
+
   .testimonials-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .cta-actions {
     flex-direction: column;
   }
@@ -1750,7 +1597,38 @@ a {
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Mobile Download Bar */
+.mobile-download-bar {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  padding: 12px 16px;
+  background: rgba(10, 10, 15, 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+}
+
+.mobile-download-bar .btn {
+  width: 100%;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .mobile-download-bar {
+    display: block;
+  }
 }
 </style>
