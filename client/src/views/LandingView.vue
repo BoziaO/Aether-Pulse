@@ -1455,8 +1455,6 @@ a {
   color: var(--text-muted);
 }
 
-<!-- Testimonials section removed -->
-
 /* CTA Section */
 .cta-section {
   padding: 100px 24px;

@@ -36,6 +36,7 @@
   const userAgent = navigator.userAgent
   const localStorageKeysCount = Object.keys(localStorage).length
   const sessionStorageKeysCount = Object.keys(sessionStorage).length
+  const buildMode = import.meta.env.MODE
 
   const simulatedCallers = computed(() => {
     const mode = settings.spatialAudioDirectionMode
@@ -477,7 +478,7 @@
             <div class="info-card">
               <h3>Debug Information</h3>
               <div class="debug-row"><span class="debug-label">App Version</span><code>1.0.0</code></div>
-              <div class="debug-row"><span class="debug-label">Build Target</span><code>{{ import.meta.env.MODE }}</code></div>
+              <div class="debug-row"><span class="debug-label">Build Target</span><code>{{ buildMode }}</code></div>
               <div class="debug-row"><span class="debug-label">Vue Version</span><code>3.x</code></div>
               <div class="debug-row"><span class="debug-label">User Agent</span><code class="debug-wrap">{{ userAgent }}</code></div>
             </div>
