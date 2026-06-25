@@ -5,6 +5,8 @@ import type { User } from '@/types/user.types'
 export const friendsApi = {
   list: () => apiFetch<FriendsData>('/friends'),
 
+  suggestions: () => apiFetch<UserSearchResult[]>('/friends/suggestions'),
+
   search: (q: string) => apiFetch<UserSearchResult[]>(`/friends/search?q=${encodeURIComponent(q)}`),
 
   getStatus: (userId: string) =>

@@ -2,9 +2,11 @@
   import { RouterView } from 'vue-router'
 
   import ToastContainer from '@/components/ui/ToastContainer.vue'
+  import CookieConsent from '@/components/ui/CookieConsent.vue'
 </script>
 
 <template>
   <RouterView />
   <ToastContainer />
+  <CookieConsent />
 </template>

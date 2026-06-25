@@ -13,7 +13,22 @@
   const searchQuery = ref('')
   const searchResults = ref<UserSearchResult[]>([])
   const searching = ref(false)
+  const suggestions = ref<UserSearchResult[]>([])
+  const loadingSuggestions = ref(false)
   let searchTimeout: ReturnType<typeof setTimeout> | null = null
+
+  async function fetchSuggestions() {
+    loadingSuggestions.value = true
+    try {
+      suggestions.value = await friendsApi.suggestions()
+    } catch {
+      suggestions.value = []
+    } finally {
+      loadingSuggestions.value = false
+    }
+  }
+
+  fetchSuggestions()
 
   async function handleSearch() {
     if (searchTimeout) clearTimeout(searchTimeout)
@@ -37,6 +52,7 @@
   async function sendRequest(userId: string) {
     await friendsStore.sendRequest(userId)
     await handleSearch()
+    suggestions.value = suggestions.value.filter((s) => s.user.id !== userId)
   }
 
   async function accept(userId: string) {
@@ -97,6 +113,27 @@
           @click="accept(result.user.id)"
         >
           <Check :size="14" /> Accept
+        </button>
+      </div>
+    </div>
+
+    <div
+      v-if="!searchQuery.trim() && suggestions.length"
+      class="section"
+    >
+      <div class="section-header">
+        <h2>Suggestions ({{ suggestions.length }})</h2>
+        <button class="btn-ghost small" @click="fetchSuggestions">Refresh</button>
+      </div>
+      <div v-if="loadingSuggestions" class="empty">Loading suggestions...</div>
+      <div v-for="result in suggestions" :key="result.user.id" class="user-row">
+        <UserAvatar :user="result.user" :size="40" />
+        <div class="user-info">
+          <strong>{{ result.user.displayName }}</strong>
+          <span>@{{ result.user.username }}</span>
+        </div>
+        <button class="btn-primary small" @click="sendRequest(result.user.id)">
+          <UserPlus :size="14" /> Add Friend
         </button>
       </div>
     </div>
@@ -198,6 +235,15 @@
   letter-spacing: 0.5px;
   color: var(--text-muted);
   margin-bottom: 10px;
+}
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.section-header h2 {
+  margin-bottom: 0;
 }
 .user-row {
   display: flex;

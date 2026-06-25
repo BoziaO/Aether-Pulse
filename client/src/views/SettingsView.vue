@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { ref, computed } from 'vue'
-  import { Headphones, Mic, Shield, Bell, Palette } from 'lucide-vue-next'
+  import { Headphones, Mic, Shield, Bell, Palette, Languages, Accessibility, Terminal } from 'lucide-vue-next'
 
   import { useSettingsStore } from '@/stores/settings.store'
   import { requestNotificationPermission } from '@/utils/notifications'
@@ -21,6 +21,9 @@
     { id: 'appearance', label: 'Appearance', icon: Palette },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'privacy', label: 'Privacy', icon: Shield },
+    { id: 'language', label: 'Language', icon: Languages },
+    { id: 'accessibility', label: 'Accessibility', icon: Accessibility },
+    { id: 'developer', label: 'Developer', icon: Terminal },
   ]
 
   const soundstages = [
@@ -29,6 +32,10 @@
     { id: 'right', name: 'Right only', desc: 'All on the right' },
     { id: 'center', name: 'Center focus', desc: 'Spread around center' },
   ] as const
+
+  const userAgent = navigator.userAgent
+  const localStorageKeysCount = Object.keys(localStorage).length
+  const sessionStorageKeysCount = Object.keys(sessionStorage).length
 
   const simulatedCallers = computed(() => {
     const mode = settings.spatialAudioDirectionMode
@@ -371,6 +378,120 @@
               Your session is stored in a secure, HttpOnly cookie. It cannot be accessed by
               JavaScript.
             </p>
+          </div>
+        </div>
+      </template>
+
+      <template v-if="activeSection === 'language'">
+        <div class="settings-section">
+          <h2>Language</h2>
+          <div class="setting-item">
+            <div class="setting-info">
+              <div class="setting-title">Application Language</div>
+              <div class="setting-desc">Choose your preferred language for the interface</div>
+            </div>
+          </div>
+          <div class="locale-grid">
+            <button
+              v-for="localeOption in settings.LOCALES"
+              :key="localeOption.id"
+              class="locale-card"
+              :class="{ active: settings.locale === localeOption.id }"
+              @click="settings.locale = localeOption.id"
+            >
+              <span class="locale-name">{{ localeOption.nativeName }}</span>
+              <span class="locale-detail">{{ localeOption.name }}</span>
+            </button>
+          </div>
+          <div class="info-card">
+            <h3>🌐 Translation Status</h3>
+            <p>Translations are community contributed. Some languages may be incomplete. English (en) is used as fallback for any missing text.</p>
+          </div>
+        </div>
+      </template>
+
+      <template v-if="activeSection === 'accessibility'">
+        <div class="settings-section">
+          <h2>Accessibility</h2>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <div class="setting-title">Reduced Motion</div>
+              <div class="setting-desc">Minimize animations and transitions throughout the app</div>
+            </div>
+            <label class="toggle">
+              <input v-model="settings.reduceMotion" type="checkbox" />
+              <span class="toggle-slider" />
+            </label>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <div class="setting-title">High Contrast</div>
+              <div class="setting-desc">Increase contrast for better readability</div>
+            </div>
+            <label class="toggle">
+              <input v-model="settings.highContrast" type="checkbox" />
+              <span class="toggle-slider" />
+            </label>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <div class="setting-title">Font Size</div>
+              <div class="setting-desc">Adjust the base text size across the interface</div>
+            </div>
+          </div>
+
+          <div class="fonts-grid">
+            <button
+              v-for="fontOption in settings.FONT_SIZES"
+              :key="fontOption.id"
+              class="font-card"
+              :class="{ active: settings.fontSize === fontOption.id }"
+              @click="settings.fontSize = fontOption.id"
+            >
+              <span class="font-name">{{ fontOption.name }}</span>
+              <span class="font-detail">{{ fontOption.description }}</span>
+            </button>
+          </div>
+        </div>
+      </template>
+
+      <template v-if="activeSection === 'developer'">
+        <div class="settings-section">
+          <h2>Developer Mode</h2>
+
+          <div class="setting-item highlight">
+            <div class="setting-info">
+              <div class="setting-title">🛠️ Enable Developer Mode</div>
+              <div class="setting-desc">Show debug information, WebRTC statistics, and development tools</div>
+            </div>
+            <label class="toggle">
+              <input v-model="settings.developerMode" type="checkbox" />
+              <span class="toggle-slider" />
+            </label>
+          </div>
+
+          <div v-if="settings.developerMode" class="dev-info-container">
+            <div class="info-card">
+              <h3>Debug Information</h3>
+              <div class="debug-row"><span class="debug-label">App Version</span><code>1.0.0</code></div>
+              <div class="debug-row"><span class="debug-label">Build Target</span><code>{{ import.meta.env.MODE }}</code></div>
+              <div class="debug-row"><span class="debug-label">Vue Version</span><code>3.x</code></div>
+              <div class="debug-row"><span class="debug-label">User Agent</span><code class="debug-wrap">{{ userAgent }}</code></div>
+            </div>
+
+            <div class="info-card">
+              <h3>Storage</h3>
+              <div class="debug-row"><span class="debug-label">Local Storage Keys</span><code>{{ localStorageKeysCount }}</code></div>
+              <div class="debug-row"><span class="debug-label">Session Storage Keys</span><code>{{ sessionStorageKeysCount }}</code></div>
+            </div>
+
+            <div class="info-card">
+              <h3>⚠️ Caution</h3>
+              <p>Developer mode exposes technical details that are useful for debugging. Some panels may show additional controls and data views throughout the app while this is enabled.</p>
+            </div>
           </div>
         </div>
       </template>
@@ -717,6 +838,117 @@
   font-size: 13px;
   color: var(--text-muted);
   line-height: 1.5;
+}
+
+.locale-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.locale-card {
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s;
+}
+.locale-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--text-muted);
+}
+.locale-card.active {
+  border-color: var(--border-accent);
+  background: rgba(139, 92, 246, 0.14);
+}
+.locale-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.locale-detail {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.fonts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.font-card {
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s;
+}
+.font-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--text-muted);
+}
+.font-card.active {
+  border-color: var(--border-accent);
+  background: rgba(139, 92, 246, 0.14);
+}
+.font-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.font-detail {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.dev-info-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: fadeIn 0.2s ease-out;
+}
+.debug-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.debug-row:last-child {
+  border-bottom: none;
+}
+.debug-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.debug-row code {
+  font-size: 12px;
+  color: var(--accent-blue);
+  background: rgba(59, 130, 246, 0.08);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.debug-wrap {
+  max-width: 280px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .layouts-grid {

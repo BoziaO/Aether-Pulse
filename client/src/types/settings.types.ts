@@ -4,6 +4,10 @@ export type ResolvedThemeMode = 'dark' | 'light'
 
 export type ChatLayoutPreset = 'compact' | 'bubble' | 'modern'
 
+export type Locale = 'pl' | 'en' | 'de' | 'es' | 'fr' | 'ja'
+
+export type FontSize = 'small' | 'medium' | 'large'
+
 export const THEME_MODES: Array<{
   id: ThemeMode
   name: string
@@ -13,7 +17,7 @@ export const THEME_MODES: Array<{
   {
     id: 'dark',
     name: 'Dark',
-    description: 'Uses the app’s default dark palette.',
+    description: 'Uses the app\u2019s default dark palette.',
     colors: ['#070a13', '#8b5cf6', '#e2e8f0'],
   },
   {
@@ -50,4 +54,27 @@ export const CHAT_LAYOUT_PRESETS: Array<{
     name: 'Modern',
     description: 'Balanced spacing with the cleanest default reading rhythm.',
   },
+]
+
+export const LOCALES: Array<{
+  id: Locale
+  name: string
+  nativeName: string
+}> = [
+  { id: 'en', name: 'English', nativeName: 'English' },
+  { id: 'pl', name: 'Polish', nativeName: 'Polski' },
+  { id: 'de', name: 'German', nativeName: 'Deutsch' },
+  { id: 'es', name: 'Spanish', nativeName: 'Espa\u00f1ol' },
+  { id: 'fr', name: 'French', nativeName: 'Fran\u00e7ais' },
+  { id: 'ja', name: 'Japanese', nativeName: '\u65e5\u672c\u8a9e' },
+]
+
+export const FONT_SIZES: Array<{
+  id: FontSize
+  name: string
+  description: string
+}> = [
+  { id: 'small', name: 'Small', description: 'Smaller text for denser content' },
+  { id: 'medium', name: 'Medium', description: 'Default text size' },
+  { id: 'large', name: 'Large', description: 'Larger text for better readability' },
 ]

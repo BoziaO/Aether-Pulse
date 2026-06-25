@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, markRaw, onMounted, computed } from 'vue'
+  import { ref, markRaw, onMounted, onUnmounted, computed, type Component } from 'vue'
   import {
     Download,
     Globe2,
@@ -18,10 +18,12 @@
     Code2,
     Menu,
     X,
+    Sparkles,
+    Waves,
   } from 'lucide-vue-next'
 
   interface DownloadItem {
-    icon: unknown
+    icon: Component
     platform: string
     meta: string
     href: string
@@ -33,18 +35,10 @@
   }
 
   interface FeatureItem {
-    icon: unknown
+    icon: Component
     title: string
     desc: string
     category?: string
-  }
-
-  interface Testimonial {
-    avatar: string
-    name: string
-    username: string
-    quote: string
-    stars: number
   }
 
   const downloads = ref<DownloadItem[]>([
@@ -122,36 +116,12 @@
     },
   ])
 
-  const testimonials = ref<Testimonial[]>([
-    {
-      avatar: '🎮',
-      name: 'GamerX',
-      username: '@gamerx',
-      quote: 'AetherPulse to rewolucja! Wreszcie mogę streamować z przyjaciółmi bez lagów i z doskonałą jakością dźwięku.',
-      stars: 5,
-    },
-    {
-      avatar: '💼',
-      name: 'Anna K.',
-      username: '@annak',
-      quote: 'Używamy AetherPulse do zdalnej współpracy. Idealne rozwiązanie dla naszego zespołu.',
-      stars: 5,
-    },
-    {
-      avatar: '🎵',
-      name: 'DJ Mark',
-      username: '@djmark',
-      quote: 'Dźwięk przestrzenny sprawia, że czuję się jakbym był w studiu nagraniowym. Niesamowite!',
-      stars: 5,
-    },
-  ])
-
   const selectedPlatform = ref<string>('')
   const currentFeatureTab = ref<'all' | 'audio' | 'video' | 'chat' | 'social' | 'mobile' | 'security'>('all')
   const isScrolled = ref<boolean>(false)
   const mobileMenuOpen = ref<boolean>(false)
+  const visibleSections = ref<Set<string>>(new Set())
 
-  // Browser compatibility check
   const isElectron = ref<boolean>(false)
   const isMobile = ref<boolean>(false)
 
@@ -160,7 +130,7 @@
     return features.value.filter(f => f.category === currentFeatureTab.value)
   })
 
-  const featureCategories = ref<Array<{ id: 'all' | 'chat' | 'audio' | 'video' | 'social' | 'mobile' | 'security'; label: string; icon: unknown }>>([
+  const featureCategories = ref<Array<{ id: 'all' | 'chat' | 'audio' | 'video' | 'social' | 'mobile' | 'security'; label: string; icon: Component }>>([
     { id: 'all', label: 'Wszystkie', icon: markRaw(Star) },
     { id: 'audio', label: 'Dźwięk', icon: markRaw(Mic) },
     { id: 'video', label: 'Wideo', icon: markRaw(Video) },
@@ -170,26 +140,45 @@
     { id: 'security', label: 'Bezpieczeństwo', icon: markRaw(Shield) },
   ])
 
-  onMounted(() => {
-    // Check if running in Electron
-    isElectron.value = typeof window !== 'undefined' && window.process?.versions && 'electron' in window.process.versions
+  let observer: IntersectionObserver | null = null
 
-    // Check if mobile device
+  onMounted(() => {
+    isElectron.value = typeof window !== 'undefined' && !!(window as any).process?.versions?.electron
+
     if (typeof window !== 'undefined') {
       isMobile.value = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
     }
 
-    // Handle scroll for navbar
     window.addEventListener('scroll', () => {
       isScrolled.value = window.scrollY > 50
     })
+
+    observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            visibleSections.value = new Set([...visibleSections.value, entry.target.id])
+          }
+        })
+      },
+      { threshold: 0.1 }
+    )
+
+    document.querySelectorAll('[data-observe]').forEach((el) => observer?.observe(el))
   })
+
+  onUnmounted(() => {
+    observer?.disconnect()
+  })
+
+  function isVisible(id: string): boolean {
+    return visibleSections.value.has(id)
+  }
 
   function handleDownload(platform: string, href: string) {
     selectedPlatform.value = platform
-
     try {
-      window.open(href, '_blank', "noopener,noreferrer")
+      window.open(href, '_blank', 'noopener,noreferrer')
     } catch {
       window.location.href = href
     }
@@ -202,24 +191,16 @@
     }
   }
 
-  function getStarRating(stars: number): string {
-    return '⭐'.repeat(stars) + '☆'.repeat(5 - stars)
-  }
-
   const recommendedPlatform = computed(() => {
     const ua = navigator.userAgent
-
     if (/Android/i.test(ua)) return 'Android'
     if (/Windows/i.test(ua)) return 'Windows'
     if (/Linux/i.test(ua)) return 'Linux'
-
     return 'Windows'
   })
 
   const recommendedDownload = computed(() =>
-    downloads.value.find(
-      d => d.platform === recommendedPlatform.value
-    ) || downloads.value[0]
+    downloads.value.find(d => d.platform === recommendedPlatform.value) || downloads.value[0]
   )
 </script>
 
@@ -229,14 +210,15 @@
     <nav class="nav" :class="{ scrolled: isScrolled }">
       <div class="nav-container">
         <a class="brand" href="/">
-          <img src="/icons/logo.png" alt="AetherPulse" loading="lazy" />
+          <div class="brand-icon">
+            <Waves :size="24" />
+          </div>
           <span>AetherPulse</span>
         </a>
 
         <div class="nav-links">
           <button class="nav-link" @click="scrollToSection('features')">Funkcje</button>
           <button class="nav-link" @click="scrollToSection('download')">Pobierz</button>
-          <button class="nav-link" @click="scrollToSection('testimonials')">Opinie</button>
         </div>
 
         <button
@@ -254,7 +236,6 @@
         >
           <button class="nav-link" @click="scrollToSection('features'); mobileMenuOpen = false">Funkcje</button>
           <button class="nav-link" @click="scrollToSection('download'); mobileMenuOpen = false">Pobierz</button>
-          <button class="nav-link" @click="scrollToSection('testimonials'); mobileMenuOpen = false">Opinie</button>
           <a href="/auth" class="btn secondary" @click="mobileMenuOpen = false">Zaloguj się</a>
           <a href="/auth" class="btn primary" @click="mobileMenuOpen = false">
             <Zap :size="16" />
@@ -277,17 +258,18 @@
       <div class="hero-container">
         <div class="hero-content">
           <div class="hero-badge">
-            <span class="badge-dot" />
-            Najwyżej oceniana platforma do rozmów głosowych
+            <Sparkles :size="14" />
+            Darmowa platforma do rozmów głosowych i streamingu
           </div>
 
           <h1 class="hero-title">
-            <span class="hero-title-inner">AetherPulse</span>
+            <span class="hero-title-line">Rozmawiaj, streamuj,</span>
+            <span class="hero-title-line hero-title-gradient">współtwórz</span>
           </h1>
 
           <p class="hero-subtitle">
-            Twój prywatny space do rozmów głosowych, streamingu i collaboration.
-            <strong>Działa na wszystkim.</strong>
+            AetherPulse to nowoczesna platforma do komunikacji głosowej, wideorozmów i współpracy.
+            <strong>Bez ograniczeń, na każdej platformie.</strong>
           </p>
 
           <div class="hero-actions">
@@ -306,48 +288,80 @@
                 Otwórz w przeglądarce
               </a>
               <div class="platform-icons">
-                <span class="platform-icon windows" title="Windows">🪟</span>
-                <span class="platform-icon android" title="Android">📱</span>
-                <span class="platform-icon linux" title="Linux">🐧</span>
-                <span class="platform-icon web" title="Web">🌐</span>
+                <span class="platform-icon" title="Windows"><MonitorUp :size="18" /></span>
+                <span class="platform-icon" title="Android"><Smartphone :size="18" /></span>
+                <span class="platform-icon" title="Linux"><Laptop :size="18" /></span>
+                <span class="platform-icon" title="Web"><Globe2 :size="18" /></span>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Hero Image / Preview -->
+        <!-- Hero Visual - App mockup -->
         <div class="hero-visual">
-          <!-- <img
-            src="/images/app-preview.webp"
-            alt="AetherPulse Preview"
-            loading="lazy"
-            decoding="async"
-          />-->
+          <div class="mockup">
+            <div class="mockup-header">
+              <div class="mockup-dots">
+                <span /><span /><span />
+              </div>
+              <div class="mockup-title">AetherPulse</div>
+            </div>
+            <div class="mockup-body">
+              <div class="mockup-sidebar">
+                <div class="mockup-avatar" />
+                <div class="mockup-avatar" />
+                <div class="mockup-avatar" />
+                <div class="mockup-avatar muted" />
+              </div>
+              <div class="mockup-main">
+                <div class="mockup-topbar">
+                  <div class="mockup-tag"># ogólny</div>
+                  <div class="mockup-icons">
+                    <Mic :size="14" />
+                    <Video :size="14" />
+                  </div>
+                </div>
+                <div class="mockup-messages">
+                  <div class="mockup-msg theirs" style="width: 70%" />
+                  <div class="mockup-msg theirs" style="width: 50%" />
+                  <div class="mockup-msg mine" style="width: 60%" />
+                  <div class="mockup-msg theirs" style="width: 80%" />
+                  <div class="mockup-msg mine" style="width: 45%" />
+                </div>
+                <div class="mockup-input">
+                  <div class="mockup-input-dot" />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Decorative elements -->
       <div class="hero-decoration">
-        <div class="floating-element e1" />
-        <div class="floating-element e2" />
-        <div class="floating-element e3" />
+        <div class="hero-gradient-sphere s1" />
+        <div class="hero-gradient-sphere s2" />
+        <div class="hero-gradient-sphere s3" />
       </div>
     </section>
 
     <!-- Features Section -->
     <section id="features" class="features-section">
       <div class="section-container">
-        <div class="section-header">
-          <span class="section-badge">✨ Funkcjonalności</span>
+        <div class="section-header" data-observe="features-header" :class="{ visible: isVisible('features-header') }">
+          <span class="section-badge">
+            <Sparkles :size="14" />
+            Funkcjonalności
+          </span>
           <h2 class="section-title">Wszystko, czego potrzebujesz<br>w jednym miejscu</h2>
           <p class="section-subtitle">
-            Od rozmów głosowych po streaming - AetherPulse oferuje kompletne rozwiązanie
-            dla Twojej społeczności.
+            Od rozmów głosowych po streaming w jakości HD &mdash; AetherPulse oferuje kompletny
+            zestaw narzędzi dla Twojej społeczności.
           </p>
         </div>
 
         <!-- Feature Categories -->
-        <div class="feature-tabs">
+        <div class="feature-tabs" data-observe="features-tabs" :class="{ visible: isVisible('features-tabs') }">
           <button
             v-for="tab in featureCategories" :key="tab.id" class="feature-tab"
             :class="{ active: currentFeatureTab === tab.id }" @click="currentFeatureTab = tab.id">
@@ -358,13 +372,21 @@
 
         <!-- Features Grid -->
         <div class="features-grid">
-          <article v-for="feature in filteredFeatures" :key="feature.title" class="feature-card">
+          <article
+            v-for="(feature, i) in filteredFeatures"
+            :key="feature.title"
+            :id="'feature-' + i"
+            class="feature-card"
+            :class="{ visible: isVisible('feature-' + i) }"
+            :data-observe="'feature-' + i"
+            :style="{ transitionDelay: (i * 100) + 'ms' }"
+          >
+            <div class="feature-card-glow" />
             <div class="feature-icon-wrapper">
               <component :is="feature.icon" :size="28" />
             </div>
             <h3 class="feature-title">{{ feature.title }}</h3>
             <p class="feature-description">{{ feature.desc }}</p>
-            <div class="feature-hover-effect" />
           </article>
         </div>
       </div>
@@ -373,8 +395,11 @@
     <!-- Downloads Section -->
     <section id="download" class="downloads-section">
       <div class="section-container">
-        <div class="section-header">
-          <span class="section-badge">📥 Pobierz</span>
+        <div class="section-header" data-observe="download-header" :class="{ visible: isVisible('download-header') }">
+          <span class="section-badge">
+            <Download :size="14" />
+            Pobierz
+          </span>
           <h2 class="section-title">Dołącz do społeczności<br>już teraz</h2>
           <p class="section-subtitle">
             Dostępne na Windows, Android, Linux i w przeglądarce.
@@ -405,12 +430,12 @@
         </div>
 
         <!-- Browser option -->
-        <div class="browser-promo">
+        <div class="browser-promo" data-observe="browser-promo" :class="{ visible: isVisible('browser-promo') }">
           <div class="browser-promo-content">
             <Globe2 :size="24" />
             <div class="browser-promo-text">
               <strong>Wolisz przeglądarkę?</strong>
-              <p>Uruchom AetherPulse bezpośrednio w przeglądarce bez instalacji.</p>
+              <p>Uruchom AetherPulse bezpośrednio w przeglądarce bez instalacji &mdash; wystarczy konto.</p>
             </div>
           </div>
           <a href="/auth" class="btn secondary">
@@ -420,36 +445,12 @@
       </div>
     </section>
 
-    <!-- Testimonials Section -->
-    <section id="testimonials" class="testimonials-section">
-      <div class="section-container">
-        <div class="section-header">
-          <span class="section-badge">💬 Opinie</span>
-          <h2 class="section-title">Co mówią nasi użytkownicy</h2>
-        </div>
-
-        <div class="testimonials-grid">
-          <div v-for="testimonial in testimonials" :key="testimonial.username" class="testimonial-card">
-            <div class="testimonial-header">
-              <div class="testimonial-avatar">{{ testimonial.avatar }}</div>
-              <div class="testimonial-author">
-                <strong>{{ testimonial.name }}</strong>
-                <span>{{ testimonial.username }}</span>
-              </div>
-            </div>
-            <div class="testimonial-rating">{{ getStarRating(testimonial.stars) }}</div>
-            <p class="testimonial-quote">{{ testimonial.quote }}</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- CTA Section -->
     <section class="cta-section">
-      <div class="cta-container">
+      <div class="cta-container" data-observe="cta" :class="{ visible: isVisible('cta') }">
         <div class="cta-content">
           <h2>Gotowy na nową erę<br>komunikacji?</h2>
-          <p>Dołącz do tysięcy użytkowników, którzy już odkryli swobodę AetherPulse.</p>
+          <p>Dołącz do tysięcy użytkowników, którzy już odkryli swobodę AetherPulse. <strong>Za darmo.</strong></p>
         </div>
         <div class="cta-actions">
           <button class="btn primary large" @click="handleDownload('Windows', downloads[0].href)">
@@ -471,17 +472,19 @@
     <footer class="footer">
       <div class="footer-container">
         <div class="footer-main">
-          <a class="footer-brand" href="/">
-            <img src="/icons/logo.png" alt="AetherPulse" loading="lazy" />
-            <span>AetherPulse</span>
-          </a>
+          <div class="footer-brand-col">
+            <a class="footer-brand" href="/">
+              <Waves :size="24" />
+              <span>AetherPulse</span>
+            </a>
+            <p class="footer-desc">Nowoczesna platforma do komunikacji głosowej, wideorozmów i współpracy zespołowej.</p>
+          </div>
 
           <div class="footer-links">
             <div class="footer-column">
               <h4>Produkt</h4>
               <a href="#features">Funkcje</a>
               <a href="#download">Pobierz</a>
-              <a href="#testimonials">Opinie</a>
             </div>
             <div class="footer-column">
               <h4>Społeczność</h4>
@@ -497,7 +500,7 @@
         </div>
 
         <div class="footer-bottom">
-          <p>© {{ new Date().getFullYear() }} AetherPulse. Wszelkie prawa zastrzeżone.</p>
+          <p>&copy; {{ new Date().getFullYear() }} AetherPulse. Wszelkie prawa zastrzeżone.</p>
           <div class="footer-social">
             <a href="https://github.com/BoziaO/Aether-Pulse" target="_blank" title="GitHub">
               <Code2 :size="18" />
@@ -678,10 +681,15 @@ a {
   color: var(--text-primary);
 }
 
-.brand img {
+.brand-icon {
   width: 32px;
   height: 32px;
-  object-fit: contain;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-gradient);
+  border-radius: 8px;
+  color: white;
 }
 
 .nav-links {
@@ -803,15 +811,22 @@ a {
 }
 
 .hero-title {
-  font-size: clamp(48px, 8vw, 96px);
+  font-size: clamp(40px, 7vw, 80px);
   font-weight: 800;
-  line-height: 0.95;
-  letter-spacing: -0.02em;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
   margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.hero-title-inner {
-  background: linear-gradient(135deg, #FFFFFF, #A78BFA, #67E8F9);
+.hero-title-line {
+  display: block;
+}
+
+.hero-title-gradient {
+  background: linear-gradient(135deg, #A78BFA, #67E8F9, #5865F2);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -863,26 +878,26 @@ a {
   align-items: center;
 }
 
-.screenshot-placeholder {
-  width: 100%;
-  max-width: 600px;
-  aspect-ratio: 16/10;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+.hero-visual {
   display: flex;
-  align-items: center;
   justify-content: center;
-  color: var(--text-muted);
-  font-size: 14px;
+  align-items: center;
 }
 
-.hero-visual img {
-  width: 100%;
-  max-width: 600px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-lg);
+.hero-visual .mockup {
+  animation: mockupEnter 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.3s;
+}
+
+@keyframes mockupEnter {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* Decorative Elements */
@@ -896,48 +911,208 @@ a {
   z-index: 0;
 }
 
-.floating-element {
+.hero-gradient-sphere {
   position: absolute;
   border-radius: 50%;
-  background: var(--primary);
-  opacity: 0.02;
-  filter: blur(80px);
+  filter: blur(100px);
+  will-change: transform;
 }
 
-.e1 {
+.hero-gradient-sphere.s1 {
+  width: 500px;
+  height: 500px;
+  top: -200px;
+  right: -100px;
+  background: radial-gradient(circle, rgba(88, 101, 242, 0.15), transparent);
+  animation: sphereFloat 10s ease-in-out infinite;
+}
+
+.hero-gradient-sphere.s2 {
   width: 400px;
   height: 400px;
-  top: -100px;
-  right: -100px;
-  animation: float 6s ease-in-out infinite;
+  bottom: -150px;
+  left: -100px;
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.1), transparent);
+  animation: sphereFloat 14s ease-in-out infinite reverse;
 }
 
-.e2 {
-  width: 300px;
-  height: 300px;
-  bottom: -50px;
-  left: -50px;
-  animation: float 8s ease-in-out infinite reverse;
+.hero-gradient-sphere.s3 {
+  width: 250px;
+  height: 250px;
+  top: 40%;
+  left: 20%;
+  background: radial-gradient(circle, rgba(103, 232, 249, 0.08), transparent);
+  animation: sphereFloat 12s ease-in-out infinite;
 }
 
-.e3 {
-  width: 200px;
-  height: 200px;
-  top: 50%;
-  left: 10%;
-  animation: float 7s ease-in-out infinite;
+@keyframes sphereFloat {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(30px, -30px) scale(1.05);
+  }
+  66% {
+    transform: translate(-20px, 10px) scale(0.95);
+  }
 }
 
 @keyframes float {
-
-  0%,
-  100% {
+  0%, 100% {
     transform: translate(0, 0) rotate(0deg);
   }
-
   50% {
     transform: translate(20px, -20px) rotate(5deg);
   }
+}
+
+/* App Mockup */
+.mockup {
+  width: 100%;
+  max-width: 540px;
+  background: rgba(30, 30, 46, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.mockup-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(20, 20, 30, 0.8);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.mockup-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.mockup-dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.mockup-dots span:nth-child(1) { background: #ED4245; }
+.mockup-dots span:nth-child(2) { background: #FAA61A; }
+.mockup-dots span:nth-child(3) { background: #3BA55C; }
+
+.mockup-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+
+.mockup-body {
+  display: flex;
+  height: 320px;
+}
+
+.mockup-sidebar {
+  width: 56px;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(10, 10, 15, 0.4);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  align-items: center;
+}
+
+.mockup-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(88, 101, 242, 0.3), rgba(88, 101, 242, 0.1));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mockup-avatar.muted {
+  opacity: 0.4;
+}
+
+.mockup-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+}
+
+.mockup-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.mockup-tag {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.mockup-icons {
+  display: flex;
+  gap: 8px;
+  color: var(--text-muted);
+}
+
+.mockup-messages {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: flex-end;
+  padding-bottom: 12px;
+}
+
+.mockup-msg {
+  height: 10px;
+  border-radius: 4px;
+  animation: msgPulse 2s ease-in-out infinite;
+}
+
+.mockup-msg.theirs {
+  background: rgba(255, 255, 255, 0.08);
+  align-self: flex-start;
+}
+
+.mockup-msg.mine {
+  background: linear-gradient(90deg, rgba(88, 101, 242, 0.3), rgba(88, 101, 242, 0.15));
+  align-self: flex-end;
+}
+
+@keyframes msgPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.mockup-input {
+  height: 36px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+}
+
+.mockup-input-dot {
+  width: 40%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
 }
 
 /* Features Section */
@@ -953,19 +1128,28 @@ a {
 .section-header {
   text-align: center;
   margin-bottom: 64px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.section-header.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .section-badge {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
+  padding: 6px 14px;
   background: var(--primary-gradient);
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
   color: white;
   margin-bottom: 24px;
+  box-shadow: 0 4px 14px rgba(88, 101, 242, 0.3);
 }
 
 .section-title {
@@ -989,6 +1173,15 @@ a {
   gap: 8px;
   margin-bottom: 48px;
   flex-wrap: wrap;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: 200ms;
+}
+
+.feature-tabs.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .feature-tab {
@@ -1025,19 +1218,46 @@ a {
 
 .feature-card {
   position: relative;
-  background: var(--bg-secondary);
+  background: rgba(30, 30, 46, 0.5);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 32px;
   cursor: default;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+  transform: translateY(24px);
+}
+
+.feature-card.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .feature-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--border-hover);
-  box-shadow: var(--shadow);
+  transform: translateY(-6px) scale(1.01);
+  border-color: rgba(88, 101, 242, 0.3);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.3),
+    0 0 40px rgba(88, 101, 242, 0.05);
+  background: rgba(30, 30, 46, 0.7);
+}
+
+.feature-card-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(88, 101, 242, 0.4), transparent);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.feature-card:hover .feature-card-glow {
+  opacity: 1;
 }
 
 .feature-icon-wrapper {
@@ -1050,6 +1270,18 @@ a {
   border-radius: 12px;
   margin-bottom: 20px;
   color: white;
+  position: relative;
+}
+
+.feature-icon-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 14px;
+  background: var(--primary-gradient);
+  opacity: 0.2;
+  filter: blur(8px);
+  z-index: -1;
 }
 
 .feature-title {
@@ -1063,16 +1295,6 @@ a {
   font-size: 14px;
   color: var(--text-secondary);
   line-height: 1.6;
-}
-
-.feature-hover-effect {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, transparent, rgba(88, 101, 242, 0.05));
-  pointer-events: none;
 }
 
 /* Downloads Section */
@@ -1089,14 +1311,16 @@ a {
 }
 
 .download-card {
-  background: var(--bg-secondary);
+  background: rgba(30, 30, 46, 0.5);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 24px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   overflow: hidden;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .download-card:hover {
@@ -1106,8 +1330,9 @@ a {
 }
 
 .download-card.featured {
-  border-color: var(--primary);
-  background: linear-gradient(135deg, rgba(88, 101, 242, 0.1), var(--bg-secondary));
+  border-color: rgba(88, 101, 242, 0.4);
+  background: linear-gradient(135deg, rgba(88, 101, 242, 0.12), rgba(30, 30, 46, 0.5));
+  box-shadow: 0 0 30px rgba(88, 101, 242, 0.08);
 }
 
 .download-icon {
@@ -1199,6 +1424,14 @@ a {
   border: 1px solid var(--border);
   border-radius: 16px;
   flex-wrap: wrap;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.browser-promo.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .browser-promo-content {
@@ -1222,64 +1455,7 @@ a {
   color: var(--text-muted);
 }
 
-/* Testimonials Section */
-.testimonials-section {
-  padding: 80px 24px;
-}
-
-.testimonials-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 24px;
-}
-
-.testimonial-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 24px;
-  transition: all 0.3s ease;
-}
-
-.testimonial-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--border-hover);
-  box-shadow: var(--shadow);
-}
-
-.testimonial-header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.testimonial-avatar {
-  font-size: 24px;
-}
-
-.testimonial-author strong {
-  display: block;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.testimonial-author span {
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
-.testimonial-rating {
-  color: #FFBD2E;
-  font-size: 14px;
-  margin-bottom: 12px;
-}
-
-.testimonial-quote {
-  font-size: 14px;
-  color: var(--text-secondary);
-  line-height: 1.6;
-}
+<!-- Testimonials section removed -->
 
 /* CTA Section */
 .cta-section {
@@ -1294,6 +1470,14 @@ a {
   margin: 0 auto;
   position: relative;
   z-index: 1;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cta-container.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .cta-content {
@@ -1355,18 +1539,27 @@ a {
   flex-wrap: wrap;
 }
 
+.footer-brand-col {
+  max-width: 300px;
+}
+
 .footer-brand {
   display: flex;
   align-items: center;
   gap: 10px;
   font-size: 18px;
   font-weight: 700;
-  margin-bottom: 24px;
+  margin-bottom: 12px;
 }
 
-.footer-brand img {
-  width: 32px;
-  height: 32px;
+.footer-brand svg {
+  color: var(--primary);
+}
+
+.footer-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.6;
 }
 
 .footer-links {
@@ -1580,10 +1773,6 @@ a {
   .feature-tab {
     padding: 8px 12px;
     font-size: 12px;
-  }
-
-  .testimonials-grid {
-    grid-template-columns: 1fr;
   }
 
   .cta-actions {

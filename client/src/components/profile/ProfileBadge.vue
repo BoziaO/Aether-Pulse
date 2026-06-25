@@ -61,6 +61,12 @@
           color: 'linear-gradient(135deg, #f97316, #ea580c)',
           desc: 'Illuminating spark of intellect and warmth',
         }
+      case 'creator':
+        return {
+          title: 'Creator',
+          color: 'linear-gradient(135deg, #fbbf24, #d97706)',
+          desc: 'The visionary behind Aether-Pulse',
+        }
       default:
         return {
           title: 'Verified',
@@ -221,6 +227,20 @@
       </defs>
       <circle cx="12" cy="12" r="10" fill="url(#brillianceGrad)" />
       <path d="M12 6l2 4 5 1-4 4 1 5-4-3-4 3 1-5-4-4 5-1 2-4z" fill="#fff" />
+    </svg>
+
+    <svg v-else-if="props.badge === 'creator'" viewBox="0 0 24 24" class="svg-badge" fill="none">
+      <defs>
+        <linearGradient id="creatorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#fbbf24" />
+          <stop offset="100%" stop-color="#d97706" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M2 19h20v3H2v-3zM4 11l2-7 4 4 2-7 2 7 4-4 2 7v6H4v-6z"
+        fill="url(#creatorGrad)"
+      />
+      <circle cx="12" cy="15" r="2" fill="#fff" opacity="0.6" />
     </svg>
   </div>
 </template>

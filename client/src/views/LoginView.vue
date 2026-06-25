@@ -31,6 +31,7 @@
   const showPwConfirm = ref(false)
   const loading = ref(false)
   const error = ref('')
+  const rememberMe = ref(true)
   const touched = ref({ username: false, password: false, passwordConfirm: false })
   const submitted = ref(false)
 
@@ -108,12 +109,13 @@
     loading.value = true
     try {
       if (tab.value === 'login') {
-        await auth.login(username.value.trim(), password.value)
+        await auth.login(username.value.trim(), password.value, rememberMe.value)
       } else {
         await auth.register(
           username.value.trim(),
           password.value,
-          displayName.value.trim() || username.value.trim()
+          displayName.value.trim() || username.value.trim(),
+          rememberMe.value
         )
       }
       router.push('/app')
@@ -347,6 +349,12 @@
               <span>{{ error }}</span>
             </div>
           </transition>
+
+          <!-- Remember me -->
+          <label class="remember-row">
+            <input v-model="rememberMe" type="checkbox" class="remember-checkbox" />
+            <span class="remember-label">Zapamiętaj mnie</span>
+          </label>
 
           <!-- Submit button -->
           <button
@@ -849,6 +857,26 @@
   border-radius: 10px;
   border: 1px solid rgba(239, 68, 68, 0.2);
   line-height: 1.4;
+}
+
+/* Remember me */
+.remember-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  padding: 2px 0;
+}
+.remember-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent-violet);
+  cursor: pointer;
+}
+.remember-label {
+  font-size: 13px;
+  color: var(--text-secondary);
 }
 
 /* Submit button */

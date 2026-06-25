@@ -7,38 +7,55 @@ import type { User } from '@/types/user.types'
 import { useSettingsStore, type ThemeMode } from './settings.store'
 import { getSocket } from '@/services/socket/socket'
 
-// Storage keys for JWT tokens
 const ACCESS_TOKEN_KEY = 'aetherpulse_access_token'
 const REFRESH_TOKEN_KEY = 'aetherpulse_refresh_token'
+const REMEMBER_ME_KEY = 'aetherpulse_remember_me'
 
-/**
- * Get access token from localStorage
- */
+function getRememberMe(): boolean {
+  return localStorage.getItem(REMEMBER_ME_KEY) !== 'false'
+}
+
+function setRememberMe(value: boolean): void {
+  if (value) {
+    localStorage.setItem(REMEMBER_ME_KEY, 'true')
+  } else {
+    localStorage.removeItem(REMEMBER_ME_KEY)
+  }
+}
+
 function getAccessToken(): string | null {
-  return localStorage.getItem(ACCESS_TOKEN_KEY)
+  return (
+    sessionStorage.getItem(ACCESS_TOKEN_KEY) ??
+    localStorage.getItem(ACCESS_TOKEN_KEY)
+  )
 }
 
-/**
- * Get refresh token from localStorage
- */
 function getRefreshToken(): string | null {
-  return localStorage.getItem(REFRESH_TOKEN_KEY)
+  return (
+    sessionStorage.getItem(REFRESH_TOKEN_KEY) ??
+    localStorage.getItem(REFRESH_TOKEN_KEY)
+  )
 }
 
-/**
- * Set tokens in localStorage
- */
-function setTokens(accessToken: string, refreshToken: string): void {
-  localStorage.setItem(ACCESS_TOKEN_KEY, accessToken)
-  localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
+function setTokens(accessToken: string, refreshToken: string, remember: boolean): void {
+  if (remember) {
+    localStorage.setItem(ACCESS_TOKEN_KEY, accessToken)
+    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
+    sessionStorage.removeItem(ACCESS_TOKEN_KEY)
+    sessionStorage.removeItem(REFRESH_TOKEN_KEY)
+  } else {
+    sessionStorage.setItem(ACCESS_TOKEN_KEY, accessToken)
+    sessionStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
+    localStorage.removeItem(ACCESS_TOKEN_KEY)
+    localStorage.removeItem(REFRESH_TOKEN_KEY)
+  }
 }
 
-/**
- * Clear tokens from localStorage
- */
 function clearTokens(): void {
   localStorage.removeItem(ACCESS_TOKEN_KEY)
   localStorage.removeItem(REFRESH_TOKEN_KEY)
+  sessionStorage.removeItem(ACCESS_TOKEN_KEY)
+  sessionStorage.removeItem(REFRESH_TOKEN_KEY)
 }
 
 export const useAuthStore = defineStore('auth', () => {
@@ -47,6 +64,7 @@ export const useAuthStore = defineStore('auth', () => {
   const error = ref<string | null>(null)
   const accessToken = ref<string | null>(getAccessToken())
   const refreshToken = ref<string | null>(getRefreshToken())
+  const rememberMe = ref(getRememberMe())
   const isFetchingMe = ref(false)
 
   const isLoggedIn = computed(() => {
@@ -65,7 +83,7 @@ export const useAuthStore = defineStore('auth', () => {
       const res = await authApi.refresh(currentRefreshToken)
       accessToken.value = res.accessToken
       refreshToken.value = res.refreshToken
-      setTokens(res.accessToken, res.refreshToken)
+      setTokens(res.accessToken, res.refreshToken, rememberMe.value)
       return true
     } catch {
       // Refresh failed, clear tokens
@@ -96,7 +114,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function login(username: string, password: string) {
+  async function login(username: string, password: string, remember?: boolean) {
     loading.value = true
     error.value = null
     try {
@@ -104,7 +122,9 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = res.user
       accessToken.value = res.accessToken
       refreshToken.value = res.refreshToken
-      setTokens(res.accessToken, res.refreshToken)
+      rememberMe.value = remember ?? true
+      setRememberMe(rememberMe.value)
+      setTokens(res.accessToken, res.refreshToken, rememberMe.value)
     } catch (e: unknown) {
       error.value = e instanceof Error ? e.message : 'Login failed'
       throw e
@@ -113,7 +133,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function register(username: string, password: string, displayName: string) {
+  async function register(username: string, password: string, displayName: string, remember?: boolean) {
     loading.value = true
     error.value = null
     try {
@@ -121,7 +141,9 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = res.user
       accessToken.value = res.accessToken
       refreshToken.value = res.refreshToken
-      setTokens(res.accessToken, res.refreshToken)
+      rememberMe.value = remember ?? true
+      setRememberMe(rememberMe.value)
+      setTokens(res.accessToken, res.refreshToken, rememberMe.value)
     } catch (e: unknown) {
       error.value = e instanceof Error ? e.message : 'Registration failed'
       throw e
@@ -218,6 +240,7 @@ export const useAuthStore = defineStore('auth', () => {
     isLoggedIn,
     accessToken,
     refreshToken,
+    rememberMe,
     login,
     register,
     logout,

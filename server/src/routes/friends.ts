@@ -1,4 +1,5 @@
 import { Router, type IRouter } from 'express'
+import mongoose from 'mongoose'
 import { User, Friendship } from '@workspace/db'
 
 import { getFriendship, friendshipStatusFor } from '../utils/friend-helpers'
@@ -229,6 +230,34 @@ router.post('/friends/block', async (req, res): Promise<void> => {
   await Friendship.create({ requesterId: userId, addresseeId: targetId, status: 'blocked' })
   notifyFriendshipUpdated(req, userId, targetId)
   res.json({ ok: true })
+})
+
+router.get('/friends/suggestions', async (req, res): Promise<void> => {
+  const userId = requireAuth(req, res)
+  if (!userId) return
+
+  const rows = await Friendship.find({
+    $or: [{ requesterId: userId }, { addresseeId: userId }],
+  }).lean()
+
+  const friendIds = rows.map((r) =>
+    r.requesterId.toString() === userId ? r.addresseeId.toString() : r.requesterId.toString()
+  )
+  friendIds.push(userId)
+
+  const excludeIds = friendIds.map((id: string) => new mongoose.Types.ObjectId(id))
+
+  const suggestions = await User.aggregate([
+    { $match: { _id: { $nin: excludeIds } } },
+    { $sample: { size: 6 } },
+  ])
+
+  res.json(
+    suggestions.map((u) => ({
+      user: serializeUser(u as any),
+      status: 'none' as const,
+    }))
+  )
 })
 
 router.get('/friends/status/:otherUserId', async (req, res): Promise<void> => {

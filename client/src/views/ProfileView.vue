@@ -127,17 +127,8 @@
     { value: 'offline', label: 'Invisible', detail: 'Appear offline', icon: EyeOff },
   ]
 
-  const AVAILABLE_BADGES = [
-    { id: 'nitro', name: 'Nitro Supporter' },
-    { id: 'booster', name: 'Server Booster' },
-    { id: 'developer', name: 'Active Developer' },
-    { id: 'staff', name: 'Aether-Pulse Staff' },
-    { id: 'bug_hunter', name: 'Bug Hunter' },
-    { id: 'early_supporter', name: 'Early Supporter' },
-    { id: 'hypesquad_balance', name: 'HypeSquad Balance' },
-    { id: 'hypesquad_bravery', name: 'HypeSquad Bravery' },
-    { id: 'hypesquad_brilliance', name: 'HypeSquad Brilliance' },
-  ]
+  const creatorUserId = import.meta.env.VITE_CREATOR_USER_ID || ''
+  const isCreator = computed(() => auth.user?.id === creatorUserId)
 
   const DISPLAY_NAME_STYLES = [
     { value: null, label: 'None (Default)' },
@@ -497,20 +488,21 @@
           </div>
         </div>
 
-        <div class="badges-field-container">
-          <label class="label">Platform Badges</label>
-          <div class="badges-selection-grid">
-            <button
-              v-for="badge in AVAILABLE_BADGES"
-              :key="badge.id"
-              class="badge-select-chip"
-              :class="{ active: form.badges.includes(badge.id) }"
-              type="button"
-              @click="toggleBadge(badge.id)"
-            >
-              <ProfileBadge :badge="badge.id" />
-              <span>{{ badge.name }}</span>
-            </button>
+        <div v-if="isCreator" class="badges-field-container">
+          <label class="label">Creator Badge</label>
+          <div class="setting-item">
+            <div class="setting-info">
+              <div class="setting-title">👑 Site Creator</div>
+              <div class="setting-desc">Display the official creator badge on your profile</div>
+            </div>
+            <label class="toggle">
+              <input
+                type="checkbox"
+                :checked="form.badges.includes('creator')"
+                @change="toggleBadge('creator')"
+              />
+              <span class="toggle-slider" />
+            </label>
           </div>
         </div>
       </section>
