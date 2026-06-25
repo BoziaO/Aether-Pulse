@@ -18,7 +18,7 @@ const serverUrl = process.env.VITE_API_URL || `http://localhost:${serverPort}`
 const clientUrl = process.env.VITE_CLIENT_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : `http://localhost:${port}`)
 const wsUrl = serverUrl.replace('https://', 'wss://').replace('http://', 'ws://')
 
-const cspPolicy = `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' ws: wss: https://fonts.googleapis.com ${serverUrl} ${wsUrl} ${clientUrl}; frame-src 'none'; object-src 'none'`
+const cspPolicy = `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' ws: wss: https://fonts.googleapis.com https://api.github.com ${serverUrl} ${wsUrl} ${clientUrl}; frame-src https://www.youtube.com; object-src 'none'`
 
 export default defineConfig({
   base: isLocalWrapper ? './' : basePath,
