@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, onMounted, onUnmounted, computed, defineAsyncComponent } from 'vue'
+  import { ref, onUnmounted, computed, watch, defineAsyncComponent } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { Phone, ArrowLeft, Link2, Settings, Users, Radio, PictureInPicture2, Loader2 } from 'lucide-vue-next'
 
@@ -52,18 +52,34 @@
       typeof (window as any).Capacitor !== 'undefined' && (window as any).Capacitor.isNativePlatform()
   )
 
-  onMounted(async () => {
-    if (!auth.user) return
+  async function enterRoom(id: string) {
+    if (!auth.user || !id) return
     try {
-      await roomStore.loadRoom(roomId.value)
-      await rtc.joinRoom(roomId.value, auth.user.id)
+      await roomStore.loadRoom(id)
+      await rtc.joinRoom(id, auth.user.id)
     } catch (e) {
       console.error('Failed to join room:', e)
     }
-  })
+  }
+
+  function leaveCurrentRoom() {
+    if (auth.user && roomId.value) {
+      rtc.leaveRoom(auth.user.id)
+    }
+  }
+
+  watch(roomId, (newId, oldId) => {
+    if (oldId) {
+      leaveCurrentRoom()
+      activeTab.value = 'voice'
+    }
+    if (newId) {
+      enterRoom(newId)
+    }
+  }, { immediate: true })
 
   onUnmounted(() => {
-    if (auth.user) rtc.leaveRoom(auth.user.id)
+    leaveCurrentRoom()
   })
 
   async function handleJoinCall() {
