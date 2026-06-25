@@ -57,6 +57,7 @@
 </script>
 
 <template>
+  <div class="sidebar-wrapper">
   <aside class="sidebar">
     <div class="sidebar-header">
       <img src="/icons/logo.png" alt="AetherPulse" class="sidebar-logo" />
@@ -149,6 +150,7 @@
   </aside>
 
   <CreateRoomModal v-if="showCreateModal" @close="showCreateModal = false" />
+  </div>
 </template>
 
 <style scoped>

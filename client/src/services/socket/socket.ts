@@ -12,7 +12,9 @@ export function getSocket(): Socket {
     const token = localStorage.getItem('aetherpulse_access_token')
     // In production (Vercel/Electron) VITE_API_URL points to the Render server.
     // In dev the Vite proxy forwards /api/* so we use relative '/'.
-    const serverUrl = import.meta.env.VITE_API_URL ?? ''
+    // In Electron production build with no env set, default to Render.
+    const isElectronProd = typeof window !== 'undefined' && (window as any).electronAPI && location.protocol === 'file:'
+    const serverUrl = import.meta.env.VITE_API_URL || (isElectronProd ? 'https://aether-pulse-server.onrender.com' : '')
     
     // Enhanced Socket.io configuration for better reconnection and scalability
     _socket = io(serverUrl, {

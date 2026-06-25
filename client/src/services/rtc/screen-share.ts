@@ -22,7 +22,8 @@ declare global {
 }
 
 export async function startScreenShare(
-  quality: ScreenShareQuality = 'standard'
+  quality: ScreenShareQuality = 'standard',
+  electronSourceId?: string
 ): Promise<MediaStream> {
   const cfg = CONFIGS[quality]
 
@@ -39,18 +40,14 @@ export async function startScreenShare(
 
   // Electron: getDisplayMedia is blocked; use desktopCapturer via IPC instead
   if (window.electronAPI?.getDesktopSources) {
-    const sources = await window.electronAPI.getDesktopSources()
-    // Pick the first screen source (entire screen)
-    const screen = sources.find((s) => s.id.startsWith('screen:')) ?? sources[0]
-    if (!screen) throw new Error('No screen sources found')
-
+    if (!electronSourceId) throw new Error('electronSourceId is required in Electron')
     return navigator.mediaDevices.getUserMedia({
       audio: false,
       video: {
         // @ts-expect-error — Electron-specific constraint
         mandatory: {
           chromeMediaSource: 'desktop',
-          chromeMediaSourceId: screen.id,
+          chromeMediaSourceId: electronSourceId,
           maxWidth: cfg.width,
           maxHeight: cfg.height,
           maxFrameRate: cfg.frameRate,

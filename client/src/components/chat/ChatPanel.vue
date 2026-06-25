@@ -190,6 +190,7 @@
 </script>
 
 <template>
+  <div class="chat-panel-root">
   <div class="chat-panel" :class="[layoutClass, { compact: isCompactPanel }]">
     <div class="chat-header">
       <span class="chat-title"># {{ roomName || 'chat' }}</span>
@@ -288,6 +289,7 @@
     :user-id="selectedUserId"
     @close="selectedUserId = null"
   />
+  </div>
 </template>
 
 <style scoped>

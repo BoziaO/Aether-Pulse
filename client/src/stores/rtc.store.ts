@@ -696,9 +696,9 @@ let lastRemovedCameraTrack: MediaStreamTrack | null = null
     }
   }
 
-  async function shareScreen(quality: ScreenShareQuality) {
+  async function shareScreen(quality: ScreenShareQuality, electronSourceId?: string) {
     try {
-      const stream = await startScreenShare(quality)
+      const stream = await startScreenShare(quality, electronSourceId)
       screenStream.value = stream
       isScreenSharing.value = true
       const videoTrack = stream.getVideoTracks()[0]

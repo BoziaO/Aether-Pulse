@@ -61,8 +61,8 @@ ipcMain.handle('get-desktop-sources', async () => {
 
 app.whenReady().then(() => {
   session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
-    if (permission === 'media') return callback(true)
-    callback(false)
+    const allowed = ['media', 'fullscreen', 'clipboard-read', 'clipboard-sanitized-write', 'window-management', 'display-capture', 'notifications']
+    callback(allowed.includes(permission))
   })
 
   createWindow()
@@ -79,15 +79,6 @@ app.on('window-all-closed', () => {
     app.quit()
   }
 })
-
-// Enable garbage collection for better memory management
-if (global.gc) {
-  setInterval(() => {
-    if (global.gc) {
-      global.gc()
-    }
-  }, 10000) // Run GC every 10 seconds
-}
 
 // Optimize WebRTC for Electron
 app.commandLine.appendSwitch('enable-features', 'WebRTCPipeWireCapturer,WebRTC-H264WithSVC')

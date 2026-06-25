@@ -8,10 +8,17 @@
   import { useRtcStore } from '@/stores/rtc.store'
   import { useSettingsStore } from '@/stores/settings.store'
   import type { ScreenShareQuality } from '@/services/rtc/screen-share'
+  import ScreenPicker from './picker/ScreenPicker.vue'
+  import type { DesktopSource } from './picker/ScreenPicker.vue'
 
   const rtc = useRtcStore()
   const settings = useSettingsStore()
   const showShareMenu = ref(false)
+  const showPicker = ref(false)
+  const pickerQuality = ref<ScreenShareQuality | null>(null)
+  const pickerSources = ref<DesktopSource[]>([])
+
+  const isElectron = !!(window as any).electronAPI?.getDesktopSources
 
   const isAndroid =
     typeof (window as any).Capacitor !== 'undefined' &&
@@ -29,7 +36,30 @@
 
   async function handleShare(quality: ScreenShareQuality) {
     showShareMenu.value = false
-    try { await rtc.shareScreen(quality) } catch {}
+    if (isElectron) {
+      try {
+        const sources: DesktopSource[] = await (window as any).electronAPI!.getDesktopSources()
+        pickerSources.value = sources
+        pickerQuality.value = quality
+        showPicker.value = true
+      } catch (e) {
+        console.error('Failed to get desktop sources:', e)
+      }
+    } else {
+      try { await rtc.shareScreen(quality) } catch {}
+    }
+  }
+
+  function onPickerSelect(source: DesktopSource) {
+    showPicker.value = false
+    const q = pickerQuality.value!
+    pickerQuality.value = null
+    rtc.shareScreen(q, source.id)
+  }
+
+  function onPickerCancel() {
+    showPicker.value = false
+    pickerQuality.value = null
   }
 
   async function togglePiP() {
@@ -66,6 +96,13 @@
         <VideoOff v-if="!rtc.isVideoOn" :size="20" />
         <Video v-else :size="20" />
       </button>
+
+      <ScreenPicker
+        v-if="showPicker && pickerSources.length"
+        :sources="pickerSources"
+        @select="onPickerSelect"
+        @cancel="onPickerCancel"
+      />
 
       <!-- Screen share — hidden on Android (no getDisplayMedia support) -->
       <div v-if="!isAndroid" class="share-wrap">

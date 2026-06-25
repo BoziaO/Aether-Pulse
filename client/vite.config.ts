@@ -18,7 +18,25 @@ const serverUrl = process.env.VITE_API_URL || `http://localhost:${serverPort}`
 const clientUrl = process.env.VITE_CLIENT_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : `http://localhost:${port}`)
 const wsUrl = serverUrl.replace('https://', 'wss://').replace('http://', 'ws://')
 
-const cspPolicy = `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' ws: wss: https://fonts.googleapis.com https://api.github.com ${serverUrl} ${wsUrl} ${clientUrl}; frame-src https://www.youtube.com; object-src 'none'`
+const isProd = process.env.NODE_ENV === 'production'
+// Electron (local wrapper) doesn't need unsafe-eval — use strict CSP in both dev & prod
+const strictCsp = isProd || isLocalWrapper
+const cspScript = strictCsp ? "'self' 'unsafe-inline'" : "'self' 'unsafe-inline' 'unsafe-eval'"
+const cspPolicy = [
+  "default-src 'self'",
+  `script-src ${cspScript}`,
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "img-src 'self' data: blob: https:",
+  "font-src 'self' data: https://fonts.gstatic.com",
+  `connect-src 'self' blob: http: https: ws: wss: ${serverUrl} ${wsUrl} ${clientUrl}`,
+  "media-src 'self' blob: https:",
+  "worker-src 'self' blob:",
+  "manifest-src 'self'",
+  "frame-src 'self' https://www.youtube.com",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+].join('; ')
 
 export default defineConfig({
   base: isLocalWrapper ? './' : basePath,
@@ -27,7 +45,7 @@ export default defineConfig({
   },
 
   optimizeDeps: {
-    include: ['vue', 'vue-router', 'pinia', 'socket.io-client', 'lucide-vue-next', '@vueuse/core'],
+    include: ['vue', 'vue-router', 'pinia', 'socket.io-client', 'lucide-vue-next', '@vueuse/core', 'events'],
   },
 
   css: {
