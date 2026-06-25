@@ -15,7 +15,33 @@ const app: Express = express()
 app.set('trust proxy', 1)
 
 // Security middleware
-app.use(helmet())
+const serverUrl = process.env.RENDER_EXTERNAL_URL || process.env.SERVER_URL || 'https://aether-pulse-server.onrender.com'
+
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        connectSrc: [
+          "'self'",
+          'ws:',
+          'wss:',
+          'https://fonts.googleapis.com',
+          serverUrl,
+          serverUrl.replace('https://', 'wss://'),
+        ],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+        imgSrc: ["'self'", 'data:', 'blob:'],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        frameAncestors: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+  })
+)
 
 // Validate critical environment secrets
 const jwtSecret = process.env.JWT_SECRET
