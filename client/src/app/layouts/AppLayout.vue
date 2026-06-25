@@ -176,7 +176,7 @@
         <img src="/icons/logo.png" alt="AetherPulse" class="mobile-logo" />
         <span class="mobile-title">AetherPulse</span>
       </div>
-      <div class="mobile-user-avatar" style="cursor: pointer" @click="$router.push('/profile')">
+      <div class="mobile-user-avatar" style="cursor: pointer" @click="$router.push('/app/profile')">
         <UserAvatar :user="auth.user" :size="28" />
       </div>
     </header>

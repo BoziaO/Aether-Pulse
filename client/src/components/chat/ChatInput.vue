@@ -13,6 +13,7 @@
     replyTo?: ReplyTarget | null
     initialValue?: string
     uploading?: boolean
+    members?: Array<{ id: string; displayName: string }> | undefined
   }>()
 
   const emit = defineEmits<{
@@ -79,6 +80,14 @@
     return mentionableUsers.value
   })
   const mentionableUsers = ref<Array<{ id: string; displayName: string }>>([])
+
+  watch(
+    () => props.members,
+    (m) => {
+      mentionableUsers.value = m ?? []
+    },
+    { immediate: true }
+  )
 
   const filteredMentions = computed(() => {
     if (!mentionQuery.value) return knownUsers.value

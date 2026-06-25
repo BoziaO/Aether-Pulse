@@ -23,7 +23,7 @@
   }>()
 
   function goToRoom(roomId: string) {
-    router.push(`/room/${roomId}`)
+    router.push(`/app/room/${roomId}`)
     emit('close')
   }
 
@@ -33,7 +33,7 @@
   }
 
   function isActiveRoom(roomId: string) {
-    return route.params.roomId === roomId
+    return route.path === `/app/room/${roomId}`
   }
 
   function isActiveDm(userId: string) {
@@ -56,17 +56,17 @@
   }
 
   function goToFriends() {
-    router.push('/friends')
+    router.push('/app/friends')
     emit('close')
   }
 
   function goToProfile() {
-    router.push('/profile')
+    router.push('/app/profile')
     emit('close')
   }
 
   function goToSettings() {
-    router.push('/settings')
+    router.push('/app/settings')
     emit('close')
   }
 
@@ -92,7 +92,7 @@
           <h3>Direct Messages</h3>
           <button
             class="nav-item"
-            :class="{ active: route.path === '/friends' }"
+            :class="{ active: route.path === '/app/friends' }"
             @click="goToFriends"
           >
             <Users :size="18" />

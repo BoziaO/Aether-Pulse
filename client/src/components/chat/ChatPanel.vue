@@ -40,6 +40,18 @@
 
   const typingList = computed(() => [...chatStore.typingUsers].filter((id) => id !== auth.user?.id))
 
+  const memberMap = computed(() => {
+    const map = new Map<string, string>()
+    if (props.members) {
+      props.members.forEach((m) => map.set(m.id, m.displayName))
+    }
+    return map
+  })
+
+  const typingNames = computed(() =>
+    typingList.value.map((id) => memberMap.value.get(id) || 'Someone')
+  )
+
   const displayMessages = computed(() =>
     showSearch.value && searchInput.value.trim() ? chatStore.searchResults : chatStore.messages
   )
@@ -251,7 +263,9 @@
       <div v-if="typingList.length > 0" class="typing-indicator">
         <span class="typing-dots"><span /><span /><span /></span>
         <span>{{
-          typingList.length === 1 ? 'Someone is typing...' : `${typingList.length} people typing...`
+          typingNames.length === 1
+            ? `${typingNames[0]} pisze...`
+            : `${typingNames.join(', ')} piszą...`
         }}</span>
       </div>
     </div>
@@ -261,6 +275,7 @@
       :initial-value="editingMessage ? editContent : ''"
       :placeholder="editingMessage ? 'Edit your message...' : 'Message...'"
       :uploading="uploading"
+      :members="members"
       @send="handleSend"
       @upload="handleUpload"
       @typing="auth.user && chatStore.setTyping(roomId, auth.user.id, $event)"

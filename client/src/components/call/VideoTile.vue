@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
-  import { MicOff } from 'lucide-vue-next'
+  import { MicOff, Maximize2, Minimize2 } from 'lucide-vue-next'
 
   import UserAvatar from '@/components/profile/UserAvatar.vue'
   import { userApi } from '@/services/api/user.api'
@@ -18,6 +18,36 @@
   const emit = defineEmits<{
     (e: 'profile-click', userId: string): void
   }>()
+
+  const isFullscreen = ref(false)
+  const tileRef = ref<HTMLElement | null>(null)
+
+  async function toggleFullscreen() {
+    if (!tileRef.value) return
+    if (!document.fullscreenElement) {
+      try {
+        await tileRef.value.requestFullscreen()
+        isFullscreen.value = true
+      } catch {
+        isFullscreen.value = false
+      }
+    } else {
+      await document.exitFullscreen()
+      isFullscreen.value = false
+    }
+  }
+
+  function onFullscreenChange() {
+    isFullscreen.value = !!document.fullscreenElement
+  }
+
+  onMounted(() => {
+    document.addEventListener('fullscreenchange', onFullscreenChange)
+  })
+
+  onBeforeUnmount(() => {
+    document.removeEventListener('fullscreenchange', onFullscreenChange)
+  })
 
   const videoEl = ref<HTMLVideoElement | null>(null)
   const remoteUser = ref<User | null>(null)
@@ -81,7 +111,7 @@
 </script>
 
 <template>
-  <div class="video-tile" :class="{ clickable: userId && !isLocal }" @click="handleClick">
+  <div ref="tileRef" class="video-tile" :class="{ clickable: userId && !isLocal, 'is-fullscreen': isFullscreen }" @click="handleClick">
     <video
       ref="videoEl"
       class="video-el"
@@ -92,7 +122,13 @@
     />
     <div class="video-overlay">
       <span class="video-label">{{ label || displayUser?.displayName || 'Unknown' }}</span>
-      <MicOff v-if="isMuted" :size="14" class="muted-icon" />
+      <div class="overlay-right">
+        <MicOff v-if="isMuted" :size="14" class="muted-icon" />
+        <button class="fullscreen-btn" title="Fullscreen" @click.stop="toggleFullscreen">
+          <Maximize2 v-if="!isFullscreen" :size="14" />
+          <Minimize2 v-else :size="14" />
+        </button>
+      </div>
     </div>
     <div v-if="!stream" class="video-placeholder">
       <UserAvatar v-if="displayUser" :user="displayUser" :size="72" />
@@ -116,6 +152,12 @@
   border: 1px solid var(--border);
   aspect-ratio: 16/9;
   min-height: 160px;
+}
+.video-tile.is-fullscreen {
+  aspect-ratio: auto;
+  border-radius: 0;
+  border: none;
+  min-height: 100vh;
 }
 .video-tile.clickable {
   cursor: pointer;
@@ -146,7 +188,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  pointer-events: none;
+  pointer-events: auto;
+}
+.overlay-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .video-label {
   font-size: 13px;
@@ -155,6 +202,23 @@
 }
 .muted-icon {
   color: var(--danger);
+}
+.fullscreen-btn {
+  background: rgba(0, 0, 0, 0.4);
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+.fullscreen-btn:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.6);
 }
 .video-placeholder {
   position: absolute;
