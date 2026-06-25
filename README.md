@@ -4,8 +4,8 @@
 
 AetherPulse łączy w sobie najlepsze cechy Discorda, Zoom i Slacka, dając Ci pełną kontrolę nad Twoją komunikacją. Prywatne pokoje głosowe, czat w czasie rzeczywistym, streaming ekranu, wideorozmowy w jakości HD — wszystko w jednym miejscu, bez subskrypcji i bez ograniczeń.
 
-> 🌐 **Wypróbuj online**: [aetherpulse.app](https://aetherpulse.app)  
-> 💻 **Pobierz na Windows / Linux / Android** → [github.com/BoziaO/Aether-Pulse/releases](https://github.com/BoziaO/Aether-Pulse/releases)
+> 🌐 **Wypróbuj online**: [aetherpulse-beta.app](aether-pulse-beta.vercel.app)  
+> 💻 **Pobierz na Windows / Linux / Android** → [Aether-Pulse/releases](https://github.com/BoziaO/Aether-Pulse/releases)
 
 ---
 
