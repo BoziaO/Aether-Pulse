@@ -165,10 +165,9 @@ router.post('/users/:userId/avatar', async (req, res): Promise<void> => {
     }
   }
 
-  const fileName = `user-${rawId}-avatar-${Date.now()}.jpg`
-  fs.writeFileSync(path.join(uploadsDir, fileName), buffer)
-  const avatarUrl = `/api/uploads/${fileName}`
-  const updated = await User.findByIdAndUpdate(rawId, { avatarUrl }, { new: true }).lean()
+  const mime = isGif ? 'image/gif' : 'image/jpeg'
+  const storedDataUrl = `data:${mime};base64,${buffer.toString('base64')}`
+  const updated = await User.findByIdAndUpdate(rawId, { avatarUrl: storedDataUrl }, { new: true }).lean()
 
   if (!updated) {
     res.status(404).json({ error: 'User not found' })
@@ -176,7 +175,7 @@ router.post('/users/:userId/avatar', async (req, res): Promise<void> => {
   }
   const serialized = serializeUser(updated as any, { viewerId: rawId })
   req.app.get('io')?.emit('user-profile-updated', serialized)
-  res.json({ avatarUrl, user: serialized })
+  res.json({ avatarUrl: storedDataUrl, user: serialized })
 })
 
 router.post('/users/:userId/banner', async (req, res): Promise<void> => {
@@ -221,10 +220,9 @@ router.post('/users/:userId/banner', async (req, res): Promise<void> => {
     }
   }
 
-  const fileName = `user-${rawId}-banner-${Date.now()}.jpg`
-  fs.writeFileSync(path.join(uploadsDir, fileName), buffer)
-  const bannerUrl = `/api/uploads/${fileName}`
-  const updated = await User.findByIdAndUpdate(rawId, { bannerUrl }, { new: true }).lean()
+  const mime = isGif ? 'image/gif' : 'image/jpeg'
+  const storedDataUrl = `data:${mime};base64,${buffer.toString('base64')}`
+  const updated = await User.findByIdAndUpdate(rawId, { bannerUrl: storedDataUrl }, { new: true }).lean()
 
   if (!updated) {
     res.status(404).json({ error: 'User not found' })
@@ -232,7 +230,7 @@ router.post('/users/:userId/banner', async (req, res): Promise<void> => {
   }
   const serialized = serializeUser(updated as any, { viewerId: rawId })
   req.app.get('io')?.emit('user-profile-updated', serialized)
-  res.json({ bannerUrl, user: serialized })
+  res.json({ bannerUrl: storedDataUrl, user: serialized })
 })
 
 router.patch('/users/:userId', async (req, res): Promise<void> => {
