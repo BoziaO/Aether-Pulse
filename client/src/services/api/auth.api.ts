@@ -19,10 +19,16 @@ export const authApi = {
       body: JSON.stringify({ username, password }),
     }),
 
-  register: (username: string, password: string, displayName: string) =>
+  register: (username: string, email: string, password: string, displayName: string) =>
     apiFetch<AuthResponse>('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ username, password, displayName }),
+      body: JSON.stringify({ username, email, password, displayName }),
+    }),
+
+  changePassword: (currentPassword: string, newPassword: string) =>
+    apiFetch<{ ok: boolean }>('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword }),
     }),
 
   logout: () => apiFetch<{ ok: boolean }>('/auth/logout', { method: 'POST' }),

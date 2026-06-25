@@ -36,6 +36,7 @@
   const emptyUser: User = {
     id: '',
     username: 'username',
+    email: null,
     displayName: 'Display Name',
     avatarUrl: null,
     bannerUrl: null,

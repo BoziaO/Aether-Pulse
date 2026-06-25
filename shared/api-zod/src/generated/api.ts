@@ -26,6 +26,7 @@ export const registerBodyDisplayNameMax = 32
 
 export const RegisterBody = zod.object({
   username: zod.string().min(registerBodyUsernameMin).max(registerBodyUsernameMax),
+  email: zod.string().email().optional().or(zod.literal('')),
   password: zod.string().min(registerBodyPasswordMin),
   displayName: zod.string().min(1).max(registerBodyDisplayNameMax),
 })
@@ -34,6 +35,7 @@ export const RegisterResponse = zod.object({
   user: zod.object({
     id: zod.string(),
     username: zod.string(),
+    email: zod.string().nullish(),
     displayName: zod.string(),
     avatarUrl: zod.string().nullish(),
     bannerUrl: zod.string().nullish(),

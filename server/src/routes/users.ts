@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { Router, type IRouter } from 'express'
+import sharp from 'sharp'
 import { UpdateUserBody } from '@workspace/api-zod'
 import { User, Friendship, Message, MessageReaction, mongoose } from '@workspace/db'
 
@@ -151,8 +152,21 @@ router.post('/users/:userId/avatar', async (req, res): Promise<void> => {
     return
   }
 
-  const fileName = `user-${rawId}-avatar-${Date.now()}.${parsedImage.ext}`
-  fs.writeFileSync(path.join(uploadsDir, fileName), parsedImage.buffer)
+  let buffer = parsedImage.buffer
+  const isGif = parsedImage.ext === 'gif'
+  if (!isGif) {
+    try {
+      buffer = await sharp(buffer)
+        .resize(512, 512, { fit: 'inside', withoutEnlargement: true })
+        .jpeg({ quality: 80, mozjpeg: true })
+        .toBuffer()
+    } catch {
+      // fallback to original buffer
+    }
+  }
+
+  const fileName = `user-${rawId}-avatar-${Date.now()}.jpg`
+  fs.writeFileSync(path.join(uploadsDir, fileName), buffer)
   const avatarUrl = `/api/uploads/${fileName}`
   const updated = await User.findByIdAndUpdate(rawId, { avatarUrl }, { new: true }).lean()
 
@@ -194,8 +208,21 @@ router.post('/users/:userId/banner', async (req, res): Promise<void> => {
     return
   }
 
-  const fileName = `user-${rawId}-banner-${Date.now()}.${parsedImage.ext}`
-  fs.writeFileSync(path.join(uploadsDir, fileName), parsedImage.buffer)
+  let buffer = parsedImage.buffer
+  const isGif = parsedImage.ext === 'gif'
+  if (!isGif) {
+    try {
+      buffer = await sharp(buffer)
+        .resize(1920, 480, { fit: 'cover', position: 'centre' })
+        .jpeg({ quality: 80, mozjpeg: true })
+        .toBuffer()
+    } catch {
+      // fallback to original buffer
+    }
+  }
+
+  const fileName = `user-${rawId}-banner-${Date.now()}.jpg`
+  fs.writeFileSync(path.join(uploadsDir, fileName), buffer)
   const bannerUrl = `/api/uploads/${fileName}`
   const updated = await User.findByIdAndUpdate(rawId, { bannerUrl }, { new: true }).lean()
 

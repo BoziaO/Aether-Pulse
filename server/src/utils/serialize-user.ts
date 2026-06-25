@@ -23,6 +23,7 @@ export function serializeUser(
   return {
     id: user._id.toString(),
     username: user.username,
+    email: isOwn ? (user.email ?? null) : null,
     displayName: user.displayName,
     avatarUrl: user.avatarUrl ?? null,
     bannerUrl: canViewFull ? (user.bannerUrl ?? null) : null,

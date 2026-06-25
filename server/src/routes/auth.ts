@@ -15,7 +15,7 @@ router.post('/auth/register', async (req, res): Promise<void> => {
     return
   }
 
-  const { username, password, displayName } = parsed.data
+  const { username, email, password, displayName } = parsed.data
 
   const existing = await User.findOne({ username })
   if (existing) {
@@ -23,8 +23,16 @@ router.post('/auth/register', async (req, res): Promise<void> => {
     return
   }
 
+  if (email) {
+    const existingEmail = await User.findOne({ email })
+    if (existingEmail) {
+      res.status(409).json({ error: 'Email already in use' })
+      return
+    }
+  }
+
   const passwordHash = await bcrypt.hash(password, 10)
-  const user = await User.create({ username, passwordHash, displayName, status: 'online' })
+  const user = await User.create({ username, email: email || null, passwordHash, displayName, status: 'online' })
 
   const { accessToken, refreshToken } = generateTokens(user._id.toString(), user.username)
 
@@ -88,6 +96,45 @@ router.get('/auth/me', async (req, res): Promise<void> => {
   }
 
   res.json({ user: serializeUser(user) })
+})
+
+router.post('/auth/change-password', async (req, res): Promise<void> => {
+  const userId = (req as any).user?.userId
+  if (!userId) {
+    res.status(401).json({ error: 'Not authenticated' })
+    return
+  }
+
+  const { currentPassword, newPassword } = req.body as {
+    currentPassword?: string
+    newPassword?: string
+  }
+
+  if (!currentPassword || !newPassword) {
+    res.status(400).json({ error: 'Current and new password are required' })
+    return
+  }
+
+  if (newPassword.length < 6) {
+    res.status(400).json({ error: 'New password must be at least 6 characters' })
+    return
+  }
+
+  const user = await User.findById(userId)
+  if (!user) {
+    res.status(404).json({ error: 'User not found' })
+    return
+  }
+
+  const valid = await bcrypt.compare(currentPassword, user.passwordHash)
+  if (!valid) {
+    res.status(401).json({ error: 'Current password is incorrect' })
+    return
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, 10)
+  await User.findByIdAndUpdate(userId, { passwordHash })
+  res.json({ ok: true })
 })
 
 router.post('/auth/refresh', async (req, res): Promise<void> => {

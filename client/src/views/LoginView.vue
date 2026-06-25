@@ -27,6 +27,7 @@
   const password = ref('')
   const passwordConfirm = ref('')
   const displayName = ref('')
+  const email = ref('')
   const showPw = ref(false)
   const showPwConfirm = ref(false)
   const loading = ref(false)
@@ -96,6 +97,7 @@
     const map: Record<string, string> = {
       'Invalid credentials': 'Nieprawidłowa nazwa użytkownika lub hasło',
       'Username already taken': 'Ta nazwa użytkownika jest już zajęta',
+      'Email already in use': 'Ten email jest już używany',
       'AUTH_RATE_LIMIT_EXCEEDED': 'Zbyt wiele prób. Spróbuj ponownie za 15 minut.',
     }
     return map[msg] || msg
@@ -113,6 +115,7 @@
       } else {
         await auth.register(
           username.value.trim(),
+          email.value.trim(),
           password.value,
           displayName.value.trim() || username.value.trim(),
           rememberMe.value
@@ -275,6 +278,22 @@
                 type="text"
                 placeholder="Twój pseudonim"
                 maxlength="32"
+                @keydown.enter="submit"
+              />
+            </div>
+          </div>
+
+          <!-- Email (register only) -->
+          <div v-if="tab === 'register'" class="form-group">
+            <label class="label" for="email">Email <span class="optional">(opcjonalnie)</span></label>
+            <div class="input-wrap">
+              <input
+                id="email"
+                v-model="email"
+                class="input"
+                type="email"
+                placeholder="twoj@email.com"
+                autocomplete="email"
                 @keydown.enter="submit"
               />
             </div>

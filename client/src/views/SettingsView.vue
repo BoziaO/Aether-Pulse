@@ -1,12 +1,45 @@
 <script setup lang="ts">
   import { ref, computed } from 'vue'
-  import { Headphones, Mic, Shield, Bell, Palette, Languages, Accessibility, Terminal } from 'lucide-vue-next'
+  import { Headphones, Mic, Shield, Bell, Palette, Languages, Accessibility, Terminal, User, Lock, Check, AlertCircle, Loader2 } from 'lucide-vue-next'
 
   import { useSettingsStore } from '@/stores/settings.store'
+  import { useAuthStore } from '@/stores/auth.store'
+  import { authApi } from '@/services/api/auth.api'
   import { requestNotificationPermission } from '@/utils/notifications'
 
   const settings = useSettingsStore()
+  const auth = useAuthStore()
   const activeSection = ref('voice')
+
+  const pwCurrent = ref('')
+  const pwNew = ref('')
+  const pwConfirm = ref('')
+  const pwLoading = ref(false)
+  const pwError = ref('')
+  const pwSuccess = ref(false)
+
+  async function changePassword() {
+    pwError.value = ''
+    pwSuccess.value = false
+
+    if (!pwCurrent.value) { pwError.value = 'Podaj obecne hasło'; return }
+    if (!pwNew.value) { pwError.value = 'Podaj nowe hasło'; return }
+    if (pwNew.value.length < 6) { pwError.value = 'Nowe hasło musi mieć minimum 6 znaków'; return }
+    if (pwNew.value !== pwConfirm.value) { pwError.value = 'Nowe hasła nie są zgodne'; return }
+
+    pwLoading.value = true
+    try {
+      await authApi.changePassword(pwCurrent.value, pwNew.value)
+      pwSuccess.value = true
+      pwCurrent.value = ''
+      pwNew.value = ''
+      pwConfirm.value = ''
+    } catch (e: unknown) {
+      pwError.value = e instanceof Error ? e.message : 'Nie udało się zmienić hasła'
+    } finally {
+      pwLoading.value = false
+    }
+  }
 
   async function onNotificationsToggle() {
     if (settings.messageNotifications) {
@@ -19,6 +52,7 @@
     { id: 'voice', label: 'Voice & Video', icon: Mic },
     { id: 'audio', label: 'Audio', icon: Headphones },
     { id: 'appearance', label: 'Appearance', icon: Palette },
+    { id: 'account', label: 'Account', icon: User },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'privacy', label: 'Privacy', icon: Shield },
     { id: 'language', label: 'Language', icon: Languages },
@@ -337,6 +371,53 @@
               <span class="layout-name">{{ layoutOption.name }}</span>
               <span class="layout-detail">{{ layoutOption.description }}</span>
             </button>
+          </div>
+        </div>
+      </template>
+
+      <template v-if="activeSection === 'account'">
+        <div class="settings-section">
+          <h2>Account</h2>
+
+          <div class="info-card">
+            <h3><User :size="16" /> {{ auth.user?.username }}</h3>
+            <p v-if="auth.user?.email" class="account-email">{{ auth.user.email }}</p>
+            <p v-else class="account-email muted">No email set</p>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <div class="setting-title">Change password</div>
+              <div class="setting-desc">Update your account password</div>
+            </div>
+          </div>
+
+          <div class="password-change-form">
+            <div class="form-group">
+              <label class="label" for="pwCurrent">Current password</label>
+              <input id="pwCurrent" v-model="pwCurrent" class="input" type="password" placeholder="Enter current password" autocomplete="current-password" />
+            </div>
+            <div class="form-group">
+              <label class="label" for="pwNew">New password</label>
+              <input id="pwNew" v-model="pwNew" class="input" type="password" placeholder="Minimum 6 characters" autocomplete="new-password" />
+            </div>
+            <div class="form-group">
+              <label class="label" for="pwConfirm">Confirm new password</label>
+              <input id="pwConfirm" v-model="pwConfirm" class="input" type="password" placeholder="Repeat new password" autocomplete="new-password" />
+            </div>
+
+            <button class="btn primary" :disabled="pwLoading" @click="changePassword">
+              <Loader2 v-if="pwLoading" :size="16" class="spin" />
+              <Lock v-else :size="16" />
+              {{ pwLoading ? 'Changing…' : 'Change password' }}
+            </button>
+
+            <p v-if="pwError" class="form-error">
+              <AlertCircle :size="14" /> {{ pwError }}
+            </p>
+            <p v-if="pwSuccess" class="form-success">
+              <Check :size="14" /> Password changed successfully
+            </p>
           </div>
         </div>
       </template>
@@ -950,6 +1031,93 @@
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.spin {
+  animation: spin 1s linear infinite;
+}
+.password-change-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.password-change-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.password-change-form .label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.password-change-form .input {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.password-change-form .input:focus {
+  border-color: var(--accent-violet);
+}
+.password-change-form .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  justify-content: center;
+}
+.password-change-form .btn.primary {
+  background: linear-gradient(135deg, var(--accent-violet), #7c3aed);
+  color: white;
+}
+.password-change-form .btn.primary:hover:not(:disabled) {
+  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4);
+  transform: translateY(-1px);
+}
+.password-change-form .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.password-change-form .form-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--danger);
+}
+.password-change-form .form-success {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--success);
+}
+.account-email {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.account-email.muted {
+  font-style: italic;
 }
 
 .layouts-grid {
