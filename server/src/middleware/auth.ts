@@ -93,7 +93,7 @@ export function jwtMiddleware(req: Request, res: Response, next: NextFunction): 
   }
 
   // Attach user to request
-  ;(req as any).user = payload
+  (req as any).user = payload
   next()
 }
 
@@ -108,7 +108,7 @@ export function optionalJwtMiddleware(req: Request, _res: Response, next: NextFu
   if (token) {
     const payload = verifyToken(token)
     if (payload) {
-      ;(req as any).user = payload
+      (req as any).user = payload
     }
   }
 

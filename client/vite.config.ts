@@ -79,7 +79,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
-      util: 'util-browser',
+      util: path.resolve(__dirname, 'node_modules/util-browser/index.js'),
     },
   },
   root: path.resolve(__dirname),
