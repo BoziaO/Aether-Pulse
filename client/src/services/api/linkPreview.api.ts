@@ -25,9 +25,12 @@ export async function fetchLinkPreview(url: string): Promise<LinkPreview> {
 }
 
 export async function fetchGitHubRepo(owner: string, repo: string): Promise<GitHubRepo> {
-  const res = await fetch(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`, {
-    headers: { Accept: 'application/vnd.github.v3+json' },
-  })
+  const res = await fetch(
+    `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`,
+    {
+      headers: { Accept: 'application/vnd.github.v3+json' },
+    }
+  )
   if (!res.ok) throw new Error('GitHub repo not found')
   return res.json()
 }

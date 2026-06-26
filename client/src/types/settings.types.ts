@@ -1,4 +1,13 @@
-export type ThemeMode = 'dark' | 'light' | 'system' | 'amoled' | 'midnight' | 'sunset' | 'ocean' | 'forest' | 'nord'
+export type ThemeMode =
+  | 'dark'
+  | 'light'
+  | 'system'
+  | 'amoled'
+  | 'midnight'
+  | 'sunset'
+  | 'ocean'
+  | 'forest'
+  | 'nord'
 
 export type ResolvedThemeMode = ThemeMode
 

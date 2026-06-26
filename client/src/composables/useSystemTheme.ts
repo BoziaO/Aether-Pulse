@@ -28,7 +28,7 @@ export function useSystemTheme() {
     }
   }
 
-  const systemTheme = computed((): 'dark' | 'light' => prefersDark.value ? 'dark' : 'light')
+  const systemTheme = computed((): 'dark' | 'light' => (prefersDark.value ? 'dark' : 'light'))
 
   return {
     prefersDark,

@@ -1,39 +1,39 @@
 <script setup lang="ts">
-  import { computed } from 'vue'
-  import { Headphones, Mic } from 'lucide-vue-next'
+import { computed } from 'vue'
+import { Headphones, Mic } from 'lucide-vue-next'
 
-  import UserAvatar from '@/components/profile/UserAvatar.vue'
-  import { useRtcStore } from '@/stores/rtc.store'
-  import { usePresenceStore } from '@/stores/presence.store'
-  import type { User } from '@/types/user.types'
+import UserAvatar from '@/components/profile/UserAvatar.vue'
+import { useRtcStore } from '@/stores/rtc.store'
+import { usePresenceStore } from '@/stores/presence.store'
+import type { User } from '@/types/user.types'
 
-  const props = defineProps<{
-    members: User[]
-  }>()
+const props = defineProps<{
+  members: User[]
+}>()
 
-  const emit = defineEmits<{
-    (e: 'open-profile', userId: string): void
-  }>()
+const emit = defineEmits<{
+  (e: 'open-profile', userId: string): void
+}>()
 
-  const rtc = useRtcStore()
-  const presence = usePresenceStore()
+const rtc = useRtcStore()
+const presence = usePresenceStore()
 
-  const sortedMembers = computed(() =>
-    [...props.members].sort((a, b) => {
-      const aOnline = presence.isOnlineInRoom(a.id) ? 0 : 1
-      const bOnline = presence.isOnlineInRoom(b.id) ? 0 : 1
-      if (aOnline !== bOnline) return aOnline - bOnline
-      return a.displayName.localeCompare(b.displayName)
-    })
-  )
+const sortedMembers = computed(() =>
+  [...props.members].sort((a, b) => {
+    const aOnline = presence.isOnlineInRoom(a.id) ? 0 : 1
+    const bOnline = presence.isOnlineInRoom(b.id) ? 0 : 1
+    if (aOnline !== bOnline) return aOnline - bOnline
+    return a.displayName.localeCompare(b.displayName)
+  })
+)
 
-  function isInCall(userId: string) {
-    return rtc.callUsers.has(userId)
-  }
+function isInCall(userId: string) {
+  return rtc.callUsers.has(userId)
+}
 
-  function isOnline(userId: string) {
-    return presence.isOnlineInRoom(userId)
-  }
+function isOnline(userId: string) {
+  return presence.isOnlineInRoom(userId)
+}
 </script>
 
 <template>
@@ -56,7 +56,7 @@
           <span class="member-name">{{ member.displayName }}</span>
           <span class="member-meta">
             <span v-if="isInCall(member.id)" class="badge in-call"
-            ><Mic :size="10" /> In voice</span
+              ><Mic :size="10" /> In voice</span
             >
             <span v-else-if="isOnline(member.id)" class="badge online">Online</span>
             <span v-else class="badge offline">{{ member.status }}</span>

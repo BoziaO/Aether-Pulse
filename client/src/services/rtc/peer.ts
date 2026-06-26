@@ -83,7 +83,7 @@ export class PeerManager {
   setLocalStream(stream: MediaStream | null) {
     // Clean up previous stream tracks to prevent memory leaks
     if (this.localStream) {
-      this.localStream.getTracks().forEach(track => {
+      this.localStream.getTracks().forEach((track) => {
         track.stop()
       })
     }
@@ -92,19 +92,19 @@ export class PeerManager {
 
   initiateCall(userId: string, socketId: string) {
     if (this.peers.has(socketId)) return
-    
+
     // Clean up old peers to prevent memory leaks
     this.cleanupOldPeers()
-    
+
     const peer = this.createPeer(true, userId, socketId)
     const now = Date.now()
-    this.peers.set(socketId, { 
-      peer, 
-      userId, 
-      socketId, 
+    this.peers.set(socketId, {
+      peer,
+      userId,
+      socketId,
       stream: null,
       createdAt: now,
-      lastActivity: now
+      lastActivity: now,
     })
   }
 
@@ -117,13 +117,13 @@ export class PeerManager {
     }
     const peer = this.createPeer(false, fromUserId, fromSocketId)
     const now = Date.now()
-    this.peers.set(fromSocketId, { 
-      peer, 
-      userId: fromUserId, 
-      socketId: fromSocketId, 
+    this.peers.set(fromSocketId, {
+      peer,
+      userId: fromUserId,
+      socketId: fromSocketId,
       stream: null,
       createdAt: now,
-      lastActivity: now
+      lastActivity: now,
     })
     peer.signal(signal)
   }
@@ -134,7 +134,7 @@ export class PeerManager {
     socketId: string
   ): InstanceType<typeof SimplePeer> {
     // Electron-specific WebRTC configuration for better compatibility
-    const isElectron = typeof (window as any).process?.versions?.electron !== undefined
+    const isElectron = typeof (window as any).process?.versions?.electron !== 'undefined'
 
     const peer = new SimplePeer({
       initiator,
@@ -202,15 +202,15 @@ export class PeerManager {
    */
   private fixSdpForElectron(sdp: string): string {
     if (typeof sdp !== 'string') return sdp
-    
+
     // Remove bandwidth constraints that might cause issues in Electron
     // Fix for common Electron WebRTC issues
     let fixedSdp = sdp
-    
+
     // Remove bandwidth constraints that Electron doesn't handle well
     fixedSdp = fixedSdp.replace(/b=AS:\d+\r\n/g, '')
     fixedSdp = fixedSdp.replace(/b=TIAS:\d+\r\n/g, '')
-    
+
     // Ensure proper codec ordering for Electron
     if (fixedSdp.includes('VP8')) {
       // Move VP8 to the top for better compatibility
@@ -220,7 +220,7 @@ export class PeerManager {
         fixedSdp = `a=rtpmap:96 VP8/96000\r\n` + fixedSdp
       }
     }
-    
+
     return fixedSdp
   }
 
@@ -230,18 +230,18 @@ export class PeerManager {
   private cleanupOldPeers(): void {
     const now = Date.now()
     const oldPeers = []
-    
+
     for (const [socketId, conn] of this.peers.entries()) {
       const age = now - conn.createdAt
       const inactiveTime = now - conn.lastActivity
-      
+
       // Remove peers that are too old or inactive
       if (age > this.maxPeerAge || inactiveTime > this.inactiveThreshold) {
         oldPeers.push(socketId)
       }
     }
-    
-    oldPeers.forEach(socketId => {
+
+    oldPeers.forEach((socketId) => {
       const conn = this.peers.get(socketId)
       if (conn) {
         try {
@@ -278,7 +278,9 @@ export class PeerManager {
     this.peers.forEach(({ peer }) => {
       try {
         peer.addTrack(track, stream)
-      } catch {}
+      } catch {
+        /* empty */
+      }
     })
   }
 
@@ -286,7 +288,9 @@ export class PeerManager {
     this.peers.forEach(({ peer }) => {
       try {
         peer.removeTrack(track, stream)
-      } catch {}
+      } catch {
+        /* empty */
+      }
     })
   }
 
@@ -305,10 +309,10 @@ export class PeerManager {
     this.socket.off('offer', this.onOffer)
     this.socket.off('answer', this.onAnswer)
     this.socket.off('ice-candidate', this.onIceCandidate)
-    
+
     // Additional cleanup for local stream
     if (this.localStream) {
-      this.localStream.getTracks().forEach(track => {
+      this.localStream.getTracks().forEach((track) => {
         try {
           track.stop()
         } catch (e) {

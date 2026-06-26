@@ -22,8 +22,10 @@ function buildHeaders(additionalHeaders: Record<string, string> = {}): Record<st
   return headers
 }
 
-const isElectronProd = typeof window !== 'undefined' && (window as any).electronAPI && location.protocol === 'file:'
-const apiUrl = import.meta.env.VITE_API_URL || (isElectronProd ? 'https://aether-pulse-server.onrender.com' : '')
+const isElectronProd =
+  typeof window !== 'undefined' && (window as any).electronAPI && location.protocol === 'file:'
+const apiUrl =
+  import.meta.env.VITE_API_URL || (isElectronProd ? 'https://aether-pulse-server.onrender.com' : '')
 const API_BASE = apiUrl + '/api'
 
 export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {

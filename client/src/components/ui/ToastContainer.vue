@@ -1,10 +1,9 @@
 <script setup lang="ts">
-  import { X, CheckCircle, AlertCircle, Info } from 'lucide-vue-next'
+import { X, CheckCircle, AlertCircle, Info } from 'lucide-vue-next'
 
-  import { useToastStore } from '@/stores/toast.store'
+import { useToastStore } from '@/stores/toast.store'
 
-
-  const toast = useToastStore()
+const toast = useToastStore()
 </script>
 
 <template>

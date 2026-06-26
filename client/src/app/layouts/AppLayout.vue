@@ -1,157 +1,161 @@
 <script setup lang="ts">
-  import { onMounted, onUnmounted, ref } from 'vue'
-  import { RouterView } from 'vue-router'
-  import { Menu } from 'lucide-vue-next'
+import { onMounted, onUnmounted, ref } from 'vue'
+import { RouterView } from 'vue-router'
+import { Menu } from 'lucide-vue-next'
 
-  import Sidebar from '@/components/sidebar/Sidebar.vue'
-  import SidebarMobile from '@/components/sidebar/SidebarMobile.vue'
-  import CreateRoomModal from '@/components/rooms/CreateRoomModal.vue'
-  import UserAvatar from '@/components/profile/UserAvatar.vue'
-  import { useAuthStore } from '@/stores/auth.store'
-  import { useSettingsStore } from '@/stores/settings.store'
-  import { useRoomStore } from '@/stores/room.store'
-  import { useFriendsStore } from '@/stores/friends.store'
-  import { useDmStore } from '@/stores/dm.store'
-  import { useChatStore } from '@/stores/chat.store'
-  import { connectSocket, getSocket } from '@/services/socket/socket'
+import Sidebar from '@/components/sidebar/Sidebar.vue'
+import SidebarMobile from '@/components/sidebar/SidebarMobile.vue'
+import CreateRoomModal from '@/components/rooms/CreateRoomModal.vue'
+import UserAvatar from '@/components/profile/UserAvatar.vue'
+import { useAuthStore } from '@/stores/auth.store'
+import { useSettingsStore } from '@/stores/settings.store'
+import { useRoomStore } from '@/stores/room.store'
+import { useFriendsStore } from '@/stores/friends.store'
+import { useDmStore } from '@/stores/dm.store'
+import { useChatStore } from '@/stores/chat.store'
+import { connectSocket, getSocket } from '@/services/socket/socket'
 
-  const auth = useAuthStore()
-  const settings = useSettingsStore()
-  const roomStore = useRoomStore()
-  const friendsStore = useFriendsStore()
-  const dmStore = useDmStore()
-  const chatStore = useChatStore()
+const auth = useAuthStore()
+const settings = useSettingsStore()
+const roomStore = useRoomStore()
+const friendsStore = useFriendsStore()
+const dmStore = useDmStore()
+const chatStore = useChatStore()
 
-  const showCreateRoomModal = ref(false)
+const showCreateRoomModal = ref(false)
 
-  const AUTO_AWAY_MS = 10 * 60 * 1000
-  const ACTIVITY_PING_MS = 2 * 60 * 1000
-  let awayTimer: ReturnType<typeof setTimeout> | null = null
-  let pingTimer: ReturnType<typeof setInterval> | null = null
-  let wasAutoAway = false
+const AUTO_AWAY_MS = 10 * 60 * 1000
+const ACTIVITY_PING_MS = 2 * 60 * 1000
+let awayTimer: ReturnType<typeof setTimeout> | null = null
+let pingTimer: ReturnType<typeof setInterval> | null = null
+let wasAutoAway = false
 
-  function pingActivity() {
+function pingActivity() {
+  const user = auth.user
+  if (!user) return
+  try {
+    getSocket().emit('ping-activity', { userId: user.id })
+  } catch {
+    /* empty */
+  }
+}
+
+function resetAwayTimer() {
+  if (awayTimer) clearTimeout(awayTimer)
+  if (wasAutoAway && auth.user?.status === 'away') {
+    const socket = getSocket()
+    socket.emit('user-status', { userId: auth.user.id, status: 'online' })
+    if (auth.user) auth.user.status = 'online'
+    wasAutoAway = false
+  }
+  awayTimer = setTimeout(() => {
     const user = auth.user
-    if (!user) return
-    try {
-      getSocket().emit('ping-activity', { userId: user.id })
-    } catch { /* empty */ }
+    if (!user || user.status !== 'online') return
+    const socket = getSocket()
+    socket.emit('user-status', { userId: user.id, status: 'away' })
+    if (auth.user) auth.user.status = 'away'
+    wasAutoAway = true
+  }, AUTO_AWAY_MS)
+}
+
+const activityEvents = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll']
+
+onMounted(async () => {
+  // Always try to fetch current user first if we have tokens
+  if (auth.accessToken && !auth.user) {
+    await auth.fetchMe()
   }
 
-  function resetAwayTimer() {
-    if (awayTimer) clearTimeout(awayTimer)
-    if (wasAutoAway && auth.user?.status === 'away') {
-      const socket = getSocket()
-      socket.emit('user-status', { userId: auth.user.id, status: 'online' })
-      if (auth.user) auth.user.status = 'online'
-      wasAutoAway = false
-    }
-    awayTimer = setTimeout(() => {
-      const user = auth.user
-      if (!user || user.status !== 'online') return
-      const socket = getSocket()
-      socket.emit('user-status', { userId: user.id, status: 'away' })
-      if (auth.user) auth.user.status = 'away'
-      wasAutoAway = true
-    }, AUTO_AWAY_MS)
-  }
+  // Only proceed if logged in
+  if (auth.isLoggedIn) {
+    connectSocket()
+    await Promise.all([
+      roomStore.fetchRooms(),
+      friendsStore.fetchFriends(),
+      dmStore.fetchConversations(),
+    ])
+    friendsStore.bindSocketEvents()
+    dmStore.bindGlobalDmListener()
 
-  const activityEvents = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll']
+    // Bind real-time profile propagation updates cascade
+    getSocket().on('user-profile-updated', (updatedUser: any) => {
+      // 1. If it is the current user, update auth.user and apply preferred theme if changed
+      if (auth.user && auth.user.id === updatedUser.id) {
+        const oldTheme = auth.user.preferredTheme
+        auth.user = { ...auth.user, ...updatedUser }
+        if (updatedUser.preferredTheme && updatedUser.preferredTheme !== oldTheme) {
+          settings.applyUserTheme(updatedUser.preferredTheme)
+        }
+      }
 
-  onMounted(async () => {
-    // Always try to fetch current user first if we have tokens
-    if (auth.accessToken && !auth.user) {
-      await auth.fetchMe()
-    }
-
-    // Only proceed if logged in
-    if (auth.isLoggedIn) {
-      connectSocket()
-      await Promise.all([
-        roomStore.fetchRooms(),
-        friendsStore.fetchFriends(),
-        dmStore.fetchConversations(),
-      ])
-      friendsStore.bindSocketEvents()
-      dmStore.bindGlobalDmListener()
-
-      // Bind real-time profile propagation updates cascade
-      getSocket().on('user-profile-updated', (updatedUser: any) => {
-        // 1. If it is the current user, update auth.user and apply preferred theme if changed
-        if (auth.user && auth.user.id === updatedUser.id) {
-          const oldTheme = auth.user.preferredTheme
-          auth.user = { ...auth.user, ...updatedUser }
-          if (updatedUser.preferredTheme && updatedUser.preferredTheme !== oldTheme) {
-            settings.applyUserTheme(updatedUser.preferredTheme)
+      // 2. Cascade down to room members lists
+      if (roomStore.currentRoom?.members) {
+        const idx = roomStore.currentRoom.members.findIndex((m) => m.id === updatedUser.id)
+        if (idx >= 0) {
+          roomStore.currentRoom.members[idx] = {
+            ...roomStore.currentRoom.members[idx],
+            ...updatedUser,
           }
         }
+      }
 
-        // 2. Cascade down to room members lists
-        if (roomStore.currentRoom?.members) {
-          const idx = roomStore.currentRoom.members.findIndex((m) => m.id === updatedUser.id)
-          if (idx >= 0) {
-            roomStore.currentRoom.members[idx] = {
-              ...roomStore.currentRoom.members[idx],
-              ...updatedUser,
-            }
-          }
+      // 3. Update friends list user references
+      friendsStore.friends.forEach((f) => {
+        if (f.user.id === updatedUser.id) {
+          f.user = { ...f.user, ...updatedUser }
         }
-
-        // 3. Update friends list user references
-        friendsStore.friends.forEach((f) => {
-          if (f.user.id === updatedUser.id) {
-            f.user = { ...f.user, ...updatedUser }
-          }
-        })
-        friendsStore.incoming.forEach((f) => {
-          if (f.user.id === updatedUser.id) {
-            f.user = { ...f.user, ...updatedUser }
-          }
-        })
-        friendsStore.outgoing.forEach((f) => {
-          if (f.user.id === updatedUser.id) {
-            f.user = { ...f.user, ...updatedUser }
-          }
-        })
-
-        // 4. Update DM conversations otherUser records
-        dmStore.conversations.forEach((c) => {
-          if (c.otherUser?.id === updatedUser.id) {
-            c.otherUser = { ...c.otherUser, ...updatedUser }
-          }
-        })
-
-        // 5. Update active messages lists (sender user details)
-        chatStore.messages.forEach((m) => {
-          if (m.userId === updatedUser.id && m.user) {
-            m.user = { ...m.user, ...updatedUser }
-          }
-        })
-        dmStore.messages.forEach((m) => {
-          if (m.userId === updatedUser.id && m.user) {
-            m.user = { ...m.user, ...updatedUser }
-          }
-        })
       })
-    }
+      friendsStore.incoming.forEach((f) => {
+        if (f.user.id === updatedUser.id) {
+          f.user = { ...f.user, ...updatedUser }
+        }
+      })
+      friendsStore.outgoing.forEach((f) => {
+        if (f.user.id === updatedUser.id) {
+          f.user = { ...f.user, ...updatedUser }
+        }
+      })
 
-    if (auth.user?.preferredTheme) {
-      settings.applyUserTheme(auth.user.preferredTheme)
-    }
+      // 4. Update DM conversations otherUser records
+      dmStore.conversations.forEach((c) => {
+        if (c.otherUser?.id === updatedUser.id) {
+          c.otherUser = { ...c.otherUser, ...updatedUser }
+        }
+      })
 
-    activityEvents.forEach((evt) => document.addEventListener(evt, resetAwayTimer, { passive: true }))
-    resetAwayTimer()
-    pingTimer = setInterval(pingActivity, ACTIVITY_PING_MS)
-  })
+      // 5. Update active messages lists (sender user details)
+      chatStore.messages.forEach((m) => {
+        if (m.userId === updatedUser.id && m.user) {
+          m.user = { ...m.user, ...updatedUser }
+        }
+      })
+      dmStore.messages.forEach((m) => {
+        if (m.userId === updatedUser.id && m.user) {
+          m.user = { ...m.user, ...updatedUser }
+        }
+      })
+    })
+  }
 
-  onUnmounted(() => {
-    activityEvents.forEach((evt) => document.removeEventListener(evt, resetAwayTimer))
-    if (awayTimer) clearTimeout(awayTimer)
-    if (pingTimer) clearInterval(pingTimer)
-    try {
-      getSocket().off('user-profile-updated')
-    } catch {}
-  })
+  if (auth.user?.preferredTheme) {
+    settings.applyUserTheme(auth.user.preferredTheme)
+  }
+
+  activityEvents.forEach((evt) => document.addEventListener(evt, resetAwayTimer, { passive: true }))
+  resetAwayTimer()
+  pingTimer = setInterval(pingActivity, ACTIVITY_PING_MS)
+})
+
+onUnmounted(() => {
+  activityEvents.forEach((evt) => document.removeEventListener(evt, resetAwayTimer))
+  if (awayTimer) clearTimeout(awayTimer)
+  if (pingTimer) clearInterval(pingTimer)
+  try {
+    getSocket().off('user-profile-updated')
+  } catch {
+    /* empty */
+  }
+})
 </script>
 
 <template>
@@ -198,7 +202,11 @@
 
     <Sidebar class="desktop-sidebar" />
     <main class="app-main">
-      <RouterView />
+      <RouterView v-slot="{ Component }">
+        <Transition name="page" mode="out-in">
+          <component :is="Component" />
+        </Transition>
+      </RouterView>
     </main>
   </div>
 </template>
@@ -331,6 +339,23 @@
 @media (max-width: 767px) {
   .mobile-top-bar {
     display: flex;
+  }
+}
+
+/* ===== Page transitions ===== */
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.12s ease;
+}
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter-active,
+  .page-leave-active {
+    transition: none;
   }
 }
 </style>

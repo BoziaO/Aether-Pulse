@@ -1,74 +1,85 @@
 <script setup lang="ts">
-  import { ref, onUnmounted, computed, watch, defineAsyncComponent } from 'vue'
-  import { useRoute, useRouter } from 'vue-router'
-  import { Phone, ArrowLeft, Link2, Settings, Users, Radio, PictureInPicture2, Loader2 } from 'lucide-vue-next'
+import { ref, onUnmounted, computed, watch, defineAsyncComponent } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import {
+  Phone,
+  ArrowLeft,
+  Link2,
+  Settings,
+  Users,
+  Radio,
+  PictureInPicture2,
+  Loader2,
+} from 'lucide-vue-next'
 
-  import { useAuthStore } from '@/stores/auth.store'
-  import { useRoomStore } from '@/stores/room.store'
-  import { useRtcStore } from '@/stores/rtc.store'
+import { useAuthStore } from '@/stores/auth.store'
+import { useRoomStore } from '@/stores/room.store'
+import { useRtcStore } from '@/stores/rtc.store'
 
-  // Lazy-loaded components for performance
-  const VideoTile = defineAsyncComponent(() => import('@/components/call/VideoTile.vue'))
-  const CallControls = defineAsyncComponent(() => import('@/components/call/CallControls.vue'))
-  const ChatPanel = defineAsyncComponent(() => import('@/components/chat/ChatPanel.vue'))
-  const MemberSidebar = defineAsyncComponent(() => import('@/components/rooms/MemberSidebar.vue'))
-  const InviteModal = defineAsyncComponent(() => import('@/components/modals/InviteModal.vue'))
-  const RoomSettingsModal = defineAsyncComponent(
-    () => import('@/components/rooms/RoomSettingsModal.vue')
-  )
-  const UserProfileModal = defineAsyncComponent(
-    () => import('@/components/profile/UserProfileModal.vue')
-  )
+// Lazy-loaded components for performance
+const VideoTile = defineAsyncComponent(() => import('@/components/call/VideoTile.vue'))
+const CallControls = defineAsyncComponent(() => import('@/components/call/CallControls.vue'))
+const ChatPanel = defineAsyncComponent(() => import('@/modules/chat/components/ChatView.vue'))
+const MemberSidebar = defineAsyncComponent(() => import('@/components/rooms/MemberSidebar.vue'))
+const InviteModal = defineAsyncComponent(() => import('@/components/modals/InviteModal.vue'))
+const RoomSettingsModal = defineAsyncComponent(
+  () => import('@/components/rooms/RoomSettingsModal.vue')
+)
+const UserProfileModal = defineAsyncComponent(
+  () => import('@/components/profile/UserProfileModal.vue')
+)
 
-  const route = useRoute()
-  const router = useRouter()
-  const auth = useAuthStore()
-  const roomStore = useRoomStore()
-  const rtc = useRtcStore()
+const route = useRoute()
+const router = useRouter()
+const auth = useAuthStore()
+const roomStore = useRoomStore()
+const rtc = useRtcStore()
 
-  const showInvite = ref(false)
-  const showSettings = ref(false)
-  const showMembers = ref(true)
-  const callError = ref('')
-  const showJoinWithoutMicrophone = ref(false)
-  const isCheckingMicrophone = ref(false)
-  const selectedUserId = ref<string | null>(null)
-  const activeTab = ref<'voice' | 'chat'>('voice')
+const showInvite = ref(false)
+const showSettings = ref(false)
+const showMembers = ref(true)
+const callError = ref('')
+const showJoinWithoutMicrophone = ref(false)
+const isCheckingMicrophone = ref(false)
+const selectedUserId = ref<string | null>(null)
+const activeTab = ref<'voice' | 'chat'>('voice')
 
-  const roomId = computed(() => route.params.roomId as string)
-  const room = computed(() => roomStore.currentRoom)
-  const membersForChat = computed(() =>
-    (room.value?.members ?? []).map((m) => ({
-      id: m.id,
-      displayName: m.displayName,
-      status: m.status,
-    }))
-  )
-  const members = computed(() => room.value?.members ?? [])
-  const remoteEntries = computed(() => [...rtc.remoteStreams.entries()])
-  const inVoiceCount = computed(() => rtc.callUsers.size + (rtc.inCall ? 1 : 0))
-  const isAndroidNative = computed(
-    () =>
-      typeof (window as any).Capacitor !== 'undefined' && (window as any).Capacitor.isNativePlatform()
-  )
+const roomId = computed(() => route.params.roomId as string)
+const room = computed(() => roomStore.currentRoom)
+const membersForChat = computed(() =>
+  (room.value?.members ?? []).map((m) => ({
+    id: m.id,
+    displayName: m.displayName,
+    status: m.status,
+  }))
+)
+const members = computed(() => room.value?.members ?? [])
+const remoteEntries = computed(() => [...rtc.remoteStreams.entries()])
+const inVoiceCount = computed(() => rtc.callUsers.size + (rtc.inCall ? 1 : 0))
+const isAndroidNative = computed(
+  () =>
+    typeof (window as any).Capacitor !== 'undefined' && (window as any).Capacitor.isNativePlatform()
+)
 
-  async function enterRoom(id: string) {
-    if (!auth.user || !id) return
-    try {
-      await roomStore.loadRoom(id)
-      await rtc.joinRoom(id, auth.user.id)
-    } catch (e) {
-      console.error('Failed to join room:', e)
-    }
+async function enterRoom(id: string) {
+  if (!auth.user || !id) return
+  try {
+    await roomStore.loadRoom(id)
+    await rtc.joinRoom(id, auth.user.id)
+  } catch (e) {
+    console.error('Failed to join room:', e)
   }
+}
 
-  function leaveCurrentRoom() {
-    if (auth.user && roomId.value) {
-      rtc.leaveRoom(auth.user.id)
-    }
+function leaveCurrentRoom() {
+  if (auth.user && roomId.value) {
+    rtc.leaveRoom(auth.user.id)
   }
+}
 
-  watch(roomId, (newId, oldId) => {
+watch(
+  roomId,
+  (newId, oldId) => {
     if (oldId) {
       leaveCurrentRoom()
       activeTab.value = 'voice'
@@ -76,51 +87,53 @@
     if (newId) {
       enterRoom(newId)
     }
-  }, { immediate: true })
+  },
+  { immediate: true }
+)
 
-  onUnmounted(() => {
-    leaveCurrentRoom()
-  })
+onUnmounted(() => {
+  leaveCurrentRoom()
+})
 
-  async function handleJoinCall() {
-    callError.value = ''
-    try {
-      await rtc.startCall()
-    } catch (e: unknown) {
-      callError.value = e instanceof Error ? e.message : 'Nie można uzyskać dostępu do mikrofonu'
-    }
+async function handleJoinCall() {
+  callError.value = ''
+  try {
+    await rtc.startCall()
+  } catch (e: unknown) {
+    callError.value = e instanceof Error ? e.message : 'Nie można uzyskać dostępu do mikrofonu'
   }
+}
 
-  async function handleJoinWithoutMicrophone() {
-    callError.value = ''
-    try {
-      isCheckingMicrophone.value = true
-      await rtc.startCall(true) // allowWithoutMicrophone = true
-      showJoinWithoutMicrophone.value = false
-    } catch (e: unknown) {
-      callError.value = e instanceof Error ? e.message : 'Nie można dołączyć bez mikrofonu'
-    } finally {
-      isCheckingMicrophone.value = false
-    }
+async function handleJoinWithoutMicrophone() {
+  callError.value = ''
+  try {
+    isCheckingMicrophone.value = true
+    await rtc.startCall(true) // allowWithoutMicrophone = true
+    showJoinWithoutMicrophone.value = false
+  } catch (e: unknown) {
+    callError.value = e instanceof Error ? e.message : 'Nie można dołączyć bez mikrofonu'
+  } finally {
+    isCheckingMicrophone.value = false
   }
+}
 
-  function goBack() {
-    router.push('/app')
-  }
+function goBack() {
+  router.push('/app')
+}
 
-  function openUserProfile(userId: string) {
-    selectedUserId.value = userId
-  }
+function openUserProfile(userId: string) {
+  selectedUserId.value = userId
+}
 
-  function handleLeftRoom() {
-    showSettings.value = false
-    router.push('/app')
-  }
+function handleLeftRoom() {
+  showSettings.value = false
+  router.push('/app')
+}
 
-  function handleDeletedRoom() {
-    showSettings.value = false
-    router.push('/')
-  }
+function handleDeletedRoom() {
+  showSettings.value = false
+  router.push('/')
+}
 </script>
 
 <template>
@@ -164,15 +177,17 @@
           <div class="join-card">
             <div class="join-icon">🎙️</div>
             <h3>{{ room?.name }}</h3>
-            <p>Dołącz do kanału głosowego — dźwięk przestrzenny, udostępnianie ekranu i HD video.</p>
+            <p>
+              Dołącz do kanału głosowego — dźwięk przestrzenny, udostępnianie ekranu i HD video.
+            </p>
             <p v-if="inVoiceCount > 0" class="voice-hint">
               {{ inVoiceCount }} {{ inVoiceCount === 1 ? 'osoba jest' : 'osoby są' }} już w
               rozmoowie
             </p>
             <p v-if="callError" class="error-msg">{{ callError }}</p>
-            
+
             <div v-if="!showJoinWithoutMicrophone" class="join-options">
-              <button 
+              <button
                 class="btn-primary join-btn"
                 :disabled="isCheckingMicrophone"
                 @click="handleJoinCall"
@@ -180,22 +195,19 @@
                 <Phone :size="18" />
                 Dołącz z mikrofonem
               </button>
-              
-              <button 
-                class="btn-outline join-btn-no-mic"
-                @click="showJoinWithoutMicrophone = true"
-              >
+
+              <button class="btn-outline join-btn-no-mic" @click="showJoinWithoutMicrophone = true">
                 Dołącz bez mikrofonu
               </button>
             </div>
-            
+
             <div v-else class="confirm-no-microphone">
               <p class="no-microphone-warning">
-                ⚠️ Będziesz mógł słuchać, ale nie mówić. 
-                Inni użytkownicy będą widzieć, że dołączyłeś bez mikrofonu.
+                ⚠️ Będziesz mógł słuchać, ale nie mówić. Inni użytkownicy będą widzieć, że
+                dołączyłeś bez mikrofonu.
               </p>
               <div class="confirm-buttons">
-                <button 
+                <button
                   class="btn-primary"
                   :disabled="isCheckingMicrophone"
                   @click="handleJoinWithoutMicrophone"
@@ -203,15 +215,10 @@
                   <Loader2 v-if="isCheckingMicrophone" class="loader" :size="18" />
                   <span v-else>Potwierdź i dołącz</span>
                 </button>
-                <button 
-                  class="btn-ghost"
-                  @click="showJoinWithoutMicrophone = false"
-                >
-                  Anuluj
-                </button>
+                <button class="btn-ghost" @click="showJoinWithoutMicrophone = false">Anuluj</button>
               </div>
             </div>
-            
+
             <!-- Audio detection status -->
             <p v-if="rtc.noMicrophoneDetected" class="audio-status warning">
               ⚠️ Nie wykryto mikrofonu na tym urządzeniu
@@ -256,7 +263,7 @@
 
     <ChatPanel
       :room-id="roomId"
-      :room-name="room?.name"
+      :room-name="room?.name ?? ''"
       :members="membersForChat"
       :class="{ 'mobile-hidden': activeTab !== 'chat' }"
       @toggle-members="showMembers = !showMembers"

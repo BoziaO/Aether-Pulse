@@ -1,59 +1,59 @@
 <script setup lang="ts">
-  import { ref, watch } from 'vue'
-  import { X, AlertTriangle } from 'lucide-vue-next'
+import { ref, watch } from 'vue'
+import { X, AlertTriangle } from 'lucide-vue-next'
 
-  const props = defineProps<{
-    title?: string
-    message: string
-    confirmText?: string
-    cancelText?: string
-    type?: 'default' | 'warning' | 'danger'
-    show?: boolean
-  }>()
+const props = defineProps<{
+  title?: string
+  message: string
+  confirmText?: string
+  cancelText?: string
+  type?: 'default' | 'warning' | 'danger'
+  show?: boolean
+}>()
 
-  const emit = defineEmits<{
-    (e: 'confirm'): void
-    (e: 'cancel'): void
-    (e: 'update:show', value: boolean): void
-  }>()
+const emit = defineEmits<{
+  (e: 'confirm'): void
+  (e: 'cancel'): void
+  (e: 'update:show', value: boolean): void
+}>()
 
-  const internalShow = ref(props.show ?? false)
+const internalShow = ref(props.show ?? false)
 
-  watch(
-    () => props.show,
-    (v) => {
-      internalShow.value = v ?? false
-    }
-  )
-
-  watch(internalShow, (v) => {
-    emit('update:show', v)
-  })
-
-  function confirm() {
-    internalShow.value = false
-    emit('confirm')
+watch(
+  () => props.show,
+  (v) => {
+    internalShow.value = v ?? false
   }
+)
 
-  function cancel() {
-    internalShow.value = false
-    emit('cancel')
-  }
+watch(internalShow, (v) => {
+  emit('update:show', v)
+})
 
-  function handleBackdropClick(e: MouseEvent) {
-    if (e.target === e.currentTarget) {
-      cancel()
-    }
-  }
+function confirm() {
+  internalShow.value = false
+  emit('confirm')
+}
 
-  function handleKeydown(e: KeyboardEvent) {
-    if (e.key === 'Escape') {
-      cancel()
-    }
-    if (e.key === 'Enter') {
-      confirm()
-    }
+function cancel() {
+  internalShow.value = false
+  emit('cancel')
+}
+
+function handleBackdropClick(e: MouseEvent) {
+  if (e.target === e.currentTarget) {
+    cancel()
   }
+}
+
+function handleKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') {
+    cancel()
+  }
+  if (e.key === 'Enter') {
+    confirm()
+  }
+}
 </script>
 
 <template>

@@ -17,13 +17,16 @@ const FriendshipSchema = new Schema<IFriendship>(
       type: String,
       enum: ['pending', 'accepted', 'blocked'],
       default: 'pending',
-      index: true,
     },
   },
   { timestamps: true }
 )
 
 FriendshipSchema.index({ requesterId: 1, addresseeId: 1 }, { unique: true })
+FriendshipSchema.index({ requesterId: 1, status: 1 }, { name: 'friendship_outgoing' })
+FriendshipSchema.index({ addresseeId: 1, status: 1 }, { name: 'friendship_incoming' })
+FriendshipSchema.index({ status: 1 }, { name: 'friendship_status' })
+FriendshipSchema.index({ addresseeId: 1, requesterId: 1 }, { name: 'friendship_reverse_lookup' })
 
 export const Friendship: Model<IFriendship> =
   mongoose.models.Friendship ?? mongoose.model<IFriendship>('Friendship', FriendshipSchema)

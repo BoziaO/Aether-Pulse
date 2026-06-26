@@ -10,12 +10,16 @@ import { rateLimit } from 'express-rate-limit'
 import router from './routes'
 import { logger } from './utils/logger'
 import { optionalJwtMiddleware } from './middleware/auth'
+import { errorHandler } from './middleware/error'
 
 const app: Express = express()
 app.set('trust proxy', 1)
 
 // Security middleware
-const serverUrl = process.env.RENDER_EXTERNAL_URL || process.env.SERVER_URL || 'https://aether-pulse-server.onrender.com'
+const serverUrl =
+  process.env.RENDER_EXTERNAL_URL ||
+  process.env.SERVER_URL ||
+  'https://aether-pulse-server.onrender.com'
 
 app.use(
   helmet({
@@ -153,9 +157,8 @@ const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10, // limit each IP to 10 auth requests per windowMs
   skip: (req) =>
-    req.path !== '/api/auth/login' &&
-    req.path !== '/api/auth/register' &&
-    req.path !== '/api/auth/refresh',
+    // req.path is relative to mount point (/api/auth/)
+    req.path !== '/login' && req.path !== '/register' && req.path !== '/refresh',
   standardHeaders: false,
   legacyHeaders: false,
   keyGenerator: (req) => req.ip || req.socket.remoteAddress || 'anonymous',
@@ -211,29 +214,7 @@ app.use('/api', (req, res, next) => {
 app.use('/api', router)
 
 // Global Error Handler
-app.use((err: any, req: any, res: any, _next: any) => {
-  const statusCode = err.status || err.statusCode || 500
-  logger.error(
-    {
-      err: {
-        message: err.message,
-        stack: err.stack,
-        ...err,
-      },
-      req: {
-        method: req.method,
-        url: req.url,
-      },
-    },
-    'Unhandled error'
-  )
+app.use(errorHandler)
 
-  res.status(statusCode).json({
-    error: {
-      message: process.env.NODE_ENV === 'production' ? 'Internal Server Error' : err.message,
-      code: err.code || 'INTERNAL_ERROR',
-    },
-  })
-})
-
+export { allowedOrigins }
 export default app

@@ -1,45 +1,45 @@
 <script setup lang="ts">
-  import { computed, ref } from 'vue'
-  import { X } from 'lucide-vue-next'
+import { computed, ref } from 'vue'
+import { X } from 'lucide-vue-next'
 
-  defineProps<{
-    modelValue: string | null
-  }>()
+defineProps<{
+  modelValue: string | null
+}>()
 
-  const emit = defineEmits<{ (e: 'update:modelValue', val: string | null): void }>()
+const emit = defineEmits<{ (e: 'update:modelValue', val: string | null): void }>()
 
-  const PRESETS = [
-    { label: 'Violet Dream', value: 'linear-gradient(135deg, #7c3aed, #3b82f6)' },
-    { label: 'Aurora', value: 'linear-gradient(135deg, #06b6d4, #8b5cf6)' },
-    { label: 'Sunset', value: 'linear-gradient(135deg, #f59e0b, #ef4444)' },
-    { label: 'Rose Gold', value: 'linear-gradient(135deg, #ec4899, #f59e0b)' },
-    { label: 'Forest', value: 'linear-gradient(135deg, #10b981, #06b6d4)' },
-    { label: 'Midnight', value: 'linear-gradient(135deg, #1e1b4b, #312e81)' },
-    { label: 'Neon Pulse', value: 'linear-gradient(135deg, #8b5cf6, #06b6d4)' },
-    { label: 'Blurple', value: 'linear-gradient(135deg, #5865f2, #7289da)' },
-  ]
+const PRESETS = [
+  { label: 'Violet Dream', value: 'linear-gradient(135deg, #7c3aed, #3b82f6)' },
+  { label: 'Aurora', value: 'linear-gradient(135deg, #06b6d4, #8b5cf6)' },
+  { label: 'Sunset', value: 'linear-gradient(135deg, #f59e0b, #ef4444)' },
+  { label: 'Rose Gold', value: 'linear-gradient(135deg, #ec4899, #f59e0b)' },
+  { label: 'Forest', value: 'linear-gradient(135deg, #10b981, #06b6d4)' },
+  { label: 'Midnight', value: 'linear-gradient(135deg, #1e1b4b, #312e81)' },
+  { label: 'Neon Pulse', value: 'linear-gradient(135deg, #8b5cf6, #06b6d4)' },
+  { label: 'Blurple', value: 'linear-gradient(135deg, #5865f2, #7289da)' },
+]
 
-  const color1 = ref('#8b5cf6')
-  const color2 = ref('#3b82f6')
-  const angle = ref(135)
-  const customMode = ref(false)
+const color1 = ref('#8b5cf6')
+const color2 = ref('#3b82f6')
+const angle = ref(135)
+const customMode = ref(false)
 
-  const customGradient = computed(
-    () => `linear-gradient(${angle.value}deg, ${color1.value}, ${color2.value})`
-  )
+const customGradient = computed(
+  () => `linear-gradient(${angle.value}deg, ${color1.value}, ${color2.value})`
+)
 
-  function selectPreset(value: string) {
-    emit('update:modelValue', value)
-    customMode.value = false
-  }
+function selectPreset(value: string) {
+  emit('update:modelValue', value)
+  customMode.value = false
+}
 
-  function applyCustom() {
-    emit('update:modelValue', customGradient.value)
-  }
+function applyCustom() {
+  emit('update:modelValue', customGradient.value)
+}
 
-  function clearGradient() {
-    emit('update:modelValue', null)
-  }
+function clearGradient() {
+  emit('update:modelValue', null)
+}
 </script>
 
 <template>

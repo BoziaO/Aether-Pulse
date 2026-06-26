@@ -8,9 +8,9 @@ function validateChannel(channel) {
   const allowedChannels = new Set([
     'get-desktop-sources',
     'electron-message',
-    'desktop-capturer-get-sources'
+    'desktop-capturer-get-sources',
   ])
-  
+
   if (typeof channel !== 'string' || !allowedChannels.has(channel)) {
     throw new Error(`Invalid channel: ${channel}`)
   }
@@ -66,12 +66,12 @@ window.process = Object.freeze({
   versions: Object.freeze({
     node: process.versions?.node || false,
     v8: process.versions?.v8 || false,
-    electron: process.versions?.electron || false
+    electron: process.versions?.electron || false,
   }),
   platform: process.platform,
   env: Object.freeze({
-    NODE_ENV: process.env.NODE_ENV
-  })
+    NODE_ENV: process.env.NODE_ENV,
+  }),
 })
 
 // Expose WebRTC globals for Electron compatibility
@@ -80,7 +80,7 @@ if (process.versions?.electron) {
   window.wrtc = window.wrtc || {
     RTCPeerConnection: window.RTCPeerConnection,
     RTCSessionDescription: window.RTCSessionDescription,
-    RTCIceCandidate: window.RTCIceCandidate
+    RTCIceCandidate: window.RTCIceCandidate,
   }
 }
 

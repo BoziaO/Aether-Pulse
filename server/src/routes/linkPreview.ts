@@ -3,9 +3,16 @@ import { Router, type IRouter } from 'express'
 const router: IRouter = Router()
 
 const SAFE_HOSTNAMES = new Set([
-  'youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be',
-  'github.com', 'www.github.com',
-  'twitter.com', 'www.twitter.com', 'x.com', 'www.x.com',
+  'youtube.com',
+  'www.youtube.com',
+  'm.youtube.com',
+  'youtu.be',
+  'github.com',
+  'www.github.com',
+  'twitter.com',
+  'www.twitter.com',
+  'x.com',
+  'www.x.com',
 ])
 
 function extractOgMeta(html: string, property: string): string | null {
@@ -65,18 +72,22 @@ router.get('/link-preview', async (req, res): Promise<void> => {
 
     const html = await response.text()
 
-    const title = extractOgMeta(html, 'og:title') ||
+    const title =
+      extractOgMeta(html, 'og:title') ||
       extractOgMeta(html, 'twitter:title') ||
-      html.match(/<title>([^<]*)<\/title>/i)?.[1]?.trim() || null
+      html.match(/<title>([^<]*)<\/title>/i)?.[1]?.trim() ||
+      null
 
-    const image = extractOgMeta(html, 'og:image') ||
-      extractOgMeta(html, 'twitter:image')
+    const image = extractOgMeta(html, 'og:image') || extractOgMeta(html, 'twitter:image')
 
-    const description = extractOgMeta(html, 'og:description') ||
-      extractOgMeta(html, 'twitter:description')
+    const description =
+      extractOgMeta(html, 'og:description') || extractOgMeta(html, 'twitter:description')
 
     const cleanDesc = description
-      ? description.replace(/<\/?[^>]+(>|$)/g, '').trim().slice(0, 300)
+      ? description
+          .replace(/<\/?[^>]+(>|$)/g, '')
+          .trim()
+          .slice(0, 300)
       : null
 
     res.json({ title, image, description: cleanDesc, url: rawUrl })

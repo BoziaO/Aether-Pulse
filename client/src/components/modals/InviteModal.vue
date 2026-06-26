@@ -1,39 +1,46 @@
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
-  import { X, Copy, Check, Link } from 'lucide-vue-next'
+import { ref, computed } from 'vue'
+import { X, Copy, Check, Link } from 'lucide-vue-next'
 
-  import { useRoomStore } from '@/stores/room.store'
-  import type { Room } from '@/types/room.types'
+import { useRoomStore } from '@/stores/room.store'
+import type { Room } from '@/types/room.types'
 
-  const props = defineProps<{ room: Room }>()
-  const emit = defineEmits<{ (e: 'close'): void }>()
-  const roomStore = useRoomStore()
-  const copied = ref(false)
+const props = defineProps<{ room: Room }>()
+const _emit = defineEmits<{ (e: 'close'): void }>()
+const roomStore = useRoomStore()
+const copied = ref(false)
 
-  const inviteLink = computed(() => roomStore.getInviteLink(props.room))
+const inviteLink = computed(() => roomStore.getInviteLink(props.room))
 
-  async function copyLink() {
-    await navigator.clipboard.writeText(inviteLink.value)
-    copied.value = true
-    setTimeout(() => {
-      copied.value = false
-    }, 2000)
-  }
+async function copyLink() {
+  await navigator.clipboard.writeText(inviteLink.value)
+  copied.value = true
+  setTimeout(() => {
+    copied.value = false
+  }, 2000)
+}
 
-  async function copyCode() {
-    await navigator.clipboard.writeText(props.room.inviteCode)
-    copied.value = true
-    setTimeout(() => {
-      copied.value = false
-    }, 2000)
-  }
+async function copyCode() {
+  await navigator.clipboard.writeText(props.room.inviteCode)
+  copied.value = true
+  setTimeout(() => {
+    copied.value = false
+  }, 2000)
+}
 </script>
 
 <template>
-  <div class="modal-backdrop" @click.self="$emit('close')">
+  <div
+    class="modal-backdrop"
+    role="dialog"
+    aria-modal="true"
+    :aria-labelledby="'invite-modal-title-' + room.id"
+    @click.self="$emit('close')"
+    @keydown.escape="$emit('close')"
+  >
     <div class="modal">
       <div class="modal-header">
-        <h2>Invite to {{ room.name }}</h2>
+        <h2 :id="'invite-modal-title-' + room.id">Invite to {{ room.name }}</h2>
         <button class="close-btn" @click="$emit('close')"><X :size="18" /></button>
       </div>
       <div class="modal-body">

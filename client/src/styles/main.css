@@ -241,3 +241,18 @@ a {
 .pulse {
   animation: pulse 1.5s ease-in-out infinite;
 }
+
+/* ===== Accessibility: Focus-visible ===== */
+:focus-visible {
+  outline: 2px solid var(--accent-violet);
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Remove default focus outline on elements that have custom focus styles */
+.toggle input:focus + .toggle-slider {
+  outline: none;
+}

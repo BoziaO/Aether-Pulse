@@ -1,207 +1,222 @@
 <script setup lang="ts">
-  import { ref, markRaw, onMounted, onUnmounted, computed, type Component } from 'vue'
-  import {
-    Download,
-    Globe2,
-    Laptop,
-    MessageCircle,
-    MonitorUp,
-    PictureInPicture2,
-    Smartphone,
-    Users,
-    Mic,
-    Video,
-    Shield,
-    Zap,
-    Star,
-    ArrowRight,
-    Code2,
-    Menu,
-    X,
-    Sparkles,
-    Waves,
-  } from 'lucide-vue-next'
+import { ref, markRaw, onMounted, onUnmounted, computed, type Component } from 'vue'
+import {
+  Download,
+  Globe2,
+  Laptop,
+  MessageCircle,
+  MonitorUp,
+  PictureInPicture2,
+  Smartphone,
+  Users,
+  Mic,
+  Video,
+  Shield,
+  Zap,
+  Star,
+  ArrowRight,
+  Code2,
+  Menu,
+  X,
+  Sparkles,
+  Waves,
+} from 'lucide-vue-next'
 
-  interface DownloadItem {
-    icon: Component
-    platform: string
-    meta: string
-    href: string
+interface DownloadItem {
+  icon: Component
+  platform: string
+  meta: string
+  href: string
+  label: string
+  primary: boolean
+  version?: string
+  size?: string
+  badge?: string
+}
+
+interface FeatureItem {
+  icon: Component
+  title: string
+  desc: string
+  category?: string
+}
+
+const downloads = ref<DownloadItem[]>([
+  {
+    icon: markRaw(MonitorUp),
+    platform: 'Windows',
+    meta: 'Windows 10+',
+    href: 'https://github.com/BoziaO/Aether-Pulse/releases/download/v1.0/AetherPulse-setup-Windows-v1.0.exe',
+    label: 'Pobierz',
+    primary: true,
+    version: 'Najnowsza',
+    size: '120MB',
+    badge: 'POPULARNY',
+  },
+  {
+    icon: markRaw(Smartphone),
+    platform: 'Android',
+    meta: 'APK',
+    href: '',
+    label: 'Wkrótce',
+    primary: false,
+    version: 'Najnowsza',
+    size: '45MB',
+    badge: 'MOBILNY',
+  },
+  {
+    icon: markRaw(Laptop),
+    platform: 'Linux',
+    meta: 'x64',
+    href: 'https://github.com/BoziaO/Aether-Pulse/releases/download/v1.0/AetherPulse-setup-Linux-v1.0.zip',
+    label: 'Pobierz',
+    primary: false,
+    version: 'Najnowsza',
+    size: '140MB',
+    badge: 'DEVELOPER',
+  },
+])
+
+const features = ref<FeatureItem[]>([
+  {
+    icon: markRaw(Mic),
+    title: 'Krystalicznie czysty dźwięk',
+    desc: 'Dźwięk przestrzenny z redukcją szumów i ech, by każda rozmowa brzmiała profesjonalnie.',
+    category: 'audio',
+  },
+  {
+    icon: markRaw(Video),
+    title: 'Streaming w HD',
+    desc: 'Udostępniaj swój ekran lub kamerę w jakości do 1080p z niską latencją.',
+    category: 'video',
+  },
+  {
+    icon: markRaw(MessageCircle),
+    title: 'Chat w czasie rzeczywistym',
+    desc: 'Szybkie wiadomości, reakcje i prywatne pokoje dla Twojej załogi.',
+    category: 'chat',
+  },
+  {
+    icon: markRaw(Users),
+    title: 'Pokoje głosowe',
+    desc: 'Tworzenie prywatnych i publicznych pokoi z kontrolą dostępu.',
+    category: 'social',
+  },
+  {
+    icon: markRaw(PictureInPicture2),
+    title: 'Picture-in-Picture',
+    desc: 'Oglądaj streamy w mini playerze, nawet gdy przełączysz aplikację.',
+    category: 'mobile',
+  },
+  {
+    icon: markRaw(Shield),
+    title: 'Bezpieczeństwo',
+    desc: 'E2E szyfrowanie, JWT autentykacja i ochrona przed nadużyciami.',
+    category: 'security',
+  },
+])
+
+const selectedPlatform = ref<string>('')
+const currentFeatureTab = ref<
+  'all' | 'audio' | 'video' | 'chat' | 'social' | 'mobile' | 'security'
+>('all')
+const isScrolled = ref<boolean>(false)
+const mobileMenuOpen = ref<boolean>(false)
+const visibleSections = ref<Set<string>>(new Set())
+
+const isElectron = ref<boolean>(false)
+const isMobile = ref<boolean>(false)
+
+const filteredFeatures = computed(() => {
+  if (currentFeatureTab.value === 'all') return features.value
+  return features.value.filter((f) => f.category === currentFeatureTab.value)
+})
+
+const featureCategories = ref<
+  Array<{
+    id: 'all' | 'chat' | 'audio' | 'video' | 'social' | 'mobile' | 'security'
     label: string
-    primary: boolean
-    version?: string
-    size?: string
-    badge?: string
-  }
-
-  interface FeatureItem {
     icon: Component
-    title: string
-    desc: string
-    category?: string
-  }
+  }>
+>([
+  { id: 'all', label: 'Wszystkie', icon: markRaw(Star) },
+  { id: 'audio', label: 'Dźwięk', icon: markRaw(Mic) },
+  { id: 'video', label: 'Wideo', icon: markRaw(Video) },
+  { id: 'chat', label: 'Chat', icon: markRaw(MessageCircle) },
+  { id: 'social', label: 'Społeczność', icon: markRaw(Users) },
+  { id: 'mobile', label: 'Mobilne', icon: markRaw(Smartphone) },
+  { id: 'security', label: 'Bezpieczeństwo', icon: markRaw(Shield) },
+])
 
-  const downloads = ref<DownloadItem[]>([
-    {
-      icon: markRaw(MonitorUp),
-      platform: 'Windows',
-      meta: 'Windows 10+',
-      href: 'https://github.com/BoziaO/Aether-Pulse/releases/download/v1.0/AetherPulse-setup-Windows-v1.0.exe',
-      label: 'Pobierz',
-      primary: true,
-      version: 'Najnowsza',
-      size: '120MB',
-      badge: 'POPULARNY',
-    },
-    {
-      icon: markRaw(Smartphone),
-      platform: 'Android',
-      meta: 'APK',
-      href: '',
-      label: 'Wkrótce',
-      primary: false,
-      version: 'Najnowsza',
-      size: '45MB',
-      badge: 'MOBILNY',
-    },
-    {
-      icon: markRaw(Laptop),
-      platform: 'Linux',
-      meta: 'x64',
-      href: 'https://github.com/BoziaO/Aether-Pulse/releases/download/v1.0/AetherPulse-setup-Linux-v1.0.zip',
-      label: 'Pobierz',
-      primary: false,
-      version: 'Najnowsza',
-      size: '140MB',
-      badge: 'DEVELOPER',
-    },
-  ])
+let observer: IntersectionObserver | null = null
 
-  const features = ref<FeatureItem[]>([
-    {
-      icon: markRaw(Mic),
-      title: 'Krystalicznie czysty dźwięk',
-      desc: 'Dźwięk przestrzenny z redukcją szumów i ech, by każda rozmowa brzmiała profesjonalnie.',
-      category: 'audio',
-    },
-    {
-      icon: markRaw(Video),
-      title: 'Streaming w HD',
-      desc: 'Udostępniaj swój ekran lub kamerę w jakości do 1080p z niską latencją.',
-      category: 'video',
-    },
-    {
-      icon: markRaw(MessageCircle),
-      title: 'Chat w czasie rzeczywistym',
-      desc: 'Szybkie wiadomości, reakcje i prywatne pokoje dla Twojej załogi.',
-      category: 'chat',
-    },
-    {
-      icon: markRaw(Users),
-      title: 'Pokoje głosowe',
-      desc: 'Tworzenie prywatnych i publicznych pokoi z kontrolą dostępu.',
-      category: 'social',
-    },
-    {
-      icon: markRaw(PictureInPicture2),
-      title: 'Picture-in-Picture',
-      desc: 'Oglądaj streamy w mini playerze, nawet gdy przełączysz aplikację.',
-      category: 'mobile',
-    },
-    {
-      icon: markRaw(Shield),
-      title: 'Bezpieczeństwo',
-      desc: 'E2E szyfrowanie, JWT autentykacja i ochrona przed nadużyciami.',
-      category: 'security',
-    },
-  ])
+onMounted(() => {
+  isElectron.value = typeof window !== 'undefined' && !!(window as any).process?.versions?.electron
 
-  const selectedPlatform = ref<string>('')
-  const currentFeatureTab = ref<'all' | 'audio' | 'video' | 'chat' | 'social' | 'mobile' | 'security'>('all')
-  const isScrolled = ref<boolean>(false)
-  const mobileMenuOpen = ref<boolean>(false)
-  const visibleSections = ref<Set<string>>(new Set())
-
-  const isElectron = ref<boolean>(false)
-  const isMobile = ref<boolean>(false)
-
-  const filteredFeatures = computed(() => {
-    if (currentFeatureTab.value === 'all') return features.value
-    return features.value.filter(f => f.category === currentFeatureTab.value)
-  })
-
-  const featureCategories = ref<Array<{ id: 'all' | 'chat' | 'audio' | 'video' | 'social' | 'mobile' | 'security'; label: string; icon: Component }>>([
-    { id: 'all', label: 'Wszystkie', icon: markRaw(Star) },
-    { id: 'audio', label: 'Dźwięk', icon: markRaw(Mic) },
-    { id: 'video', label: 'Wideo', icon: markRaw(Video) },
-    { id: 'chat', label: 'Chat', icon: markRaw(MessageCircle) },
-    { id: 'social', label: 'Społeczność', icon: markRaw(Users) },
-    { id: 'mobile', label: 'Mobilne', icon: markRaw(Smartphone) },
-    { id: 'security', label: 'Bezpieczeństwo', icon: markRaw(Shield) },
-  ])
-
-  let observer: IntersectionObserver | null = null
-
-  onMounted(() => {
-    isElectron.value = typeof window !== 'undefined' && !!(window as any).process?.versions?.electron
-
-    if (typeof window !== 'undefined') {
-      isMobile.value = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-    }
-
-    window.addEventListener('scroll', () => {
-      isScrolled.value = window.scrollY > 50
-    })
-
-    observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            visibleSections.value = new Set([...visibleSections.value, entry.target.id])
-          }
-        })
-      },
-      { threshold: 0.1 }
+  if (typeof window !== 'undefined') {
+    isMobile.value = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
     )
-
-    document.querySelectorAll('[data-observe]').forEach((el) => observer?.observe(el))
-  })
-
-  onUnmounted(() => {
-    observer?.disconnect()
-  })
-
-  function isVisible(id: string): boolean {
-    return visibleSections.value.has(id)
   }
 
-  function handleDownload(platform: string, href: string) {
-    selectedPlatform.value = platform
-    try {
-      window.open(href, '_blank', 'noopener,noreferrer')
-    } catch {
-      window.location.href = href
-    }
-  }
-
-  function scrollToSection(sectionId: string) {
-    const element = document.getElementById(sectionId)
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
-  }
-
-  const recommendedPlatform = computed(() => {
-    const ua = navigator.userAgent
-    if (/Android/i.test(ua)) return 'Android'
-    if (/Windows/i.test(ua)) return 'Windows'
-    if (/Linux/i.test(ua)) return 'Linux'
-    return 'Windows'
+  window.addEventListener('scroll', () => {
+    isScrolled.value = window.scrollY > 50
   })
 
-  const recommendedDownload = computed(() =>
-    downloads.value.find(d => d.platform === recommendedPlatform.value) || downloads.value[0]
+  observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          visibleSections.value = new Set([...visibleSections.value, entry.target.id])
+        }
+      })
+    },
+    { threshold: 0.1 }
   )
+
+  document.querySelectorAll('[data-observe]').forEach((el) => observer?.observe(el))
+})
+
+onUnmounted(() => {
+  observer?.disconnect()
+})
+
+function isVisible(id: string): boolean {
+  return visibleSections.value.has(id)
+}
+
+function handleDownload(platform: string, href: string) {
+  selectedPlatform.value = platform
+  try {
+    window.open(href, '_blank', 'noopener,noreferrer')
+  } catch {
+    window.location.href = href
+  }
+}
+
+function scrollToSection(sectionId: string) {
+  const element = document.getElementById(sectionId)
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+}
+
+function scrollToSectionMobile(sectionId: string) {
+  scrollToSection(sectionId)
+  mobileMenuOpen.value = false
+}
+
+const recommendedPlatform = computed(() => {
+  const ua = navigator.userAgent
+  if (/Android/i.test(ua)) return 'Android'
+  if (/Windows/i.test(ua)) return 'Windows'
+  if (/Linux/i.test(ua)) return 'Linux'
+  return 'Windows'
+})
+
+const recommendedDownload = computed(
+  () => downloads.value.find((d) => d.platform === recommendedPlatform.value) || downloads.value[0]
+)
 </script>
 
 <template>
@@ -221,21 +236,14 @@
           <button class="nav-link" @click="scrollToSection('download')">Pobierz</button>
         </div>
 
-        <button
-          class="mobile-menu-btn"
-          aria-label="Menu"
-          @click="mobileMenuOpen = !mobileMenuOpen"
-        >
+        <button class="mobile-menu-btn" aria-label="Menu" @click="mobileMenuOpen = !mobileMenuOpen">
           <Menu v-if="!mobileMenuOpen" :size="24" />
           <X v-else :size="24" />
         </button>
 
-        <div
-          v-if="mobileMenuOpen"
-          class="mobile-menu"
-        >
-          <button class="nav-link" @click="scrollToSection('features'); mobileMenuOpen = false">Funkcje</button>
-          <button class="nav-link" @click="scrollToSection('download'); mobileMenuOpen = false">Pobierz</button>
+        <div v-if="mobileMenuOpen" class="mobile-menu">
+          <button class="nav-link" @click="scrollToSectionMobile('features')">Funkcje</button>
+          <button class="nav-link" @click="scrollToSectionMobile('download')">Pobierz</button>
           <a href="/auth" class="btn secondary" @click="mobileMenuOpen = false">Zaloguj się</a>
           <a href="/auth" class="btn primary" @click="mobileMenuOpen = false">
             <Zap :size="16" />
@@ -274,10 +282,9 @@
 
           <div class="hero-actions">
             <button
-              class="btn primary large" @click="handleDownload(
-                recommendedDownload.platform,
-                recommendedDownload.href
-              )">
+              class="btn primary large"
+              @click="handleDownload(recommendedDownload.platform, recommendedDownload.href)"
+            >
               <Download :size="20" />
               <span>Pobierz dla {{ recommendedDownload.platform }}</span>
             </button>
@@ -301,9 +308,7 @@
         <div class="hero-visual">
           <div class="mockup">
             <div class="mockup-header">
-              <div class="mockup-dots">
-                <span /><span /><span />
-              </div>
+              <div class="mockup-dots"><span /><span /><span /></div>
               <div class="mockup-title">AetherPulse</div>
             </div>
             <div class="mockup-body">
@@ -348,12 +353,16 @@
     <!-- Features Section -->
     <section id="features" class="features-section">
       <div class="section-container">
-        <div class="section-header" data-observe="features-header" :class="{ visible: isVisible('features-header') }">
+        <div
+          class="section-header"
+          data-observe="features-header"
+          :class="{ visible: isVisible('features-header') }"
+        >
           <span class="section-badge">
             <Sparkles :size="14" />
             Funkcjonalności
           </span>
-          <h2 class="section-title">Wszystko, czego potrzebujesz<br>w jednym miejscu</h2>
+          <h2 class="section-title">Wszystko, czego potrzebujesz<br />w jednym miejscu</h2>
           <p class="section-subtitle">
             Od rozmów głosowych po streaming w jakości HD &mdash; AetherPulse oferuje kompletny
             zestaw narzędzi dla Twojej społeczności.
@@ -361,10 +370,18 @@
         </div>
 
         <!-- Feature Categories -->
-        <div class="feature-tabs" data-observe="features-tabs" :class="{ visible: isVisible('features-tabs') }">
+        <div
+          class="feature-tabs"
+          data-observe="features-tabs"
+          :class="{ visible: isVisible('features-tabs') }"
+        >
           <button
-            v-for="tab in featureCategories" :key="tab.id" class="feature-tab"
-            :class="{ active: currentFeatureTab === tab.id }" @click="currentFeatureTab = tab.id">
+            v-for="tab in featureCategories"
+            :key="tab.id"
+            class="feature-tab"
+            :class="{ active: currentFeatureTab === tab.id }"
+            @click="currentFeatureTab = tab.id"
+          >
             <component :is="tab.icon" :size="18" />
             {{ tab.label }}
           </button>
@@ -374,12 +391,12 @@
         <div class="features-grid">
           <article
             v-for="(feature, i) in filteredFeatures"
-            :key="feature.title"
             :id="'feature-' + i"
+            :key="feature.title"
             class="feature-card"
             :class="{ visible: isVisible('feature-' + i) }"
             :data-observe="'feature-' + i"
-            :style="{ transitionDelay: (i * 100) + 'ms' }"
+            :style="{ transitionDelay: i * 100 + 'ms' }"
           >
             <div class="feature-card-glow" />
             <div class="feature-icon-wrapper">
@@ -395,22 +412,30 @@
     <!-- Downloads Section -->
     <section id="download" class="downloads-section">
       <div class="section-container">
-        <div class="section-header" data-observe="download-header" :class="{ visible: isVisible('download-header') }">
+        <div
+          class="section-header"
+          data-observe="download-header"
+          :class="{ visible: isVisible('download-header') }"
+        >
           <span class="section-badge">
             <Download :size="14" />
             Pobierz
           </span>
-          <h2 class="section-title">Dołącz do społeczności<br>już teraz</h2>
+          <h2 class="section-title">Dołącz do społeczności<br />już teraz</h2>
           <p class="section-subtitle">
-            Dostępne na Windows, Android, Linux i w przeglądarce.
-            Wybierz swoją platformę i zaczynaj przygodę.
+            Dostępne na Windows, Android, Linux i w przeglądarce. Wybierz swoją platformę i zaczynaj
+            przygodę.
           </p>
         </div>
 
         <div class="download-platforms">
           <div
-            v-for="item in downloads" :key="item.platform" class="download-card" :class="{ featured: item.primary }"
-            @click="handleDownload(item.platform, item.href)">
+            v-for="item in downloads"
+            :key="item.platform"
+            class="download-card"
+            :class="{ featured: item.primary }"
+            @click="handleDownload(item.platform, item.href)"
+          >
             <div class="download-icon">
               <component :is="item.icon" :size="32" />
             </div>
@@ -430,17 +455,22 @@
         </div>
 
         <!-- Browser option -->
-        <div class="browser-promo" data-observe="browser-promo" :class="{ visible: isVisible('browser-promo') }">
+        <div
+          class="browser-promo"
+          data-observe="browser-promo"
+          :class="{ visible: isVisible('browser-promo') }"
+        >
           <div class="browser-promo-content">
             <Globe2 :size="24" />
             <div class="browser-promo-text">
               <strong>Wolisz przeglądarkę?</strong>
-              <p>Uruchom AetherPulse bezpośrednio w przeglądarce bez instalacji &mdash; wystarczy konto.</p>
+              <p>
+                Uruchom AetherPulse bezpośrednio w przeglądarce bez instalacji &mdash; wystarczy
+                konto.
+              </p>
             </div>
           </div>
-          <a href="/auth" class="btn secondary">
-            Otwórz w przeglądarce
-          </a>
+          <a href="/auth" class="btn secondary"> Otwórz w przeglądarce </a>
         </div>
       </div>
     </section>
@@ -449,8 +479,11 @@
     <section class="cta-section">
       <div class="cta-container" data-observe="cta" :class="{ visible: isVisible('cta') }">
         <div class="cta-content">
-          <h2>Gotowy na nową erę<br>komunikacji?</h2>
-          <p>Dołącz do tysięcy użytkowników, którzy już odkryli swobodę AetherPulse. <strong>Za darmo.</strong></p>
+          <h2>Gotowy na nową erę<br />komunikacji?</h2>
+          <p>
+            Dołącz do tysięcy użytkowników, którzy już odkryli swobodę AetherPulse.
+            <strong>Za darmo.</strong>
+          </p>
         </div>
         <div class="cta-actions">
           <button class="btn primary large" @click="handleDownload('Windows', downloads[0].href)">
@@ -477,7 +510,9 @@
               <Waves :size="24" />
               <span>AetherPulse</span>
             </a>
-            <p class="footer-desc">Nowoczesna platforma do komunikacji głosowej, wideorozmów i współpracy zespołowej.</p>
+            <p class="footer-desc">
+              Nowoczesna platforma do komunikacji głosowej, wideorozmów i współpracy zespołowej.
+            </p>
           </div>
 
           <div class="footer-links">
@@ -522,22 +557,22 @@
 <style scoped>
 /* CSS Variables */
 :root {
-  --primary: #5865F2;
-  --primary-hover: #4752C4;
-  --primary-gradient: linear-gradient(135deg, #5865F2, #7289DA);
-  --secondary: #3BA55C;
-  --secondary-hover: #2E8E49;
-  --danger: #ED4245;
-  --warning: #FAA61A;
-  --bg-primary: #0A0A0F;
-  --bg-secondary: #1E1E2E;
-  --bg-tertiary: #2E2E42;
+  --primary: #5865f2;
+  --primary-hover: #4752c4;
+  --primary-gradient: linear-gradient(135deg, #5865f2, #7289da);
+  --secondary: #3ba55c;
+  --secondary-hover: #2e8e49;
+  --danger: #ed4245;
+  --warning: #faa61a;
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #1e1e2e;
+  --bg-tertiary: #2e2e42;
   --border: rgba(255, 255, 255, 0.08);
   --border-hover: rgba(255, 255, 255, 0.16);
-  --text-primary: #FFFFFF;
-  --text-secondary: #B9BBBE;
-  --text-muted: #72767D;
-  --accent: #5865F2;
+  --text-primary: #ffffff;
+  --text-secondary: #b9bbbe;
+  --text-muted: #72767d;
+  --accent: #5865f2;
   --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 16px 64px rgba(0, 0, 0, 0.4);
 }
@@ -558,7 +593,13 @@ body {
   min-height: 100vh;
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
   overflow-x: hidden;
   position: relative;
 }
@@ -799,7 +840,6 @@ a {
 }
 
 @keyframes pulse {
-
   0%,
   100% {
     opacity: 1;
@@ -826,7 +866,7 @@ a {
 }
 
 .hero-title-gradient {
-  background: linear-gradient(135deg, #A78BFA, #67E8F9, #5865F2);
+  background: linear-gradient(135deg, #a78bfa, #67e8f9, #5865f2);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -946,7 +986,8 @@ a {
 }
 
 @keyframes sphereFloat {
-  0%, 100% {
+  0%,
+  100% {
     transform: translate(0, 0) scale(1);
   }
   33% {
@@ -958,7 +999,8 @@ a {
 }
 
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translate(0, 0) rotate(0deg);
   }
   50% {
@@ -1001,9 +1043,15 @@ a {
   border-radius: 50%;
 }
 
-.mockup-dots span:nth-child(1) { background: #ED4245; }
-.mockup-dots span:nth-child(2) { background: #FAA61A; }
-.mockup-dots span:nth-child(3) { background: #3BA55C; }
+.mockup-dots span:nth-child(1) {
+  background: #ed4245;
+}
+.mockup-dots span:nth-child(2) {
+  background: #faa61a;
+}
+.mockup-dots span:nth-child(3) {
+  background: #3ba55c;
+}
 
 .mockup-title {
   font-size: 12px;
@@ -1094,8 +1142,13 @@ a {
 }
 
 @keyframes msgPulse {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 .mockup-input {
@@ -1629,23 +1682,23 @@ a {
   }
 }
 
-.hero-content>* {
+.hero-content > * {
   animation: fadeInUp 0.6s ease-out both;
 }
 
-.hero-content>*:nth-child(1) {
+.hero-content > *:nth-child(1) {
   animation-delay: 0.1s;
 }
 
-.hero-content>*:nth-child(2) {
+.hero-content > *:nth-child(2) {
   animation-delay: 0.2s;
 }
 
-.hero-content>*:nth-child(3) {
+.hero-content > *:nth-child(3) {
   animation-delay: 0.3s;
 }
 
-.hero-content>*:nth-child(4) {
+.hero-content > *:nth-child(4) {
   animation-delay: 0.4s;
 }
 

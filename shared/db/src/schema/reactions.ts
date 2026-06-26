@@ -12,12 +12,14 @@ const MessageReactionSchema = new Schema<IMessageReaction>(
   {
     messageId: { type: Schema.Types.ObjectId, ref: 'Message', required: true, index: true },
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-    emoji: { type: String, required: true, index: true },
+    emoji: { type: String, required: true, index: true, maxlength: 32 },
   },
   { timestamps: { createdAt: true, updatedAt: false } }
 )
 
 MessageReactionSchema.index({ messageId: 1, userId: 1, emoji: 1 }, { unique: true })
+MessageReactionSchema.index({ userId: 1, emoji: 1 }, { name: 'user_reaction_stats' })
+MessageReactionSchema.index({ messageId: 1, createdAt: -1 }, { name: 'message_reactions_order' })
 
 export const MessageReaction: Model<IMessageReaction> =
   mongoose.models.MessageReaction ??

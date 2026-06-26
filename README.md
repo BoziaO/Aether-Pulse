@@ -11,12 +11,12 @@ AetherPulse łączy w sobie najlepsze cechy Discorda, Zoom i Slacka, dając Ci p
 
 ## ✨ Dlaczego AetherPulse?
 
-| Co zyskujesz | Szczegóły |
-|-------------|-----------|
-| **Prywatność** | Kod open source — hostuj samodzielnie lub korzystaj z naszej instancji |
-| **Zero opłat** | Żadnych subskrypcji, żadnych limitów, żadnego premium |
-| **Wszędzie** | Web, Windows, Linux, Android — to samo konto, to samo doświadczenie |
-| **Nowoczesność** | WebRTC, Socket.io, Vue 3 — technologia, która działa |
+| Co zyskujesz     | Szczegóły                                                              |
+| ---------------- | ---------------------------------------------------------------------- |
+| **Prywatność**   | Kod open source — hostuj samodzielnie lub korzystaj z naszej instancji |
+| **Zero opłat**   | Żadnych subskrypcji, żadnych limitów, żadnego premium                  |
+| **Wszędzie**     | Web, Windows, Linux, Android — to samo konto, to samo doświadczenie    |
+| **Nowoczesność** | WebRTC, Socket.io, Vue 3 — technologia, która działa                   |
 
 ## 🚀 Możliwości
 
@@ -31,16 +31,16 @@ AetherPulse łączy w sobie najlepsze cechy Discorda, Zoom i Slacka, dając Ci p
 
 ## 🛠 Tech Stack
 
-| Obszar | Technologia |
-|--------|------------|
-| Frontend | Vue 3, Vite, Pinia, Vue Router, Tailwind CSS, lucide-vue-next |
-| Realtime | Socket.io, WebRTC, simple-peer |
-| Backend | Node.js, Express 5, Socket.io, Helmet, rate limiting, Pino |
-| Baza danych | MongoDB, Mongoose |
-| Desktop | Electron, electron-builder |
-| Mobile | Capacitor Android |
-| Język | TypeScript (typowanie wszędzie) |
-| Narzędzia | pnpm workspaces, Turborepo, Vitest |
+| Obszar      | Technologia                                                   |
+| ----------- | ------------------------------------------------------------- |
+| Frontend    | Vue 3, Vite, Pinia, Vue Router, Tailwind CSS, lucide-vue-next |
+| Realtime    | Socket.io, WebRTC, simple-peer                                |
+| Backend     | Node.js, Express 5, Socket.io, Helmet, rate limiting, Pino    |
+| Baza danych | MongoDB, Mongoose                                             |
+| Desktop     | Electron, electron-builder                                    |
+| Mobile      | Capacitor Android                                             |
+| Język       | TypeScript (typowanie wszędzie)                               |
+| Narzędzia   | pnpm workspaces, Turborepo, Vitest                            |
 
 ## 📁 Struktura projektu
 
@@ -95,18 +95,18 @@ Aplikacja będzie dostępna pod adresem `http://localhost:5174`.
 
 ## ✅ Skrypty
 
-| Komenda | Opis |
-|---------|------|
-| `pnpm dev` | Uruchom wszystko (Turborepo) |
-| `pnpm build` | Zbuduj wszystkie pakiety |
-| `pnpm typecheck` | Sprawdź typy TypeScript |
-| `pnpm lint` | Sprawdź kod linterem |
-| `pnpm start:client` | Tylko klient Vite |
-| `pnpm start:server` | Tylko serwer Express |
-| `pnpm electron:dev` | Desktop (dev) |
-| `pnpm electron:build` | Desktop (Windows) |
-| `pnpm android:sync` | Sync do Capacitor |
-| `pnpm docker:up` | Stack produkcyjny |
+| Komenda               | Opis                         |
+| --------------------- | ---------------------------- |
+| `pnpm dev`            | Uruchom wszystko (Turborepo) |
+| `pnpm build`          | Zbuduj wszystkie pakiety     |
+| `pnpm typecheck`      | Sprawdź typy TypeScript      |
+| `pnpm lint`           | Sprawdź kod linterem         |
+| `pnpm start:client`   | Tylko klient Vite            |
+| `pnpm start:server`   | Tylko serwer Express         |
+| `pnpm electron:dev`   | Desktop (dev)                |
+| `pnpm electron:build` | Desktop (Windows)            |
+| `pnpm android:sync`   | Sync do Capacitor            |
+| `pnpm docker:up`      | Stack produkcyjny            |
 
 ## 🐳 Docker
 

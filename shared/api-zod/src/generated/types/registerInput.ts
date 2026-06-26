@@ -12,7 +12,7 @@ export interface RegisterInput {
    * @maxLength 20
    */
   username: string
-  /** @minLength 6 */
+  /** @minLength 8 */
   password: string
   /**
    * @minLength 1

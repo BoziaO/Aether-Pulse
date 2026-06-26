@@ -37,36 +37,66 @@ export interface IUser extends Document {
 
 const UserSchema = new Schema<IUser>(
   {
-    username: { type: String, required: true, unique: true, index: true },
-    email: { type: String, default: null },
-    passwordHash: { type: String, required: true },
-    displayName: { type: String, required: true, index: true },
-    avatarUrl: { type: String, default: null },
-    bannerUrl: { type: String, default: null },
-    bio: { type: String, default: null },
-    pronouns: { type: String, default: null },
-    website: { type: String, default: null },
-    location: { type: String, default: null },
+    username: {
+      type: String,
+      required: true,
+      unique: true,
+      maxlength: 32,
+    },
+    email: {
+      type: String,
+      default: null,
+      sparse: true,
+      unique: true,
+      maxlength: 255,
+    },
+    passwordHash: { type: String, required: true, maxlength: 255 },
+    displayName: {
+      type: String,
+      required: true,
+      index: true,
+      maxlength: 64,
+    },
+    avatarUrl: { type: String, default: null, maxlength: 2048 },
+    bannerUrl: { type: String, default: null, maxlength: 2048 },
+    bio: { type: String, default: null, maxlength: 512 },
+    pronouns: { type: String, default: null, maxlength: 32 },
+    website: { type: String, default: null, maxlength: 2048 },
+    location: { type: String, default: null, maxlength: 128 },
     status: {
       type: String,
       enum: ['online', 'away', 'busy', 'offline'],
       default: 'offline',
       index: true,
     },
-    customStatus: { type: String, default: null },
-    accentColor: { type: String, default: null },
-    primaryColor: { type: String, default: null },
-    displayNameStyle: { type: String, default: null },
-    profileGradient: { type: String, default: null },
-    avatarFrame: { type: String, default: null },
-    profileTheme: { type: String, default: null },
-    customTheme: { type: String, default: null },
+    customStatus: { type: String, default: null, maxlength: 128 },
+    accentColor: { type: String, default: null, maxlength: 7 },
+    primaryColor: { type: String, default: null, maxlength: 7 },
+    displayNameStyle: { type: String, default: null, maxlength: 64 },
+    profileGradient: { type: String, default: null, maxlength: 255 },
+    avatarFrame: { type: String, default: null, maxlength: 255 },
+    profileTheme: { type: String, default: null, maxlength: 64 },
+    customTheme: { type: String, default: null, maxlength: 64 },
     badges: { type: [String], default: [] },
     socialLinks: {
-      type: [{ platform: String, url: String, label: String }],
+      type: [
+        {
+          platform: {
+            type: String,
+            required: true,
+            maxlength: 32,
+          },
+          url: {
+            type: String,
+            required: true,
+            maxlength: 2048,
+          },
+          label: { type: String, maxlength: 64 },
+        },
+      ],
       default: [],
     },
-    timezone: { type: String, default: null },
+    timezone: { type: String, default: null, maxlength: 64 },
     profilePrivacy: {
       type: String,
       enum: ['public', 'friends', 'private'],
@@ -74,14 +104,16 @@ const UserSchema = new Schema<IUser>(
     },
     showTimezone: { type: Boolean, default: true },
     showLastSeen: { type: Boolean, default: true },
-    preferredTheme: { type: String, default: null },
+    preferredTheme: { type: String, default: null, maxlength: 64 },
     lastSeenAt: { type: Date, default: null },
-    profileViews: { type: Number, default: 0 },
+    profileViews: { type: Number, default: 0, min: 0 },
     showProfileViews: { type: Boolean, default: true },
   },
   {
     timestamps: true,
   }
 )
+
+UserSchema.index({ username: 'text', displayName: 'text' }, { name: 'user_search_text' })
 
 export const User: Model<IUser> = mongoose.models.User ?? mongoose.model<IUser>('User', UserSchema)

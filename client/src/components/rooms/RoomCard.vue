@@ -1,11 +1,11 @@
 <script setup lang="ts">
-  import { useRouter } from 'vue-router'
-  import { Hash, ArrowRight } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
+import { Hash, ArrowRight } from 'lucide-vue-next'
 
-  import type { Room } from '@/types/room.types'
+import type { Room } from '@/types/room.types'
 
-  const props = defineProps<{ room: Room; isOwner?: boolean }>()
-  const router = useRouter()
+const _props = defineProps<{ room: Room; isOwner?: boolean }>()
+const router = useRouter()
 </script>
 
 <template>

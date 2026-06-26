@@ -1,36 +1,36 @@
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
-  import { Monitor, MonitorDown, X } from 'lucide-vue-next'
+import { ref, computed } from 'vue'
+import { Monitor, MonitorDown, X } from 'lucide-vue-next'
 
-  export interface DesktopSource {
-    id: string
-    name: string
-    thumbnail: string
-  }
+export interface DesktopSource {
+  id: string
+  name: string
+  thumbnail: string
+}
 
-  const props = defineProps<{
-    sources: DesktopSource[]
-  }>()
+const props = defineProps<{
+  sources: DesktopSource[]
+}>()
 
-  const emit = defineEmits<{
-    select: [source: DesktopSource]
-    cancel: []
-  }>()
+const emit = defineEmits<{
+  select: [source: DesktopSource]
+  cancel: []
+}>()
 
-  const selectedId = ref<string | null>(null)
+const selectedId = ref<string | null>(null)
 
-  const screens = computed(() => props.sources.filter((s) => s.id.startsWith('screen:')))
-  const windows = computed(() => props.sources.filter((s) => s.id.startsWith('window:')))
-  const tab = ref<'screens' | 'windows'>('screens')
+const screens = computed(() => props.sources.filter((s) => s.id.startsWith('screen:')))
+const windows = computed(() => props.sources.filter((s) => s.id.startsWith('window:')))
+const tab = ref<'screens' | 'windows'>('screens')
 
-  function select(id: string) {
-    selectedId.value = id
-  }
+function select(id: string) {
+  selectedId.value = id
+}
 
-  function confirm() {
-    const source = props.sources.find((s) => s.id === selectedId.value)
-    if (source) emit('select', source)
-  }
+function confirm() {
+  const source = props.sources.find((s) => s.id === selectedId.value)
+  if (source) emit('select', source)
+}
 </script>
 
 <template>
@@ -44,15 +44,15 @@
       <div class="picker-tabs">
         <button
           :class="{ active: tab === 'screens' }"
-          @click="tab = 'screens'"
           :disabled="screens.length === 0"
+          @click="tab = 'screens'"
         >
           <Monitor :size="16" /> Ekrany ({{ screens.length }})
         </button>
         <button
           :class="{ active: tab === 'windows' }"
-          @click="tab = 'windows'"
           :disabled="windows.length === 0"
+          @click="tab = 'windows'"
         >
           <MonitorDown :size="16" /> Okna ({{ windows.length }})
         </button>
@@ -60,7 +60,7 @@
 
       <div class="picker-grid">
         <button
-          v-for="source in (tab === 'screens' ? screens : windows)"
+          v-for="source in tab === 'screens' ? screens : windows"
           :key="source.id"
           class="source-card"
           :class="{ selected: source.id === selectedId }"
@@ -124,7 +124,10 @@
   padding: 4px;
   border-radius: 6px;
 }
-.close-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+.close-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
 .picker-tabs {
   display: flex;
   gap: 4px;
@@ -145,9 +148,18 @@
   cursor: pointer;
   transition: all 0.15s;
 }
-.picker-tabs button:hover:not(:disabled) { background: var(--bg-hover); color: var(--text-primary); }
-.picker-tabs button.active { background: var(--accent); color: white; }
-.picker-tabs button:disabled { opacity: 0.4; cursor: default; }
+.picker-tabs button:hover:not(:disabled) {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.picker-tabs button.active {
+  background: var(--accent);
+  color: white;
+}
+.picker-tabs button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
 .picker-grid {
   flex: 1;
   overflow-y: auto;
@@ -169,8 +181,13 @@
   transition: all 0.15s;
   text-align: center;
 }
-.source-card:hover { border-color: var(--border-accent); }
-.source-card.selected { border-color: var(--accent); background: rgba(139, 92, 246, 0.1); }
+.source-card:hover {
+  border-color: var(--border-accent);
+}
+.source-card.selected {
+  border-color: var(--accent);
+  background: rgba(139, 92, 246, 0.1);
+}
 .source-thumb {
   width: 100%;
   aspect-ratio: 16/9;
@@ -201,7 +218,8 @@
   padding: 12px 20px;
   border-top: 1px solid var(--border);
 }
-.btn-cancel, .btn-share {
+.btn-cancel,
+.btn-share {
   padding: 8px 20px;
   border-radius: 8px;
   font-size: 14px;
@@ -214,11 +232,18 @@
   background: var(--bg-hover);
   color: var(--text-secondary);
 }
-.btn-cancel:hover { background: rgba(255,255,255,0.12); }
+.btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
 .btn-share {
   background: var(--accent);
   color: white;
 }
-.btn-share:hover:not(:disabled) { filter: brightness(1.15); }
-.btn-share:disabled { opacity: 0.4; cursor: default; }
+.btn-share:hover:not(:disabled) {
+  filter: brightness(1.15);
+}
+.btn-share:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
 </style>

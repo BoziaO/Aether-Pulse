@@ -140,7 +140,7 @@ describe('Auth Store', () => {
 
     try {
       await auth.login('testuser', 'wrongpassword')
-    } catch (e) {
+    } catch {
       // Expected
     }
 

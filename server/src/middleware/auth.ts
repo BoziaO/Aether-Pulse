@@ -26,10 +26,14 @@ export interface TokenPair {
  * Generate JWT token pair (access + refresh)
  */
 export function generateTokens(userId: string, username: string): TokenPair {
-  const accessToken = jwt.sign({ userId, username }, jwtSecret!, { expiresIn: jwtExpiresIn } as any)
+  const accessToken = jwt.sign({ userId, username }, jwtSecret!, {
+    expiresIn: jwtExpiresIn,
+    algorithm: 'HS256',
+  } as any)
 
   const refreshToken = jwt.sign({ userId, username }, jwtSecret!, {
     expiresIn: refreshExpiresIn,
+    algorithm: 'HS256',
   } as any)
 
   return { accessToken, refreshToken }
@@ -40,7 +44,7 @@ export function generateTokens(userId: string, username: string): TokenPair {
  */
 export function verifyToken(token: string): JwtPayload | null {
   try {
-    const payload = jwt.verify(token, jwtSecret!) as any
+    const payload = jwt.verify(token, jwtSecret!, { algorithms: ['HS256'] }) as any
     return payload as JwtPayload
   } catch {
     return null
@@ -52,7 +56,7 @@ export function verifyToken(token: string): JwtPayload | null {
  */
 export function verifyRefreshToken(token: string): JwtPayload | null {
   try {
-    const payload = jwt.verify(token, jwtSecret!) as any
+    const payload = jwt.verify(token, jwtSecret!, { algorithms: ['HS256'] }) as any
     return payload as JwtPayload
   } catch {
     return null
@@ -111,12 +115,13 @@ export function optionalJwtMiddleware(req: Request, _res: Response, next: NextFu
   next()
 }
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: JwtPayload
-    }
+export function requireAuth(req: any, res: any): string | null {
+  const userId = req.user?.userId
+  if (!userId) {
+    res.status(401).json({ error: 'Not authenticated' })
+    return null
   }
+  return userId
 }
 
 declare module 'express-session' {

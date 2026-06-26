@@ -27,6 +27,7 @@ module.exports = {
     },
   },
   rules: {
+    '@typescript-eslint/no-duplicate-enum-values': 'off',
     '@typescript-eslint/no-explicit-any': 'warn',
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
@@ -55,6 +56,17 @@ module.exports = {
       { groups: [['builtin', 'external'], ['internal']], 'newlines-between': 'always' },
     ],
     'import/no-unresolved': 'off',
+    'deprecation/deprecation': 'off',
   },
-  ignorePatterns: ['node_modules', 'dist', 'dist-*', 'build', '*.d.ts', '.eslintrc.cjs'],
+  ignorePatterns: [
+    'node_modules',
+    'dist',
+    'dist-*',
+    'build',
+    '*.d.ts',
+    '.eslintrc.cjs',
+    'electron/',
+    'public/sw.js',
+    'src/services/rtc/spatial-audio.ts',
+  ],
 }

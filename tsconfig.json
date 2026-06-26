@@ -8,9 +8,6 @@
       "path": "./shared/db"
     },
     {
-      "path": "./shared/api-client-react"
-    },
-    {
       "path": "./shared/api-zod"
     },
     {

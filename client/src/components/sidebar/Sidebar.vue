@@ -1,155 +1,158 @@
 <script setup lang="ts">
-  import { ref, onMounted } from 'vue'
-  import { useRouter, useRoute } from 'vue-router'
-  import { Hash, Plus, Settings, LogOut, Mic, MicOff, Users, MessageCircle } from 'lucide-vue-next'
+import { ref, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { Hash, Plus, Settings, LogOut, Mic, MicOff, Users, MessageCircle } from 'lucide-vue-next'
 
-  import { useAuthStore } from '@/stores/auth.store'
-  import { useRoomStore } from '@/stores/room.store'
-  import { useRtcStore } from '@/stores/rtc.store'
-  import { useFriendsStore } from '@/stores/friends.store'
-  import { useDmStore } from '@/stores/dm.store'
-  import UserAvatar from '@/components/profile/UserAvatar.vue'
-  import CreateRoomModal from '@/components/rooms/CreateRoomModal.vue'
+import { useAuthStore } from '@/stores/auth.store'
+import { useRoomStore } from '@/stores/room.store'
+import { useRtcStore } from '@/stores/rtc.store'
+import { useFriendsStore } from '@/stores/friends.store'
+import { useDmStore } from '@/stores/dm.store'
+import UserAvatar from '@/components/profile/UserAvatar.vue'
+import CreateRoomModal from '@/components/rooms/CreateRoomModal.vue'
 
-  const router = useRouter()
-  const route = useRoute()
-  const auth = useAuthStore()
-  const roomStore = useRoomStore()
-  const rtcStore = useRtcStore()
-  const friendsStore = useFriendsStore()
-  const dmStore = useDmStore()
+const router = useRouter()
+const route = useRoute()
+const auth = useAuthStore()
+const roomStore = useRoomStore()
+const rtcStore = useRtcStore()
+const friendsStore = useFriendsStore()
+const dmStore = useDmStore()
 
-  const showCreateModal = ref(false)
+const showCreateModal = ref(false)
 
-  function goToRoom(roomId: string) {
-    router.push(`/app/room/${roomId}`)
-  }
+function goToRoom(roomId: string) {
+  router.push(`/app/room/${roomId}`)
+}
 
-  function goToDm(userId: string) {
-    router.push({ name: 'dm', params: { userId } })
-  }
+function goToDm(userId: string) {
+  router.push({ name: 'dm', params: { userId } })
+}
 
-  function isActiveRoom(roomId: string) {
-    return route.params.roomId === roomId
-  }
+function isActiveRoom(roomId: string) {
+  return route.params.roomId === roomId
+}
 
-  function isActiveDm(userId: string) {
-    return route.name === 'dm' && route.params.userId === userId
-  }
+function isActiveDm(userId: string) {
+  return route.name === 'dm' && route.params.userId === userId
+}
 
-  function dmPreview(conv: import('@/types/dm.types').DmConversation) {
-    const lm = conv.lastMessage
-    if (!lm) return 'No messages yet'
-    if (lm.type === 'file') return lm.attachmentName || 'Attachment'
-    const text = lm.content
-    const snippet = text.length > 36 ? `${text.slice(0, 36)}…` : text
-    return lm.userId === auth.user?.id ? `You: ${snippet}` : snippet
-  }
+function dmPreview(conv: import('@/types/dm.types').DmConversation) {
+  const lm = conv.lastMessage
+  if (!lm) return 'No messages yet'
+  if (lm.type === 'file') return lm.attachmentName || 'Attachment'
+  const text = lm.content
+  const snippet = text.length > 36 ? `${text.slice(0, 36)}…` : text
+  return lm.userId === auth.user?.id ? `You: ${snippet}` : snippet
+}
 
-  async function handleLogout() {
-    await auth.logout()
-    router.push('/auth')
-  }
+async function handleLogout() {
+  await auth.logout()
+  router.push('/auth')
+}
 
-  onMounted(() => {
-    friendsStore.bindSocketEvents()
-  })
+onMounted(() => {
+  friendsStore.bindSocketEvents()
+})
 </script>
 
 <template>
   <div class="sidebar-wrapper">
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <img src="/icons/logo.png" alt="AetherPulse" class="sidebar-logo" />
-      <span class="sidebar-brand">AetherPulse</span>
-    </div>
-
-    <div class="sidebar-section-label">Direct Messages</div>
-    <div class="sidebar-dms">
-      <button
-        class="room-item friends-link"
-        :class="{ active: route.path === '/app/friends' }"
-        @click="router.push('/app/friends')"
-      >
-        <Users :size="16" />
-        <span>Friends</span>
-        <span v-if="friendsStore.pendingCount" class="pending-badge">{{
-          friendsStore.pendingCount
-        }}</span>
-      </button>
-      <button
-        v-for="conv in dmStore.conversations"
-        :key="conv.id"
-        class="room-item"
-        :class="{ active: conv.otherUser && isActiveDm(conv.otherUser.id) }"
-        @click="conv.otherUser && goToDm(conv.otherUser.id)"
-      >
-        <MessageCircle :size="16" class="room-icon" />
-        <div class="dm-label">
-          <span class="room-name">{{ conv.otherUser?.displayName || 'Unknown' }}</span>
-          <span class="dm-preview">{{ dmPreview(conv) }}</span>
-        </div>
-      </button>
-    </div>
-
-    <div class="sidebar-section-label">Rooms</div>
-    <div class="sidebar-rooms">
-      <button
-        v-for="room in roomStore.rooms"
-        :key="room.id"
-        class="room-item"
-        :class="{ active: isActiveRoom(room.id) }"
-        @click="goToRoom(room.id)"
-      >
-        <Hash :size="16" class="room-icon" />
-        <span class="room-name">{{ room.name }}</span>
-        <span v-if="room.isActive" class="room-active-dot" />
-      </button>
-      <button class="room-item add-room" @click="showCreateModal = true">
-        <Plus :size="16" />
-        <span>New Room</span>
-      </button>
-    </div>
-
-    <div class="sidebar-spacer" />
-
-    <div v-if="rtcStore.inCall" class="call-status">
-      <div class="call-status-label">
-        <span class="call-dot pulse" />
-        <span>Voice Connected</span>
+    <aside class="sidebar" role="navigation" aria-label="Main navigation">
+      <div class="sidebar-header">
+        <img src="/icons/logo.png" alt="AetherPulse" class="sidebar-logo" />
+        <span class="sidebar-brand">AetherPulse</span>
       </div>
-      <div class="call-controls">
+
+      <div class="sidebar-section-label">Direct Messages</div>
+      <div class="sidebar-dms">
         <button
-          class="call-btn"
-          :title="rtcStore.isMuted ? 'Unmute' : 'Mute'"
-          @click="rtcStore.toggleMute()"
+          class="room-item friends-link"
+          :class="{ active: route.path === '/app/friends' }"
+          :aria-selected="route.path === '/app/friends'"
+          @click="router.push('/app/friends')"
         >
-          <MicOff v-if="rtcStore.isMuted" :size="14" />
-          <Mic v-else :size="14" />
+          <Users :size="16" />
+          <span>Friends</span>
+          <span v-if="friendsStore.pendingCount" class="pending-badge">{{
+            friendsStore.pendingCount
+          }}</span>
+        </button>
+        <button
+          v-for="conv in dmStore.conversations"
+          :key="conv.id"
+          class="room-item"
+          :class="{ active: conv.otherUser && isActiveDm(conv.otherUser.id) }"
+          :aria-selected="conv.otherUser ? isActiveDm(conv.otherUser.id) : false"
+          @click="conv.otherUser && goToDm(conv.otherUser.id)"
+        >
+          <MessageCircle :size="16" class="room-icon" />
+          <div class="dm-label">
+            <span class="room-name">{{ conv.otherUser?.displayName || 'Unknown' }}</span>
+            <span class="dm-preview">{{ dmPreview(conv) }}</span>
+          </div>
         </button>
       </div>
-    </div>
 
-    <div class="sidebar-user">
-      <div class="user-info" style="cursor: pointer" @click="router.push('/app/profile')">
-        <UserAvatar :user="auth.user" :size="32" />
-        <div class="user-details">
-          <div class="user-name">{{ auth.user?.displayName }}</div>
-          <div class="user-status">{{ auth.user?.customStatus || auth.user?.status }}</div>
+      <div class="sidebar-section-label">Rooms</div>
+      <div class="sidebar-rooms">
+        <button
+          v-for="room in roomStore.rooms"
+          :key="room.id"
+          class="room-item"
+          :class="{ active: isActiveRoom(room.id) }"
+          :aria-selected="isActiveRoom(room.id)"
+          @click="goToRoom(room.id)"
+        >
+          <Hash :size="16" class="room-icon" />
+          <span class="room-name">{{ room.name }}</span>
+          <span v-if="room.isActive" class="room-active-dot" />
+        </button>
+        <button class="room-item add-room" @click="showCreateModal = true">
+          <Plus :size="16" />
+          <span>New Room</span>
+        </button>
+      </div>
+
+      <div class="sidebar-spacer" />
+
+      <div v-if="rtcStore.inCall" class="call-status">
+        <div class="call-status-label">
+          <span class="call-dot pulse" />
+          <span>Voice Connected</span>
+        </div>
+        <div class="call-controls">
+          <button
+            class="call-btn"
+            :title="rtcStore.isMuted ? 'Unmute' : 'Mute'"
+            @click="rtcStore.toggleMute()"
+          >
+            <MicOff v-if="rtcStore.isMuted" :size="14" />
+            <Mic v-else :size="14" />
+          </button>
         </div>
       </div>
-      <div class="user-actions">
-        <button class="icon-btn" title="Settings" @click="router.push('/app/settings')">
-          <Settings :size="16" />
-        </button>
-        <button class="icon-btn danger" title="Log out" @click="handleLogout">
-          <LogOut :size="16" />
-        </button>
-      </div>
-    </div>
-  </aside>
 
-  <CreateRoomModal v-if="showCreateModal" @close="showCreateModal = false" />
+      <div class="sidebar-user">
+        <div class="user-info" style="cursor: pointer" @click="router.push('/app/profile')">
+          <UserAvatar :user="auth.user" :size="32" />
+          <div class="user-details">
+            <div class="user-name">{{ auth.user?.displayName }}</div>
+            <div class="user-status">{{ auth.user?.customStatus || auth.user?.status }}</div>
+          </div>
+        </div>
+        <div class="user-actions">
+          <button class="icon-btn" title="Settings" @click="router.push('/app/settings')">
+            <Settings :size="16" />
+          </button>
+          <button class="icon-btn danger" title="Log out" @click="handleLogout">
+            <LogOut :size="16" />
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <CreateRoomModal v-if="showCreateModal" @close="showCreateModal = false" />
   </div>
 </template>
 
@@ -361,7 +364,7 @@
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 6px;
+  padding: 8px;
   border-radius: 6px;
   display: flex;
 }

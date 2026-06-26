@@ -1,71 +1,79 @@
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
-  import {
-    Mic, MicOff, Video, VideoOff, Monitor, MonitorOff,
-    PhoneOff, Headphones, PictureInPicture2,
-  } from 'lucide-vue-next'
+import { ref, computed } from 'vue'
+import {
+  Mic,
+  MicOff,
+  Video,
+  VideoOff,
+  Monitor,
+  MonitorOff,
+  PhoneOff,
+  Headphones,
+  PictureInPicture2,
+} from 'lucide-vue-next'
 
-  import { useRtcStore } from '@/stores/rtc.store'
-  import { useSettingsStore } from '@/stores/settings.store'
-  import type { ScreenShareQuality } from '@/services/rtc/screen-share'
-  import ScreenPicker from './picker/ScreenPicker.vue'
-  import type { DesktopSource } from './picker/ScreenPicker.vue'
+import { useRtcStore } from '@/stores/rtc.store'
+import { useSettingsStore } from '@/stores/settings.store'
+import type { ScreenShareQuality } from '@/services/rtc/screen-share'
+import ScreenPicker from './picker/ScreenPicker.vue'
+import type { DesktopSource } from './picker/ScreenPicker.vue'
 
-  const rtc = useRtcStore()
-  const settings = useSettingsStore()
-  const showShareMenu = ref(false)
-  const showPicker = ref(false)
-  const pickerQuality = ref<ScreenShareQuality | null>(null)
-  const pickerSources = ref<DesktopSource[]>([])
+const rtc = useRtcStore()
+const settings = useSettingsStore()
+const showShareMenu = ref(false)
+const showPicker = ref(false)
+const pickerQuality = ref<ScreenShareQuality | null>(null)
+const pickerSources = ref<DesktopSource[]>([])
 
-  const isElectron = !!(window as any).electronAPI?.getDesktopSources
+const isElectron = !!(window as any).electronAPI?.getDesktopSources
 
-  const isAndroid =
-    typeof (window as any).Capacitor !== 'undefined' &&
-    (window as any).Capacitor.isNativePlatform()
+const isAndroid =
+  typeof (window as any).Capacitor !== 'undefined' && (window as any).Capacitor.isNativePlatform()
 
-  const pipSupported = computed(() =>
-    !isAndroid && !!(document as any).pictureInPictureEnabled
-  )
+const pipSupported = computed(() => !isAndroid && !!(document as any).pictureInPictureEnabled)
 
-  const shareOptions: { quality: ScreenShareQuality; label: string }[] = [
-    { quality: 'gaming',   label: '🎮 Gaming (1080p 60fps)' },
-    { quality: 'movie',    label: '🎬 Movie (1080p 30fps)'  },
-    { quality: 'standard', label: '🖥️ Standard (720p 30fps)' },
-  ]
+const shareOptions: { quality: ScreenShareQuality; label: string }[] = [
+  { quality: 'gaming', label: '🎮 Gaming (1080p 60fps)' },
+  { quality: 'movie', label: '🎬 Movie (1080p 30fps)' },
+  { quality: 'standard', label: '🖥️ Standard (720p 30fps)' },
+]
 
-  async function handleShare(quality: ScreenShareQuality) {
-    showShareMenu.value = false
-    if (isElectron) {
-      try {
-        const sources: DesktopSource[] = await (window as any).electronAPI!.getDesktopSources()
-        pickerSources.value = sources
-        pickerQuality.value = quality
-        showPicker.value = true
-      } catch (e) {
-        console.error('Failed to get desktop sources:', e)
-      }
-    } else {
-      try { await rtc.shareScreen(quality) } catch {}
+async function handleShare(quality: ScreenShareQuality) {
+  showShareMenu.value = false
+  if (isElectron) {
+    try {
+      const sources: DesktopSource[] = await (window as any).electronAPI!.getDesktopSources()
+      pickerSources.value = sources
+      pickerQuality.value = quality
+      showPicker.value = true
+    } catch (e) {
+      console.error('Failed to get desktop sources:', e)
+    }
+  } else {
+    try {
+      await rtc.shareScreen(quality)
+    } catch {
+      /* empty */
     }
   }
+}
 
-  function onPickerSelect(source: DesktopSource) {
-    showPicker.value = false
-    const q = pickerQuality.value!
-    pickerQuality.value = null
-    rtc.shareScreen(q, source.id)
-  }
+function onPickerSelect(source: DesktopSource) {
+  showPicker.value = false
+  const q = pickerQuality.value!
+  pickerQuality.value = null
+  rtc.shareScreen(q, source.id)
+}
 
-  function onPickerCancel() {
-    showPicker.value = false
-    pickerQuality.value = null
-  }
+function onPickerCancel() {
+  showPicker.value = false
+  pickerQuality.value = null
+}
 
-  async function togglePiP() {
-    if (rtc.isPiP) rtc.exitPiP()
-    else await rtc.enterPiP()
-  }
+async function togglePiP() {
+  if (rtc.isPiP) rtc.exitPiP()
+  else await rtc.enterPiP()
+}
 </script>
 
 <template>
@@ -192,10 +200,22 @@
   justify-content: center;
 }
 .controls-left,
-.controls-right { flex: 1; }
-.controls-right { text-align: right; }
-.call-label { font-size: 12px; font-weight: 700; color: var(--danger); letter-spacing: 0.5px; }
-.peers-count { font-size: 12px; color: var(--text-muted); }
+.controls-right {
+  flex: 1;
+}
+.controls-right {
+  text-align: right;
+}
+.call-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--danger);
+  letter-spacing: 0.5px;
+}
+.peers-count {
+  font-size: 12px;
+  color: var(--text-muted);
+}
 .ctrl-btn {
   width: 44px;
   height: 44px;
@@ -210,12 +230,28 @@
   transition: all 0.15s;
   touch-action: manipulation;
 }
-.ctrl-btn:hover  { background: rgba(255,255,255,0.12); color: var(--text-primary); }
-.ctrl-btn.active { background: rgba(139,92,246,0.2);   color: var(--accent-violet); }
-.ctrl-btn.danger { background: rgba(239,68,68,0.15);   color: var(--danger); }
-.ctrl-btn.end-call { background: var(--danger); color: white; }
-.ctrl-btn.end-call:hover { background: #dc2626; }
-.share-wrap { position: relative; }
+.ctrl-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-primary);
+}
+.ctrl-btn.active {
+  background: rgba(139, 92, 246, 0.2);
+  color: var(--accent-violet);
+}
+.ctrl-btn.danger {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--danger);
+}
+.ctrl-btn.end-call {
+  background: var(--danger);
+  color: white;
+}
+.ctrl-btn.end-call:hover {
+  background: #dc2626;
+}
+.share-wrap {
+  position: relative;
+}
 .share-menu {
   position: absolute;
   bottom: calc(100% + 8px);
@@ -227,7 +263,7 @@
   padding: 6px;
   min-width: 200px;
   z-index: 100;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 .share-option {
   width: 100%;
@@ -240,12 +276,25 @@
   border-radius: 6px;
   cursor: pointer;
 }
-.share-option:hover { background: var(--bg-hover); color: var(--text-primary); }
+.share-option:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
 
 @media (max-width: 767px) {
-  .call-controls { padding: 10px 12px; }
-  .ctrl-btn { width: 48px; height: 48px; }
-  .controls-left, .controls-right { display: none; }
-  .controls-center { gap: 6px; }
+  .call-controls {
+    padding: 10px 12px;
+  }
+  .ctrl-btn {
+    width: 48px;
+    height: 48px;
+  }
+  .controls-left,
+  .controls-right {
+    display: none;
+  }
+  .controls-center {
+    gap: 6px;
+  }
 }
 </style>

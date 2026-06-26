@@ -1,178 +1,183 @@
 <script setup lang="ts">
-  import { ref, computed, watch } from 'vue'
-  import { useRouter } from 'vue-router'
-  import {
-    Eye,
-    EyeOff,
-    Check,
-    X,
-    AlertCircle,
-    Loader2,
-    ArrowLeft,
-    MessageCircle,
-    Users,
-    Mic,
-    Shield,
-    Zap,
-    Radio,
-  } from 'lucide-vue-next'
+import { ref, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import {
+  Eye,
+  EyeOff,
+  Check,
+  X,
+  AlertCircle,
+  Loader2,
+  ArrowLeft,
+  MessageCircle,
+  Users,
+  Mic,
+  Shield,
+  Zap,
+  Radio,
+} from 'lucide-vue-next'
 
-  import { useAuthStore } from '@/stores/auth.store'
+import { useAuthStore } from '@/stores/auth.store'
 
-  const router = useRouter()
-  const auth = useAuthStore()
+const router = useRouter()
+const auth = useAuthStore()
 
-  const tab = ref<'login' | 'register'>('login')
-  const username = ref('')
-  const password = ref('')
-  const passwordConfirm = ref('')
-  const displayName = ref('')
-  const email = ref('')
-  const showPw = ref(false)
-  const showPwConfirm = ref(false)
-  const loading = ref(false)
-  const error = ref('')
-  const rememberMe = ref(true)
-  const touched = ref({ username: false, password: false, passwordConfirm: false })
-  const submitted = ref(false)
+const tab = ref<'login' | 'register'>('login')
+const username = ref('')
+const password = ref('')
+const passwordConfirm = ref('')
+const displayName = ref('')
+const email = ref('')
+const showPw = ref(false)
+const showPwConfirm = ref(false)
+const loading = ref(false)
+const error = ref('')
+const rememberMe = ref(true)
+const touched = ref({ username: false, password: false, passwordConfirm: false })
+const submitted = ref(false)
 
-  const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/
-  const usernameError = computed(() => {
-    if (!touched.value.username && !submitted.value) return ''
-    if (!username.value) return 'Nazwa użytkownika jest wymagana'
-    if (username.value.length < 3) return 'Minimum 3 znaki'
-    if (username.value.length > 20) return 'Maksimum 20 znaków'
-    if (!/^[a-zA-Z0-9_]/.test(username.value)) return 'Tylko litery, cyfry i podkreślenia'
-    if (!/^[a-zA-Z0-9_]+$/.test(username.value)) return 'Tylko litery, cyfry i _'
-    return ''
-  })
+const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/
+const usernameError = computed(() => {
+  if (!touched.value.username && !submitted.value) return ''
+  if (!username.value) return 'Nazwa użytkownika jest wymagana'
+  if (username.value.length < 3) return 'Minimum 3 znaki'
+  if (username.value.length > 20) return 'Maksimum 20 znaków'
+  if (!/^[a-zA-Z0-9_]/.test(username.value)) return 'Tylko litery, cyfry i podkreślenia'
+  if (!/^[a-zA-Z0-9_]+$/.test(username.value)) return 'Tylko litery, cyfry i _'
+  return ''
+})
 
-  const passwordError = computed(() => {
-    if (!touched.value.password && !submitted.value) return ''
-    if (!password.value) return 'Hasło jest wymagane'
-    if (password.value.length < 6) return 'Minimum 6 znaków'
-    return ''
-  })
+const passwordError = computed(() => {
+  if (!touched.value.password && !submitted.value) return ''
+  if (!password.value) return 'Hasło jest wymagane'
+  if (password.value.length < 6) return 'Minimum 6 znaków'
+  return ''
+})
 
-  const passwordStrength = computed(() => {
-    const pw = password.value
-    if (!pw) return { score: 0, label: '', color: '', width: '0%' }
+const passwordStrength = computed(() => {
+  const pw = password.value
+  if (!pw) return { score: 0, label: '', color: '', width: '0%' }
 
-    let score = 0
-    if (pw.length >= 6) score += 1
-    if (pw.length >= 10) score += 1
-    if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score += 1
-    if (/\d/.test(pw)) score += 1
-    if (/[^a-zA-Z0-9]/.test(pw)) score += 1
+  let score = 0
+  if (pw.length >= 6) score += 1
+  if (pw.length >= 10) score += 1
+  if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score += 1
+  if (/\d/.test(pw)) score += 1
+  if (/[^a-zA-Z0-9]/.test(pw)) score += 1
 
-    const map = {
-      0: { label: 'Bardzo słabe', color: 'var(--danger)', width: '10%' },
-      1: { label: 'Słabe', color: 'var(--danger)', width: '25%' },
-      2: { label: 'Średnie', color: 'var(--warning)', width: '50%' },
-      3: { label: 'Dobre', color: 'var(--accent-teal)', width: '70%' },
-      4: { label: 'Silne', color: 'var(--success)', width: '85%' },
-      5: { label: 'Bardzo silne', color: 'var(--success)', width: '100%' },
+  const map = {
+    0: { label: 'Bardzo słabe', color: 'var(--danger)', width: '10%' },
+    1: { label: 'Słabe', color: 'var(--danger)', width: '25%' },
+    2: { label: 'Średnie', color: 'var(--warning)', width: '50%' },
+    3: { label: 'Dobre', color: 'var(--accent-teal)', width: '70%' },
+    4: { label: 'Silne', color: 'var(--success)', width: '85%' },
+    5: { label: 'Bardzo silne', color: 'var(--success)', width: '100%' },
+  }
+
+  return { score, ...map[score as keyof typeof map] }
+})
+
+const passwordConfirmError = computed(() => {
+  if (tab.value === 'login') return ''
+  if (!touched.value.passwordConfirm && !submitted.value) return ''
+  if (!passwordConfirm.value && tab.value === 'register') return 'Potwierdź hasło'
+  if (password.value !== passwordConfirm.value) return 'Hasła nie są zgodne'
+  return ''
+})
+
+const isValid = computed(() => {
+  const userOk = username.value && usernameRegex.test(username.value)
+  const pwOk = password.value.length >= 6
+  if (tab.value === 'login') return userOk && pwOk
+  const pwConfirmOk = password.value === passwordConfirm.value && passwordConfirm.value.length > 0
+  return userOk && pwOk && pwConfirmOk
+})
+
+function formatApiError(msg: string): string {
+  const map: Record<string, string> = {
+    'Invalid credentials': 'Nieprawidłowa nazwa użytkownika lub hasło',
+    'Username already taken': 'Ta nazwa użytkownika jest już zajęta',
+    'Email already in use': 'Ten email jest już używany',
+    AUTH_RATE_LIMIT_EXCEEDED: 'Zbyt wiele prób. Spróbuj ponownie za 15 minut.',
+  }
+  return map[msg] || msg
+}
+
+async function submit() {
+  submitted.value = true
+  if (!isValid.value) return
+
+  error.value = ''
+  loading.value = true
+  try {
+    if (tab.value === 'login') {
+      await auth.login(username.value.trim(), password.value, rememberMe.value)
+    } else {
+      await auth.register(
+        username.value.trim(),
+        email.value.trim(),
+        password.value,
+        displayName.value.trim() || username.value.trim(),
+        rememberMe.value
+      )
     }
-
-    return { score, ...map[score as keyof typeof map] }
-  })
-
-  const passwordConfirmError = computed(() => {
-    if (tab.value === 'login') return ''
-    if (!touched.value.passwordConfirm && !submitted.value) return ''
-    if (!passwordConfirm.value && tab.value === 'register') return 'Potwierdź hasło'
-    if (password.value !== passwordConfirm.value) return 'Hasła nie są zgodne'
-    return ''
-  })
-
-  const isValid = computed(() => {
-    const userOk = username.value && usernameRegex.test(username.value)
-    const pwOk = password.value.length >= 6
-    if (tab.value === 'login') return userOk && pwOk
-    const pwConfirmOk = password.value === passwordConfirm.value && passwordConfirm.value.length > 0
-    return userOk && pwOk && pwConfirmOk
-  })
-
-  function formatApiError(msg: string): string {
-    const map: Record<string, string> = {
-      'Invalid credentials': 'Nieprawidłowa nazwa użytkownika lub hasło',
-      'Username already taken': 'Ta nazwa użytkownika jest już zajęta',
-      'Email already in use': 'Ten email jest już używany',
-      'AUTH_RATE_LIMIT_EXCEEDED': 'Zbyt wiele prób. Spróbuj ponownie za 15 minut.',
-    }
-    return map[msg] || msg
+    router.push('/app')
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : 'Wystąpił błąd'
+    error.value = formatApiError(msg)
+  } finally {
+    loading.value = false
   }
+}
 
-  async function submit() {
-    submitted.value = true
-    if (!isValid.value) return
+function switchTab(newTab: 'login' | 'register') {
+  tab.value = newTab
+  error.value = ''
+  submitted.value = false
+  touched.value = { username: false, password: false, passwordConfirm: false }
+}
 
-    error.value = ''
-    loading.value = true
-    try {
-      if (tab.value === 'login') {
-        await auth.login(username.value.trim(), password.value, rememberMe.value)
-      } else {
-        await auth.register(
-          username.value.trim(),
-          email.value.trim(),
-          password.value,
-          displayName.value.trim() || username.value.trim(),
-          rememberMe.value
-        )
-      }
-      router.push('/app')
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Wystąpił błąd'
-      error.value = formatApiError(msg)
-    } finally {
-      loading.value = false
-    }
-  }
+watch(tab, () => {
+  error.value = ''
+})
 
-  function switchTab(newTab: 'login' | 'register') {
-    tab.value = newTab
-    error.value = ''
-    submitted.value = false
-    touched.value = { username: false, password: false, passwordConfirm: false }
-  }
+const features = [
+  { icon: Mic, label: 'Pokoje głosowe z dźwiękiem 3D' },
+  { icon: MessageCircle, label: 'Czat z Markdown i embedami' },
+  { icon: Users, label: 'System znajomych i DM' },
+  { icon: Radio, label: 'Streaming ekranu' },
+  { icon: Shield, label: 'Open source (MIT)' },
+  { icon: Zap, label: 'WebRTC peer-to-peer' },
+]
 
-  watch(tab, () => {
-    error.value = ''
-  })
-
-  const features = [
-    { icon: Mic, label: 'Pokoje głosowe z dźwiękiem 3D' },
-    { icon: MessageCircle, label: 'Czat z Markdown i embedami' },
-    { icon: Users, label: 'System znajomych i DM' },
-    { icon: Radio, label: 'Streaming ekranu' },
-    { icon: Shield, label: 'Open source (MIT)' },
-    { icon: Zap, label: 'WebRTC peer-to-peer' },
-  ]
-
-  function goHome() {
-    router.push('/')
-  }
+function goHome() {
+  router.push('/')
+}
 </script>
 
 <template>
   <div class="auth-page">
     <div class="particle-bg">
-      <div v-for="i in 24" :key="i" class="particle" :style="{
-        '--x': `${Math.random() * 100}%`,
-        '--y': `${Math.random() * 100}%`,
-        '--s': `${Math.random() * 3 + 1}px`,
-        '--d': `${Math.random() * 8 + 4}s`,
-        '--delay': `${Math.random() * 5}s`,
-        '--o': `${Math.random() * 0.3 + 0.05}`,
-      }" />
+      <div
+        v-for="i in 24"
+        :key="i"
+        class="particle"
+        :style="{
+          '--x': `${Math.random() * 100}%`,
+          '--y': `${Math.random() * 100}%`,
+          '--s': `${Math.random() * 3 + 1}px`,
+          '--d': `${Math.random() * 8 + 4}s`,
+          '--delay': `${Math.random() * 5}s`,
+          '--o': `${Math.random() * 0.3 + 0.05}`,
+        }"
+      />
     </div>
     <div class="auth-bg" />
 
     <div class="auth-container">
       <!-- Brand header (mobile) -->
       <div class="auth-header-mobile">
-        <button class="back-btn" @click="goHome" aria-label="Strona główna">
+        <button class="back-btn" aria-label="Strona główna" @click="goHome">
           <ArrowLeft :size="18" />
         </button>
         <div class="auth-logo">
@@ -183,7 +188,7 @@
 
       <!-- Feature panel (desktop) -->
       <div class="auth-features">
-        <button class="back-btn desktop-back" @click="goHome" aria-label="Strona główna">
+        <button class="back-btn desktop-back" aria-label="Strona główna" @click="goHome">
           <ArrowLeft :size="18" />
           <span>Strona główna</span>
         </button>
@@ -191,7 +196,7 @@
         <div class="features-brand">
           <img src="/icons/logo.png" alt="AetherPulse" />
           <h1>AetherPulse</h1>
-          <p class="features-tagline">Twoja prywatna przestrzeń<br>do rozmów</p>
+          <p class="features-tagline">Twoja prywatna przestrzeń<br />do rozmów</p>
         </div>
 
         <div class="features-list">
@@ -219,25 +224,23 @@
       <div class="auth-card">
         <div class="auth-card-header">
           <h2>{{ tab === 'login' ? 'Witaj ponownie' : 'Dołącz do nas' }}</h2>
-          <p>{{ tab === 'login' ? 'Zaloguj się, aby kontynuować' : 'Utwórz konto i zacznij rozmawiać' }}</p>
+          <p>
+            {{
+              tab === 'login' ? 'Zaloguj się, aby kontynuować' : 'Utwórz konto i zacznij rozmawiać'
+            }}
+          </p>
         </div>
 
         <div class="auth-tabs">
-          <button
-            :class="{ active: tab === 'login' }"
-            @click="switchTab('login')"
-          >
+          <button :class="{ active: tab === 'login' }" @click="switchTab('login')">
             Logowanie
           </button>
-          <button
-            :class="{ active: tab === 'register' }"
-            @click="switchTab('register')"
-          >
+          <button :class="{ active: tab === 'register' }" @click="switchTab('register')">
             Rejestracja
           </button>
         </div>
 
-        <form class="auth-form" @submit.prevent="submit" novalidate>
+        <form class="auth-form" novalidate @submit.prevent="submit">
           <!-- Username -->
           <div class="form-group" :class="{ error: usernameError && submitted }">
             <label class="label" for="username">Nazwa użytkownika</label>
@@ -269,7 +272,9 @@
 
           <!-- Display Name (register only) -->
           <div v-if="tab === 'register'" class="form-group">
-            <label class="label" for="displayName">Wyświetlana nazwa <span class="optional">(opcjonalnie)</span></label>
+            <label class="label" for="displayName"
+              >Wyświetlana nazwa <span class="optional">(opcjonalnie)</span></label
+            >
             <div class="input-wrap">
               <input
                 id="displayName"
@@ -285,7 +290,9 @@
 
           <!-- Email (register only) -->
           <div v-if="tab === 'register'" class="form-group">
-            <label class="label" for="email">Email <span class="optional">(opcjonalnie)</span></label>
+            <label class="label" for="email"
+              >Email <span class="optional">(opcjonalnie)</span></label
+            >
             <div class="input-wrap">
               <input
                 id="email"
@@ -314,7 +321,13 @@
                 @input="touched.password = true"
                 @keydown.enter="submit"
               />
-              <button class="pw-toggle" type="button" @click="showPw = !showPw" tabindex="-1" aria-label="Pokaż hasło">
+              <button
+                class="pw-toggle"
+                type="button"
+                tabindex="-1"
+                aria-label="Pokaż hasło"
+                @click="showPw = !showPw"
+              >
                 <EyeOff v-if="showPw" :size="16" />
                 <Eye v-else :size="16" />
               </button>
@@ -327,7 +340,10 @@
             <!-- Password strength (register only) -->
             <div v-if="tab === 'register' && password" class="strength-meter">
               <div class="strength-bar">
-                <div class="strength-fill" :style="{ width: passwordStrength.width, background: passwordStrength.color }" />
+                <div
+                  class="strength-fill"
+                  :style="{ width: passwordStrength.width, background: passwordStrength.color }"
+                />
               </div>
               <span class="strength-label" :style="{ color: passwordStrength.color }">
                 {{ passwordStrength.label }}
@@ -336,7 +352,11 @@
           </div>
 
           <!-- Password Confirm (register only) -->
-          <div v-if="tab === 'register'" class="form-group" :class="{ error: passwordConfirmError && submitted }">
+          <div
+            v-if="tab === 'register'"
+            class="form-group"
+            :class="{ error: passwordConfirmError && submitted }"
+          >
             <label class="label" for="passwordConfirm">Potwierdź hasło</label>
             <div class="pw-wrap">
               <input
@@ -350,7 +370,13 @@
                 @input="touched.passwordConfirm = true"
                 @keydown.enter="submit"
               />
-              <button class="pw-toggle" type="button" @click="showPwConfirm = !showPwConfirm" tabindex="-1" aria-label="Pokaż hasło">
+              <button
+                class="pw-toggle"
+                type="button"
+                tabindex="-1"
+                aria-label="Pokaż hasło"
+                @click="showPwConfirm = !showPwConfirm"
+              >
                 <EyeOff v-if="showPwConfirm" :size="16" />
                 <Eye v-else :size="16" />
               </button>
@@ -376,11 +402,7 @@
           </label>
 
           <!-- Submit button -->
-          <button
-            class="btn-primary submit-btn"
-            :disabled="loading"
-            type="submit"
-          >
+          <button class="btn-primary submit-btn" :disabled="loading" type="submit">
             <Loader2 v-if="loading" class="spin" :size="18" />
             <template v-else>
               {{ tab === 'login' ? 'Zaloguj się' : 'Utwórz konto' }}
@@ -389,7 +411,11 @@
 
           <p class="auth-footer">
             {{ tab === 'login' ? 'Nie masz konta?' : 'Masz już konto?' }}
-            <button type="button" class="link-btn" @click="switchTab(tab === 'login' ? 'register' : 'login')">
+            <button
+              type="button"
+              class="link-btn"
+              @click="switchTab(tab === 'login' ? 'register' : 'login')"
+            >
               {{ tab === 'login' ? 'Zarejestruj się' : 'Zaloguj się' }}
             </button>
           </p>
@@ -414,7 +440,13 @@
   position: relative;
   overflow: hidden;
   background: var(--bg-primary);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
 }
 
 /* Background gradient */
@@ -422,7 +454,7 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 70% 50% at 20% 30%, rgba(139, 92, 246, 0.10) 0%, transparent 70%),
+    radial-gradient(ellipse 70% 50% at 20% 30%, rgba(139, 92, 246, 0.1) 0%, transparent 70%),
     radial-gradient(ellipse 50% 50% at 80% 70%, rgba(59, 130, 246, 0.07) 0%, transparent 70%),
     radial-gradient(ellipse 40% 40% at 50% 50%, rgba(6, 182, 212, 0.04) 0%, transparent 70%);
   pointer-events: none;
@@ -455,7 +487,8 @@
 }
 
 @keyframes particle-float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0) scale(1);
     opacity: var(--o);
   }
@@ -960,15 +993,23 @@
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Transition */
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+.fade-enter-active,
+.fade-leave-active {
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
-.fade-enter-from, .fade-leave-to {
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
   transform: translateY(-4px);
 }

@@ -4,7 +4,13 @@ import { computed, ref, watch } from 'vue'
 import { spatialAudio } from '@/services/rtc/spatial-audio'
 import { useAuthStore } from './auth.store'
 import { useSystemTheme } from '@/composables/useSystemTheme'
-import type { ChatLayoutPreset, FontSize, Locale, ResolvedThemeMode, ThemeMode } from '@/types/settings.types'
+import type {
+  ChatLayoutPreset,
+  FontSize,
+  Locale,
+  ResolvedThemeMode,
+  ThemeMode,
+} from '@/types/settings.types'
 import { CHAT_LAYOUT_PRESETS, FONT_SIZES, LOCALES, THEME_MODES } from '@/types/settings.types'
 
 const THEME_STORAGE_KEY = 'theme'
@@ -74,7 +80,7 @@ export const useSettingsStore = defineStore('settings', () => {
         if (auth.user && auth.user.customTheme !== next) {
           auth.updateProfile({ customTheme: next })
         }
-      } catch (e) {
+      } catch {
         // Safe fallback if authStore is not ready
       }
     }
@@ -129,22 +135,38 @@ export const useSettingsStore = defineStore('settings', () => {
   )
 
   watch(locale, (v) => localStorage.setItem('locale', v), { immediate: true })
-  watch(reduceMotion, (v) => {
-    localStorage.setItem('reduceMotion', String(v))
-    document.documentElement.dataset.reduceMotion = v ? 'true' : 'false'
-  }, { immediate: true })
-  watch(highContrast, (v) => {
-    localStorage.setItem('highContrast', String(v))
-    document.documentElement.dataset.highContrast = v ? 'true' : 'false'
-  }, { immediate: true })
-  watch(fontSize, (v) => {
-    localStorage.setItem('fontSize', v)
-    document.documentElement.dataset.fontSize = v
-  }, { immediate: true })
-  watch(developerMode, (v) => {
-    localStorage.setItem('developerMode', String(v))
-    document.documentElement.dataset.developerMode = v ? 'true' : 'false'
-  }, { immediate: true })
+  watch(
+    reduceMotion,
+    (v) => {
+      localStorage.setItem('reduceMotion', String(v))
+      document.documentElement.dataset.reduceMotion = v ? 'true' : 'false'
+    },
+    { immediate: true }
+  )
+  watch(
+    highContrast,
+    (v) => {
+      localStorage.setItem('highContrast', String(v))
+      document.documentElement.dataset.highContrast = v ? 'true' : 'false'
+    },
+    { immediate: true }
+  )
+  watch(
+    fontSize,
+    (v) => {
+      localStorage.setItem('fontSize', v)
+      document.documentElement.dataset.fontSize = v
+    },
+    { immediate: true }
+  )
+  watch(
+    developerMode,
+    (v) => {
+      localStorage.setItem('developerMode', String(v))
+      document.documentElement.dataset.developerMode = v ? 'true' : 'false'
+    },
+    { immediate: true }
+  )
 
   watch(
     spatialAudioDistance,

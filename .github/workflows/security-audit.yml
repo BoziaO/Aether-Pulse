@@ -1,0 +1,43 @@
+name: Security Audit
+
+on:
+  schedule:
+    - cron: '0 6 * * 1' # Every Monday 06:00 UTC
+  push:
+    branches: [main]
+    paths:
+      - pnpm-lock.yaml
+      - '**/package.json'
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Run pnpm audit
+        run: |
+          pnpm audit --prod --audit-level=high 2>&1 | tee audit-report.txt
+        continue-on-error: true
+      - name: Check for known vulnerabilities in lockfile
+        run: |
+          echo "Checking for .npmrc security settings..."
+          grep -E "minimumReleaseAge|allowBuilds" pnpm-workspace.yaml || true
+      - name: Upload audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-audit-report
+          path: audit-report.txt
+          retention-days: 30

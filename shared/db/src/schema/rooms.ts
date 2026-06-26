@@ -1,7 +1,5 @@
 import mongoose, { Schema, Document, Model } from 'mongoose'
 
-// ─── Room ────────────────────────────────────────────────────────────────────
-
 export interface IRoom extends Document {
   _id: mongoose.Types.ObjectId
   name: string
@@ -15,9 +13,20 @@ export interface IRoom extends Document {
 
 const RoomSchema = new Schema<IRoom>(
   {
-    name: { type: String, required: true },
-    inviteCode: { type: String, required: true, unique: true, index: true },
-    ownerId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    name: { type: String, required: true, maxlength: 64 },
+    inviteCode: {
+      type: String,
+      required: true,
+      unique: true,
+      index: true,
+      maxlength: 32,
+    },
+    ownerId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      index: true,
+    },
     quality: {
       type: String,
       enum: ['360p', '480p', '720p', '1080p', '1440p'],
@@ -29,8 +38,6 @@ const RoomSchema = new Schema<IRoom>(
 )
 
 export const Room: Model<IRoom> = mongoose.models.Room ?? mongoose.model<IRoom>('Room', RoomSchema)
-
-// ─── RoomMember ──────────────────────────────────────────────────────────────
 
 export interface IRoomMember extends Document {
   _id: mongoose.Types.ObjectId
@@ -46,6 +53,7 @@ const RoomMemberSchema = new Schema<IRoomMember>({
 })
 
 RoomMemberSchema.index({ roomId: 1, userId: 1 }, { unique: true })
+RoomMemberSchema.index({ userId: 1, roomId: 1 }, { name: 'rm_member_user' })
 
 export const RoomMember: Model<IRoomMember> =
   mongoose.models.RoomMember ?? mongoose.model<IRoomMember>('RoomMember', RoomMemberSchema)

@@ -1,50 +1,50 @@
 <script setup lang="ts">
-  import { ref } from 'vue'
+import { ref } from 'vue'
 
-  const emit = defineEmits<{
-    (e: 'select', emoji: string): void
-  }>()
+const emit = defineEmits<{
+  (e: 'select', emoji: string): void
+}>()
 
-  const open = ref(false)
+const open = ref(false)
 
-  const QUICK = ['👍', '❤️', '😂', '😮', '😢', '🔥', '🎉', '👀', '💯', '✨']
-  const MORE = [
-    '😀',
-    '😁',
-    '😅',
-    '🤣',
-    '😊',
-    '😍',
-    '🤔',
-    '😎',
-    '🥳',
-    '😴',
-    '👏',
-    '🙌',
-    '🤝',
-    '💪',
-    '🚀',
-    '⭐',
-    '💜',
-    '💙',
-    '💚',
-    '🎯',
-    '🎮',
-    '🎵',
-    '🎧',
-    '📌',
-    '✅',
-    '❌',
-    '⚡',
-    '🌙',
-    '☀️',
-    '🍕',
-  ]
+const QUICK = ['👍', '❤️', '😂', '😮', '😢', '🔥', '🎉', '👀', '💯', '✨']
+const MORE = [
+  '😀',
+  '😁',
+  '😅',
+  '🤣',
+  '😊',
+  '😍',
+  '🤔',
+  '😎',
+  '🥳',
+  '😴',
+  '👏',
+  '🙌',
+  '🤝',
+  '💪',
+  '🚀',
+  '⭐',
+  '💜',
+  '💙',
+  '💚',
+  '🎯',
+  '🎮',
+  '🎵',
+  '🎧',
+  '📌',
+  '✅',
+  '❌',
+  '⚡',
+  '🌙',
+  '☀️',
+  '🍕',
+]
 
-  function pick(emoji: string) {
-    emit('select', emoji)
-    open.value = false
-  }
+function pick(emoji: string) {
+  emit('select', emoji)
+  open.value = false
+}
 </script>
 
 <template>

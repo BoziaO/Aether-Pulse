@@ -15,7 +15,9 @@ const basePath = process.env.BASE_PATH || '/'
 const isLocalWrapper = process.env.LOCAL_WRAPPER === 'true'
 
 const serverUrl = process.env.VITE_API_URL || `http://localhost:${serverPort}`
-const clientUrl = process.env.VITE_CLIENT_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : `http://localhost:${port}`)
+const clientUrl =
+  process.env.VITE_CLIENT_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : `http://localhost:${port}`)
 const wsUrl = serverUrl.replace('https://', 'wss://').replace('http://', 'ws://')
 
 const isProd = process.env.NODE_ENV === 'production'
@@ -45,7 +47,15 @@ export default defineConfig({
   },
 
   optimizeDeps: {
-    include: ['vue', 'vue-router', 'pinia', 'socket.io-client', 'lucide-vue-next', '@vueuse/core', 'events'],
+    include: [
+      'vue',
+      'vue-router',
+      'pinia',
+      'socket.io-client',
+      'lucide-vue-next',
+      '@vueuse/core',
+      'events',
+    ],
   },
 
   css: {

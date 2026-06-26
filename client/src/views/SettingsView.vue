@@ -1,132 +1,160 @@
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
-  import { Headphones, Mic, Shield, Bell, Palette, Languages, Accessibility, Terminal, User, Lock, Check, AlertCircle, Loader2 } from 'lucide-vue-next'
+import { ref, computed } from 'vue'
+import {
+  Headphones,
+  Mic,
+  Shield,
+  Bell,
+  Palette,
+  Languages,
+  Accessibility,
+  Terminal,
+  User,
+  Lock,
+  Check,
+  AlertCircle,
+  Loader2,
+} from 'lucide-vue-next'
 
-  import { useSettingsStore } from '@/stores/settings.store'
-  import { useAuthStore } from '@/stores/auth.store'
-  import { authApi } from '@/services/api/auth.api'
-  import { requestNotificationPermission } from '@/utils/notifications'
+import { useSettingsStore } from '@/stores/settings.store'
+import { useAuthStore } from '@/stores/auth.store'
+import { authApi } from '@/services/api/auth.api'
+import { requestNotificationPermission } from '@/utils/notifications'
 
-  const settings = useSettingsStore()
-  const auth = useAuthStore()
-  const activeSection = ref('voice')
+const settings = useSettingsStore()
+const auth = useAuthStore()
+const activeSection = ref('voice')
 
-  const pwCurrent = ref('')
-  const pwNew = ref('')
-  const pwConfirm = ref('')
-  const pwLoading = ref(false)
-  const pwError = ref('')
-  const pwSuccess = ref(false)
+const pwCurrent = ref('')
+const pwNew = ref('')
+const pwConfirm = ref('')
+const pwLoading = ref(false)
+const pwError = ref('')
+const pwSuccess = ref(false)
 
-  async function changePassword() {
-    pwError.value = ''
-    pwSuccess.value = false
+async function changePassword() {
+  pwError.value = ''
+  pwSuccess.value = false
 
-    if (!pwCurrent.value) { pwError.value = 'Podaj obecne hasło'; return }
-    if (!pwNew.value) { pwError.value = 'Podaj nowe hasło'; return }
-    if (pwNew.value.length < 6) { pwError.value = 'Nowe hasło musi mieć minimum 6 znaków'; return }
-    if (pwNew.value !== pwConfirm.value) { pwError.value = 'Nowe hasła nie są zgodne'; return }
-
-    pwLoading.value = true
-    try {
-      await authApi.changePassword(pwCurrent.value, pwNew.value)
-      pwSuccess.value = true
-      pwCurrent.value = ''
-      pwNew.value = ''
-      pwConfirm.value = ''
-    } catch (e: unknown) {
-      pwError.value = e instanceof Error ? e.message : 'Nie udało się zmienić hasła'
-    } finally {
-      pwLoading.value = false
-    }
+  if (!pwCurrent.value) {
+    pwError.value = 'Podaj obecne hasło'
+    return
+  }
+  if (!pwNew.value) {
+    pwError.value = 'Podaj nowe hasło'
+    return
+  }
+  if (pwNew.value.length < 6) {
+    pwError.value = 'Nowe hasło musi mieć minimum 6 znaków'
+    return
+  }
+  if (pwNew.value !== pwConfirm.value) {
+    pwError.value = 'Nowe hasła nie są zgodne'
+    return
   }
 
-  async function onNotificationsToggle() {
-    if (settings.messageNotifications) {
-      const granted = await requestNotificationPermission()
-      if (!granted) settings.messageNotifications = false
-    }
+  pwLoading.value = true
+  try {
+    await authApi.changePassword(pwCurrent.value, pwNew.value)
+    pwSuccess.value = true
+    pwCurrent.value = ''
+    pwNew.value = ''
+    pwConfirm.value = ''
+  } catch (e: unknown) {
+    pwError.value = e instanceof Error ? e.message : 'Nie udało się zmienić hasła'
+  } finally {
+    pwLoading.value = false
   }
+}
 
-  const sections = [
-    { id: 'voice', label: 'Voice & Video', icon: Mic },
-    { id: 'audio', label: 'Audio', icon: Headphones },
-    { id: 'appearance', label: 'Appearance', icon: Palette },
-    { id: 'account', label: 'Account', icon: User },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'privacy', label: 'Privacy', icon: Shield },
-    { id: 'language', label: 'Language', icon: Languages },
-    { id: 'accessibility', label: 'Accessibility', icon: Accessibility },
-    { id: 'developer', label: 'Developer', icon: Terminal },
-  ]
+async function onNotificationsToggle() {
+  if (settings.messageNotifications) {
+    const granted = await requestNotificationPermission()
+    if (!granted) settings.messageNotifications = false
+  }
+}
 
-  const soundstages = [
-    { id: 'alternating', name: 'Alternating', desc: 'Left & Right' },
-    { id: 'left', name: 'Left only', desc: 'All on the left' },
-    { id: 'right', name: 'Right only', desc: 'All on the right' },
-    { id: 'center', name: 'Center focus', desc: 'Spread around center' },
-  ] as const
+const sections = [
+  { id: 'voice', label: 'Voice & Video', icon: Mic },
+  { id: 'audio', label: 'Audio', icon: Headphones },
+  { id: 'appearance', label: 'Appearance', icon: Palette },
+  { id: 'account', label: 'Account', icon: User },
+  { id: 'notifications', label: 'Notifications', icon: Bell },
+  { id: 'privacy', label: 'Privacy', icon: Shield },
+  { id: 'language', label: 'Language', icon: Languages },
+  { id: 'accessibility', label: 'Accessibility', icon: Accessibility },
+  { id: 'developer', label: 'Developer', icon: Terminal },
+]
 
-  const userAgent = navigator.userAgent
-  const localStorageKeysCount = Object.keys(localStorage).length
-  const sessionStorageKeysCount = Object.keys(sessionStorage).length
-  const buildMode = import.meta.env.MODE
+const soundstages = [
+  { id: 'alternating', name: 'Alternating', desc: 'Left & Right' },
+  { id: 'left', name: 'Left only', desc: 'All on the left' },
+  { id: 'right', name: 'Right only', desc: 'All on the right' },
+  { id: 'center', name: 'Center focus', desc: 'Spread around center' },
+] as const
 
-  const simulatedCallers = computed(() => {
-    const mode = settings.spatialAudioDirectionMode
-    const spreadAngle = settings.spatialAudioSpreadAngle
-    const distance = settings.spatialAudioDistance
+const userAgent = navigator.userAgent
+const localStorageKeysCount = Object.keys(localStorage).length
+const sessionStorageKeysCount = Object.keys(sessionStorage).length
+const buildMode = import.meta.env.MODE
 
-    // Center of visual container is (100, 100)
-    // Scaling radius: map distance (1-15m) to (30-85px)
-    const radiusPx = 30 + ((distance - 1) / 14) * 55
+const simulatedCallers = computed(() => {
+  const mode = settings.spatialAudioDirectionMode
+  const spreadAngle = settings.spatialAudioSpreadAngle
+  const distance = settings.spatialAudioDistance
 
-    return [0, 1, 2].map((index) => {
-      let angleRad = 0
-      if (mode === 'center') {
-        if (index > 0) {
-          const step = Math.ceil(index / 2)
-          const sign = index % 2 === 1 ? -1 : 1
-          angleRad = step * ((spreadAngle * Math.PI) / 180) * sign
-        }
-      } else if (mode === 'alternating') {
-        if (index % 2 === 0) {
-          const k = index / 2
-          angleRad = -Math.PI / 2 + k * ((spreadAngle * Math.PI) / 180)
-        } else {
-          const k = (index - 1) / 2
-          angleRad = Math.PI / 2 - k * ((spreadAngle * Math.PI) / 180)
-        }
-      } else if (mode === 'left') {
-        angleRad = -Math.PI / 2 + index * ((spreadAngle * Math.PI) / 180)
-      } else if (mode === 'right') {
-        angleRad = Math.PI / 2 - index * ((spreadAngle * Math.PI) / 180)
+  // Center of visual container is (100, 100)
+  // Scaling radius: map distance (1-15m) to (30-85px)
+  const radiusPx = 30 + ((distance - 1) / 14) * 55
+
+  return [0, 1, 2].map((index) => {
+    let angleRad = 0
+    if (mode === 'center') {
+      if (index > 0) {
+        const step = Math.ceil(index / 2)
+        const sign = index % 2 === 1 ? -1 : 1
+        angleRad = step * ((spreadAngle * Math.PI) / 180) * sign
       }
-
-      const x = 100 + Math.sin(angleRad) * radiusPx
-      const y = 100 - Math.cos(angleRad) * radiusPx
-
-      return {
-        id: index,
-        label: `Call ${String.fromCharCode(65 + index)}`,
-        style: {
-          left: `${x}px`,
-          top: `${y}px`,
-        },
+    } else if (mode === 'alternating') {
+      if (index % 2 === 0) {
+        const k = index / 2
+        angleRad = -Math.PI / 2 + k * ((spreadAngle * Math.PI) / 180)
+      } else {
+        const k = (index - 1) / 2
+        angleRad = Math.PI / 2 - k * ((spreadAngle * Math.PI) / 180)
       }
-    })
+    } else if (mode === 'left') {
+      angleRad = -Math.PI / 2 + index * ((spreadAngle * Math.PI) / 180)
+    } else if (mode === 'right') {
+      angleRad = Math.PI / 2 - index * ((spreadAngle * Math.PI) / 180)
+    }
+
+    const x = 100 + Math.sin(angleRad) * radiusPx
+    const y = 100 - Math.cos(angleRad) * radiusPx
+
+    return {
+      id: index,
+      label: `Call ${String.fromCharCode(65 + index)}`,
+      style: {
+        left: `${x}px`,
+        top: `${y}px`,
+      },
+    }
   })
+})
 </script>
 
 <template>
   <div class="settings-view">
-    <div class="settings-nav">
+    <div class="settings-nav" role="tablist" aria-label="Settings sections">
       <div class="nav-label">Settings</div>
       <button
         v-for="s in sections"
         :key="s.id"
         class="nav-item"
+        role="tab"
         :class="{ active: activeSection === s.id }"
+        :aria-selected="activeSection === s.id"
         @click="activeSection = s.id"
       >
         <component :is="s.icon" :size="16" />
@@ -395,15 +423,36 @@
           <div class="password-change-form">
             <div class="form-group">
               <label class="label" for="pwCurrent">Current password</label>
-              <input id="pwCurrent" v-model="pwCurrent" class="input" type="password" placeholder="Enter current password" autocomplete="current-password" />
+              <input
+                id="pwCurrent"
+                v-model="pwCurrent"
+                class="input"
+                type="password"
+                placeholder="Enter current password"
+                autocomplete="current-password"
+              />
             </div>
             <div class="form-group">
               <label class="label" for="pwNew">New password</label>
-              <input id="pwNew" v-model="pwNew" class="input" type="password" placeholder="Minimum 6 characters" autocomplete="new-password" />
+              <input
+                id="pwNew"
+                v-model="pwNew"
+                class="input"
+                type="password"
+                placeholder="Minimum 6 characters"
+                autocomplete="new-password"
+              />
             </div>
             <div class="form-group">
               <label class="label" for="pwConfirm">Confirm new password</label>
-              <input id="pwConfirm" v-model="pwConfirm" class="input" type="password" placeholder="Repeat new password" autocomplete="new-password" />
+              <input
+                id="pwConfirm"
+                v-model="pwConfirm"
+                class="input"
+                type="password"
+                placeholder="Repeat new password"
+                autocomplete="new-password"
+              />
             </div>
 
             <button class="btn primary" :disabled="pwLoading" @click="changePassword">
@@ -412,9 +461,7 @@
               {{ pwLoading ? 'Changing…' : 'Change password' }}
             </button>
 
-            <p v-if="pwError" class="form-error">
-              <AlertCircle :size="14" /> {{ pwError }}
-            </p>
+            <p v-if="pwError" class="form-error"><AlertCircle :size="14" /> {{ pwError }}</p>
             <p v-if="pwSuccess" class="form-success">
               <Check :size="14" /> Password changed successfully
             </p>
@@ -487,7 +534,10 @@
           </div>
           <div class="info-card">
             <h3>🌐 Translation Status</h3>
-            <p>Translations are community contributed. Some languages may be incomplete. English (en) is used as fallback for any missing text.</p>
+            <p>
+              Translations are community contributed. Some languages may be incomplete. English (en)
+              is used as fallback for any missing text.
+            </p>
           </div>
         </div>
       </template>
@@ -547,7 +597,9 @@
           <div class="setting-item highlight">
             <div class="setting-info">
               <div class="setting-title">🛠️ Enable Developer Mode</div>
-              <div class="setting-desc">Show debug information, WebRTC statistics, and development tools</div>
+              <div class="setting-desc">
+                Show debug information, WebRTC statistics, and development tools
+              </div>
             </div>
             <label class="toggle">
               <input v-model="settings.developerMode" type="checkbox" />
@@ -558,21 +610,40 @@
           <div v-if="settings.developerMode" class="dev-info-container">
             <div class="info-card">
               <h3>Debug Information</h3>
-              <div class="debug-row"><span class="debug-label">App Version</span><code>1.0.0</code></div>
-              <div class="debug-row"><span class="debug-label">Build Target</span><code>{{ buildMode }}</code></div>
-              <div class="debug-row"><span class="debug-label">Vue Version</span><code>3.x</code></div>
-              <div class="debug-row"><span class="debug-label">User Agent</span><code class="debug-wrap">{{ userAgent }}</code></div>
+              <div class="debug-row">
+                <span class="debug-label">App Version</span><code>1.0.0</code>
+              </div>
+              <div class="debug-row">
+                <span class="debug-label">Build Target</span><code>{{ buildMode }}</code>
+              </div>
+              <div class="debug-row">
+                <span class="debug-label">Vue Version</span><code>3.x</code>
+              </div>
+              <div class="debug-row">
+                <span class="debug-label">User Agent</span
+                ><code class="debug-wrap">{{ userAgent }}</code>
+              </div>
             </div>
 
             <div class="info-card">
               <h3>Storage</h3>
-              <div class="debug-row"><span class="debug-label">Local Storage Keys</span><code>{{ localStorageKeysCount }}</code></div>
-              <div class="debug-row"><span class="debug-label">Session Storage Keys</span><code>{{ sessionStorageKeysCount }}</code></div>
+              <div class="debug-row">
+                <span class="debug-label">Local Storage Keys</span
+                ><code>{{ localStorageKeysCount }}</code>
+              </div>
+              <div class="debug-row">
+                <span class="debug-label">Session Storage Keys</span
+                ><code>{{ sessionStorageKeysCount }}</code>
+              </div>
             </div>
 
             <div class="info-card">
               <h3>⚠️ Caution</h3>
-              <p>Developer mode exposes technical details that are useful for debugging. Some panels may show additional controls and data views throughout the app while this is enabled.</p>
+              <p>
+                Developer mode exposes technical details that are useful for debugging. Some panels
+                may show additional controls and data views throughout the app while this is
+                enabled.
+              </p>
             </div>
           </div>
         </div>
@@ -938,7 +1009,9 @@
   align-items: center;
   gap: 4px;
   cursor: pointer;
-  transition: transform 0.2s, border-color 0.2s;
+  transition:
+    transform 0.2s,
+    border-color 0.2s;
 }
 .locale-card:hover {
   transform: translateY(-2px);
@@ -973,7 +1046,9 @@
   align-items: center;
   gap: 4px;
   cursor: pointer;
-  transition: transform 0.2s, border-color 0.2s;
+  transition:
+    transform 0.2s,
+    border-color 0.2s;
 }
 .font-card:hover {
   transform: translateY(-2px);
@@ -1029,12 +1104,22 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 .spin {
   animation: spin 1s linear infinite;
@@ -1089,6 +1174,7 @@
 .password-change-form .btn.primary {
   background: linear-gradient(135deg, var(--accent-violet), #7c3aed);
   color: white;
+  border: none;
 }
 .password-change-form .btn.primary:hover:not(:disabled) {
   box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4);

@@ -33,14 +33,14 @@ export const useRtcStore = defineStore('rtc', () => {
   let peerManager: PeerManager | null = null
   let currentRoomId: string | null = null
   let lastSharedScreenVideoTrack: MediaStreamTrack | null = null
-let lastRemovedCameraTrack: MediaStreamTrack | null = null
+  let lastRemovedCameraTrack: MediaStreamTrack | null = null
   let wakeLock: WakeLockSentinel | null = null
   let pipVideo: HTMLVideoElement | null = null
   let audioContext: AudioContext | null = null
   let audioAnalyser: AnalyserNode | null = null
   let microphoneCheckInterval: NodeJS.Timeout | null = null
   let connectionTimeout: NodeJS.Timeout | null = null
-  
+
   // Connection health monitoring
   const connectionHealth = ref<'good' | 'poor' | 'disconnected'>('good')
   let lastHealthCheck = Date.now()
@@ -132,28 +132,28 @@ let lastRemovedCameraTrack: MediaStreamTrack | null = null
     remoteStreams.value = newMap
     spatialAudio.detachStream(userId)
   }
-  
+
   /**
    * Check if microphone is available and audio is working
    */
   async function checkMicrophoneAccess(): Promise<boolean> {
     try {
       // First, check if we have permission
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: true, 
-        video: false 
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: false,
       })
-      
+
       // Stop the test stream immediately
-      stream.getTracks().forEach(track => track.stop())
-      
+      stream.getTracks().forEach((track) => track.stop())
+
       audioDetected.value = true
       noMicrophoneDetected.value = false
       microphonePermissionDenied.value = false
       return true
     } catch (error: any) {
       console.warn('Microphone access check failed:', error)
-      
+
       if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
         microphonePermissionDenied.value = true
         audioDetected.value = false
@@ -170,7 +170,7 @@ let lastRemovedCameraTrack: MediaStreamTrack | null = null
       return false
     }
   }
-  
+
   /**
    * Start audio level monitoring
    */
@@ -179,30 +179,30 @@ let lastRemovedCameraTrack: MediaStreamTrack | null = null
       if (!audioContext) {
         audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
       }
-      
+
       if (!audioAnalyser && audioContext) {
         audioAnalyser = audioContext.createAnalyser()
         audioAnalyser.fftSize = 256
       }
-      
+
       const source = audioContext?.createMediaStreamSource(stream)
       if (source && audioAnalyser && audioContext) {
         source.connect(audioAnalyser)
-        
+
         const bufferLength = audioAnalyser.frequencyBinCount
         const dataArray = new Uint8Array(bufferLength)
-        
+
         microphoneCheckInterval = setInterval(() => {
           if (audioAnalyser) {
             audioAnalyser.getByteTimeDomainData(dataArray)
-            
+
             // Simple audio detection - check if we have any significant audio
             let sum = 0
             for (let i = 0; i < dataArray.length; i++) {
               sum += Math.abs(dataArray[i] - 128)
             }
             const average = sum / dataArray.length
-            
+
             // If we detect audio above threshold, mark as detected
             if (average > 5) {
               audioDetected.value = true
@@ -214,7 +214,7 @@ let lastRemovedCameraTrack: MediaStreamTrack | null = null
       console.warn('Failed to start audio monitoring:', error)
     }
   }
-  
+
   /**
    * Stop audio monitoring
    */
@@ -223,7 +223,7 @@ let lastRemovedCameraTrack: MediaStreamTrack | null = null
       clearInterval(microphoneCheckInterval)
       microphoneCheckInterval = null
     }
-    
+
     // Clean up audio context
     if (audioContext) {
       try {
@@ -233,10 +233,10 @@ let lastRemovedCameraTrack: MediaStreamTrack | null = null
       }
       audioContext = null
     }
-    
+
     audioAnalyser = null
   }
-  
+
   /**
    * Start connection health monitoring
    */
@@ -244,7 +244,7 @@ let lastRemovedCameraTrack: MediaStreamTrack | null = null
     if (connectionTimeout) {
       clearInterval(connectionTimeout)
     }
-    
+
     connectionTimeout = setInterval(() => {
       const now = Date.now()
       if (now - lastHealthCheck > healthCheckInterval) {
@@ -253,7 +253,7 @@ let lastRemovedCameraTrack: MediaStreamTrack | null = null
       }
     }, 10000)
   }
-  
+
   /**
    * Check connection health
    */
@@ -263,20 +263,20 @@ let lastRemovedCameraTrack: MediaStreamTrack | null = null
       connectionHealth.value = 'disconnected'
       return
     }
-    
+
     // Count active peers
     const activePeers = peerManager ? [...peerManager['peers'].values()].length : 0
-    
+
     if (activePeers === 0 && inCall.value) {
       connectionHealth.value = 'poor'
     } else {
       connectionHealth.value = 'good'
     }
   }
-  
-/**
-    * Clean up all tracked objects
-    */
+
+  /**
+   * Clean up all tracked objects
+   */
   function cleanupTrackedObjects(): void {}
 
   async function joinRoom(roomId: string, userId: string) {
@@ -468,12 +468,12 @@ let lastRemovedCameraTrack: MediaStreamTrack | null = null
 
       const settings = useSettingsStore()
       const toastStore = useToastStore()
-      
+
       // First check if we have microphone access
       const hasMicrophone = await checkMicrophoneAccess()
-      
+
       let stream: MediaStream | null = null
-      
+
       if (hasMicrophone || allowWithoutMicrophone) {
         try {
           // Try to get audio stream, but if it fails and allowWithoutMicrophone is true, continue without it
@@ -482,12 +482,11 @@ let lastRemovedCameraTrack: MediaStreamTrack | null = null
             noiseSuppression: settings.noiseSuppressionEnabled,
             autoGainControl: true,
           }
-          
+
           stream = await navigator.mediaDevices.getUserMedia({
             audio: hasMicrophone ? audioConstraints : false,
             video: isVideoOn.value,
           })
-          
         } catch (audioError: any) {
           if (allowWithoutMicrophone) {
             // Try without audio
@@ -519,13 +518,13 @@ let lastRemovedCameraTrack: MediaStreamTrack | null = null
 
       // Keep screen awake during call
       await acquireWakeLock()
-      
+
       // Start connection health monitoring
       startHealthMonitoring()
 
       // Announce that we joined the call; server replies with current call participants.
       socket.emit('join-call', { roomId: currentRoomId, userId: authStore.user.id })
-      
+
       // If we don't have audio, notify other users
       if (!stream || !stream.getAudioTracks().length) {
         socket.emit('join-call-no-audio', { roomId: currentRoomId, userId: authStore.user.id })
@@ -551,20 +550,30 @@ let lastRemovedCameraTrack: MediaStreamTrack | null = null
     if (currentRoomId && inCall.value && authStore.user) {
       try {
         getSocket().emit('leave-call', { roomId: currentRoomId, userId: authStore.user.id })
-      } catch {}
+      } catch {
+        /* empty */
+      }
     }
 
     // Stop audio monitoring
     stopAudioMonitoring()
-    
+
     // Clean up all streams
     localStream.value?.getTracks().forEach((t) => {
-      try { t.stop() } catch (e) { console.warn('Error stopping track:', e) }
+      try {
+        t.stop()
+      } catch (e) {
+        console.warn('Error stopping track:', e)
+      }
     })
     screenStream.value?.getTracks().forEach((t) => {
-      try { t.stop() } catch (e) { console.warn('Error stopping track:', e) }
+      try {
+        t.stop()
+      } catch (e) {
+        console.warn('Error stopping track:', e)
+      }
     })
-    
+
     localStream.value = null
     screenStream.value = null
     isScreenSharing.value = false
@@ -574,31 +583,31 @@ let lastRemovedCameraTrack: MediaStreamTrack | null = null
     audioDetected.value = false
     noMicrophoneDetected.value = false
     microphonePermissionDenied.value = false
-    
+
     lastSharedScreenVideoTrack = null
     lastRemovedCameraTrack = null
-    
+
     // Clean up peer manager
     peerManager?.destroyAll()
     peerManager = null
-    
+
     // Clear remote streams
     remoteStreams.value = new Map()
-    
+
     // Clean up spatial audio
     spatialAudio.cleanup()
-    
+
     // Clean up tracked objects
     cleanupTrackedObjects()
-    
+
     // Clear timeouts
     if (connectionTimeout) {
       clearInterval(connectionTimeout)
       connectionTimeout = null
     }
-    
+
     connectionHealth.value = 'disconnected'
-    
+
     stopWakeLock()
     exitPiP()
   }
@@ -607,9 +616,13 @@ let lastRemovedCameraTrack: MediaStreamTrack | null = null
     try {
       if ('wakeLock' in navigator) {
         wakeLock = await (navigator as any).wakeLock.request('screen')
-        wakeLock!.addEventListener('release', () => { wakeLock = null })
+        wakeLock!.addEventListener('release', () => {
+          wakeLock = null
+        })
       }
-    } catch {}
+    } catch {
+      /* empty */
+    }
   }
 
   function stopWakeLock() {
@@ -639,7 +652,13 @@ let lastRemovedCameraTrack: MediaStreamTrack | null = null
       if ((pipVideo as any).requestPictureInPicture) {
         await (pipVideo as any).requestPictureInPicture()
         isPiP.value = true
-        pipVideo.addEventListener('leavepictureinpicture', () => { isPiP.value = false }, { once: true })
+        pipVideo.addEventListener(
+          'leavepictureinpicture',
+          () => {
+            isPiP.value = false
+          },
+          { once: true }
+        )
       }
     } catch (e) {
       console.warn('PiP not supported:', e)
@@ -649,9 +668,11 @@ let lastRemovedCameraTrack: MediaStreamTrack | null = null
   function exitPiP() {
     try {
       if ((document as any).pictureInPictureElement) {
-        (document as any).exitPictureInPicture().catch(() => {})
+        ;(document as any).exitPictureInPicture().catch(() => {})
       }
-    } catch {}
+    } catch {
+      /* empty */
+    }
     if (pipVideo) {
       pipVideo.srcObject = null
       pipVideo.remove()

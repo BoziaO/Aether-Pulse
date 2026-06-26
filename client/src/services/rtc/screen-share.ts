@@ -29,11 +29,15 @@ export async function startScreenShare(
 
   // Android (Capacitor): getDisplayMedia not supported — share front/back camera instead
   const isAndroid =
-    typeof (window as any).Capacitor !== 'undefined' &&
-    (window as any).Capacitor.isNativePlatform()
+    typeof (window as any).Capacitor !== 'undefined' && (window as any).Capacitor.isNativePlatform()
   if (isAndroid) {
     return navigator.mediaDevices.getUserMedia({
-      video: { width: { ideal: cfg.width }, height: { ideal: cfg.height }, frameRate: { ideal: cfg.frameRate }, facingMode: 'environment' },
+      video: {
+        width: { ideal: cfg.width },
+        height: { ideal: cfg.height },
+        frameRate: { ideal: cfg.frameRate },
+        facingMode: 'environment',
+      },
       audio: false,
     })
   }

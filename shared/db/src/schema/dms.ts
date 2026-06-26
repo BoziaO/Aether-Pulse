@@ -1,7 +1,5 @@
 import mongoose, { Schema, Document, Model } from 'mongoose'
 
-// ─── DmConversation ──────────────────────────────────────────────────────────
-
 export interface IDmConversation extends Document {
   _id: mongoose.Types.ObjectId
   createdAt: Date
@@ -15,8 +13,6 @@ DmConversationSchema.index({ updatedAt: -1 })
 export const DmConversation: Model<IDmConversation> =
   mongoose.models.DmConversation ??
   mongoose.model<IDmConversation>('DmConversation', DmConversationSchema)
-
-// ─── DmParticipant ───────────────────────────────────────────────────────────
 
 export interface IDmParticipant extends Document {
   _id: mongoose.Types.ObjectId
@@ -37,12 +33,11 @@ const DmParticipantSchema = new Schema<IDmParticipant>({
 })
 
 DmParticipantSchema.index({ conversationId: 1, userId: 1 }, { unique: true })
+DmParticipantSchema.index({ userId: 1, conversationId: 1 }, { name: 'dm_participant_user_lookup' })
 
 export const DmParticipant: Model<IDmParticipant> =
   mongoose.models.DmParticipant ??
   mongoose.model<IDmParticipant>('DmParticipant', DmParticipantSchema)
-
-// ─── DmMessage ───────────────────────────────────────────────────────────────
 
 export interface IDmMessage extends Document {
   _id: mongoose.Types.ObjectId
@@ -69,12 +64,12 @@ const DmMessageSchema = new Schema<IDmMessage>(
       index: true,
     },
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-    content: { type: String, required: true },
+    content: { type: String, required: true, maxlength: 10000 },
     type: { type: String, enum: ['text', 'file'], default: 'text' },
-    attachmentUrl: { type: String, default: null },
-    attachmentName: { type: String, default: null },
-    attachmentMime: { type: String, default: null },
-    replyToId: { type: Schema.Types.ObjectId, ref: 'DmMessage', default: null },
+    attachmentUrl: { type: String, default: null, maxlength: 2048 },
+    attachmentName: { type: String, default: null, maxlength: 512 },
+    attachmentMime: { type: String, default: null, maxlength: 64 },
+    replyToId: { type: Schema.Types.ObjectId, ref: 'DmMessage', default: null, index: true },
     editedAt: { type: Date, default: null },
     isDeleted: { type: Boolean, default: false },
   },

@@ -41,7 +41,7 @@ RUN rm -rf /etc/nginx/conf.d/default.conf
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy built client files
-COPY --from=build /usr/src/app/client/dist/public /usr/share/nginx/html
+COPY --from=build /usr/src/app/client/dist /usr/share/nginx/html
 
 # Create non-root user for security
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup && \

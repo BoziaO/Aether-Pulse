@@ -12,12 +12,12 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        sync: false        # set manually in Render dashboard
+        sync: false # set manually in Render dashboard
       - key: JWT_SECRET
         generateValue: true
       - key: SESSION_SECRET
         generateValue: true
       - key: CLIENT_URL
-        sync: false        # paste your Vercel URL here after first deploy
+        sync: false # paste your Vercel URL here after first deploy
       - key: REDIS_URL
-        sync: false        # optional — leave empty for in-memory adapter
+        sync: false # optional — leave empty for in-memory adapter

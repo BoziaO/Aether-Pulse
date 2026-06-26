@@ -65,7 +65,7 @@ class SpatialAudioService {
       // Modern API uses AudioParams, fallback to deprecated setPosition.
       const hasPositionParams = typeof (panner as any).positionX !== 'undefined'
       if (hasPositionParams) {
-        (panner as any).positionX.value = position.x
+        ;(panner as any).positionX.value = position.x
         ;(panner as any).positionY.value = position.y
         ;(panner as any).positionZ.value = position.z
       } else {
@@ -93,7 +93,7 @@ class SpatialAudioService {
     if (!panner) return
     const hasPositionParams = typeof (panner as any).positionX !== 'undefined'
     if (hasPositionParams) {
-      (panner as any).positionX.value = x
+      ;(panner as any).positionX.value = x
       ;(panner as any).positionY.value = y
       ;(panner as any).positionZ.value = z
     } else {

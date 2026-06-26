@@ -24,17 +24,11 @@ function setRememberMe(value: boolean): void {
 }
 
 function getAccessToken(): string | null {
-  return (
-    sessionStorage.getItem(ACCESS_TOKEN_KEY) ??
-    localStorage.getItem(ACCESS_TOKEN_KEY)
-  )
+  return sessionStorage.getItem(ACCESS_TOKEN_KEY) ?? localStorage.getItem(ACCESS_TOKEN_KEY)
 }
 
 function getRefreshToken(): string | null {
-  return (
-    sessionStorage.getItem(REFRESH_TOKEN_KEY) ??
-    localStorage.getItem(REFRESH_TOKEN_KEY)
-  )
+  return sessionStorage.getItem(REFRESH_TOKEN_KEY) ?? localStorage.getItem(REFRESH_TOKEN_KEY)
 }
 
 function setTokens(accessToken: string, refreshToken: string, remember: boolean): void {
@@ -133,7 +127,13 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function register(username: string, email: string, password: string, displayName: string, remember?: boolean) {
+  async function register(
+    username: string,
+    email: string,
+    password: string,
+    displayName: string,
+    remember?: boolean
+  ) {
     loading.value = true
     error.value = null
     try {
@@ -155,7 +155,9 @@ export const useAuthStore = defineStore('auth', () => {
   async function logout() {
     try {
       await authApi.logout()
-    } catch {}
+    } catch {
+      /* empty */
+    }
     clearTokens()
     accessToken.value = null
     refreshToken.value = null
@@ -169,7 +171,7 @@ export const useAuthStore = defineStore('auth', () => {
     if (isFetchingMe.value) {
       return
     }
-    
+
     isFetchingMe.value = true
     try {
       const res = await authApi.me()
@@ -216,7 +218,9 @@ export const useAuthStore = defineStore('auth', () => {
         userId: user.value.id,
         status: updated.status ?? user.value.status,
       })
-    } catch {}
+    } catch {
+      /* empty */
+    }
     return updated
   }
 

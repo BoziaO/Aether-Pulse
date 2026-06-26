@@ -8,7 +8,10 @@
     "dev": "turbo dev",
     "build": "turbo build",
     "typecheck": "turbo typecheck",
+    "typecheck:libs": "turbo typecheck --filter='@workspace/*'",
     "lint": "turbo lint",
+    "audit": "pnpm audit --audit-level=high",
+    "audit:deps": "pnpm audit --prod",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "start:client": "pnpm --filter aetherpulse-client dev",
@@ -40,9 +43,7 @@
     "highlight.js": "^11.11.1",
     "markdown-it": "^14.2.0",
     "markdown-it-anchor": "^9.2.0",
-    "markdown-it-task-lists": "^2.1.1",
-    "util": "^0.12.5",
-    "util-browser": "^0.0.2"
+    "markdown-it-task-lists": "^2.1.1"
   },
   "engines": {
     "node": ">=22.0.0",

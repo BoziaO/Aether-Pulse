@@ -1,80 +1,80 @@
 <script setup lang="ts">
-  import { computed } from 'vue'
+import { computed } from 'vue'
 
-  const props = defineProps<{
-    badge: string
-  }>()
+const props = defineProps<{
+  badge: string
+}>()
 
-  const badgeData = computed(() => {
-    switch (props.badge) {
-      case 'nitro':
-        return {
-          title: 'Nitro Supporter',
-          color: 'linear-gradient(135deg, #ff7300, #ff007f)',
-          desc: 'Premium subscriber badge',
-        }
-      case 'booster':
-        return {
-          title: 'Server Booster',
-          color: 'linear-gradient(135deg, #f43f5e, #ec4899)',
-          desc: 'Boosted the community server',
-        }
-      case 'developer':
-        return {
-          title: 'Active Developer',
-          color: 'linear-gradient(135deg, #0ea5e9, #2563eb)',
-          desc: 'Crafted with passion & code',
-        }
-      case 'staff':
-        return {
-          title: 'Aether-Pulse Staff',
-          color: 'linear-gradient(135deg, #eab308, #ca8a04)',
-          desc: 'Official platform administrator',
-        }
-      case 'bug_hunter':
-        return {
-          title: 'Bug Hunter',
-          color: 'linear-gradient(135deg, #10b981, #059669)',
-          desc: 'Discovered and reported critical issues',
-        }
-      case 'early_supporter':
-        return {
-          title: 'Early Supporter',
-          color: 'linear-gradient(135deg, #a855f7, #7c3aed)',
-          desc: 'An original pioneer of Aether-Pulse',
-        }
-      case 'hypesquad_balance':
-        return {
-          title: 'HypeSquad Balance',
-          color: 'linear-gradient(135deg, #06b6d4, #0891b2)',
-          desc: 'Harmony, poise, and calculated execution',
-        }
-      case 'hypesquad_bravery':
-        return {
-          title: 'HypeSquad Bravery',
-          color: 'linear-gradient(135deg, #f43f5e, #e11d48)',
-          desc: 'Fearless, audacious, and bold leadership',
-        }
-      case 'hypesquad_brilliance':
-        return {
-          title: 'HypeSquad Brilliance',
-          color: 'linear-gradient(135deg, #f97316, #ea580c)',
-          desc: 'Illuminating spark of intellect and warmth',
-        }
-      case 'creator':
-        return {
-          title: 'Creator',
-          color: 'linear-gradient(135deg, #fbbf24, #d97706)',
-          desc: 'The visionary behind Aether-Pulse',
-        }
-      default:
-        return {
-          title: 'Verified',
-          color: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-          desc: 'Verified user badge',
-        }
-    }
-  })
+const badgeData = computed(() => {
+  switch (props.badge) {
+    case 'nitro':
+      return {
+        title: 'Nitro Supporter',
+        color: 'linear-gradient(135deg, #ff7300, #ff007f)',
+        desc: 'Premium subscriber badge',
+      }
+    case 'booster':
+      return {
+        title: 'Server Booster',
+        color: 'linear-gradient(135deg, #f43f5e, #ec4899)',
+        desc: 'Boosted the community server',
+      }
+    case 'developer':
+      return {
+        title: 'Active Developer',
+        color: 'linear-gradient(135deg, #0ea5e9, #2563eb)',
+        desc: 'Crafted with passion & code',
+      }
+    case 'staff':
+      return {
+        title: 'Aether-Pulse Staff',
+        color: 'linear-gradient(135deg, #eab308, #ca8a04)',
+        desc: 'Official platform administrator',
+      }
+    case 'bug_hunter':
+      return {
+        title: 'Bug Hunter',
+        color: 'linear-gradient(135deg, #10b981, #059669)',
+        desc: 'Discovered and reported critical issues',
+      }
+    case 'early_supporter':
+      return {
+        title: 'Early Supporter',
+        color: 'linear-gradient(135deg, #a855f7, #7c3aed)',
+        desc: 'An original pioneer of Aether-Pulse',
+      }
+    case 'hypesquad_balance':
+      return {
+        title: 'HypeSquad Balance',
+        color: 'linear-gradient(135deg, #06b6d4, #0891b2)',
+        desc: 'Harmony, poise, and calculated execution',
+      }
+    case 'hypesquad_bravery':
+      return {
+        title: 'HypeSquad Bravery',
+        color: 'linear-gradient(135deg, #f43f5e, #e11d48)',
+        desc: 'Fearless, audacious, and bold leadership',
+      }
+    case 'hypesquad_brilliance':
+      return {
+        title: 'HypeSquad Brilliance',
+        color: 'linear-gradient(135deg, #f97316, #ea580c)',
+        desc: 'Illuminating spark of intellect and warmth',
+      }
+    case 'creator':
+      return {
+        title: 'Creator',
+        color: 'linear-gradient(135deg, #fbbf24, #d97706)',
+        desc: 'The visionary behind Aether-Pulse',
+      }
+    default:
+      return {
+        title: 'Verified',
+        color: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+        desc: 'Verified user badge',
+      }
+  }
+})
 </script>
 
 <template>
@@ -236,10 +236,7 @@
           <stop offset="100%" stop-color="#d97706" />
         </linearGradient>
       </defs>
-      <path
-        d="M2 19h20v3H2v-3zM4 11l2-7 4 4 2-7 2 7 4-4 2 7v6H4v-6z"
-        fill="url(#creatorGrad)"
-      />
+      <path d="M2 19h20v3H2v-3zM4 11l2-7 4 4 2-7 2 7 4-4 2 7v6H4v-6z" fill="url(#creatorGrad)" />
       <circle cx="12" cy="15" r="2" fill="#fff" opacity="0.6" />
     </svg>
   </div>

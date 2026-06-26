@@ -7,39 +7,37 @@ on:
 
 permissions:
   contents: write
+  packages: write
 
 jobs:
   build-electron:
     name: Build Electron (${{ matrix.os }})
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: windows-latest
             script: electron:build
-            extension: exe
+            artifact-name: aetherpulse-windows
           - os: ubuntu-latest
             script: electron:build:linux
-            extension: AppImage
+            artifact-name: aetherpulse-linux
 
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3
+      - uses: pnpm/action-setup@v3
         with:
           version: 11
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'pnpm'
+          cache: pnpm
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile
 
       - name: Build Electron (${{ matrix.os }})
         run: pnpm ${{ matrix.script }}
@@ -49,52 +47,126 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: aetherpulse-${{ matrix.os }}
+          name: ${{ matrix.artifact-name }}
           path: client/dist-electron/
+          compression-level: 0
+
+  build-docker-server:
+    name: Build & Push Docker (server)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/metadata-action@v5
+        id: meta-server
+        with:
+          images: ghcr.io/${{ github.repository }}-server
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/server/Dockerfile
+          push: true
+          tags: ${{ steps.meta-server.outputs.tags }}
+          labels: ${{ steps.meta-server.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-docker-client:
+    name: Build & Push Docker (client)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/metadata-action@v5
+        id: meta-client
+        with:
+          images: ghcr.io/${{ github.repository }}-client
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/client/Dockerfile
+          push: true
+          tags: ${{ steps.meta-client.outputs.tags }}
+          labels: ${{ steps.meta-client.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   create-release:
     name: Create GitHub Release
-    needs: build-electron
+    needs:
+      - build-electron
+      - build-docker-server
+      - build-docker-client
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v4
+
       - name: Download Windows artifacts
         uses: actions/download-artifact@v4
         with:
-          name: aetherpulse-windows-latest
+          name: aetherpulse-windows
           path: artifacts/windows
 
       - name: Download Linux artifacts
         uses: actions/download-artifact@v4
         with:
-          name: aetherpulse-ubuntu-latest
+          name: aetherpulse-linux
           path: artifacts/linux
 
-      - name: List artifacts
-        run: find artifacts -type f
+      - name: Generate release notes
+        run: |
+          cat > release-notes.md << 'EOF'
+          ## AetherPulse ${{ github.ref_name }}
+
+          ### Downloads
+
+          | Platform | File |
+          |----------|------|
+          | Windows | AetherPulse Setup (attached) |
+          | Linux | AetherPulse AppImage (attached) |
+          | Docker (server) | \`ghcr.io/${{ github.repository }}-server:${{ github.ref_name }}\` |
+          | Docker (client) | \`ghcr.io/${{ github.repository }}-client:${{ github.ref_name }}\` |
+
+          ### Installation
+
+          **Windows**: Run the installer and follow the prompts.
+
+          **Linux**: \`chmod +x *.AppImage && ./AetherPulse-*.AppImage\`
+
+          **Docker**: See \`docker/docker-compose.yml\` or pull images from GHCR.
+
+          ### Notes
+          - Requires Node.js >= 22 for local development
+          - Connect to an AetherPulse server (default: https://aetherpulse-server.onrender.com)
+          EOF
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           name: AetherPulse ${{ github.ref_name }}
-          body: |
-            ## AetherPulse ${{ github.ref_name }}
-
-            ### Pobierz
-            - **Windows**: `AetherPulse Setup *.exe` (w załącznikach)
-            - **Linux**: `AetherPulse *.AppImage` (w załącznikach)
-
-            ### Instalacja
-            **Windows**: Uruchom installer `.exe` i postępuj zgodnie z instrukcjami.
-
-            **Linux**: Nadaj uprawnienia `chmod +x *.AppImage` i uruchom.
-
-            ### Uwagi
-            - Wymagane Node.js >= 22
-            - Połącz się z serwerem AetherPulse (domyślnie: https://aetherpulse-server.onrender.com)
+          body_path: release-notes.md
           files: |
             artifacts/**/*
-          draft: true
-          prerelease: false
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') && !contains(github.ref_name, '-rc') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

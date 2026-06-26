@@ -18,10 +18,7 @@ function createWindow() {
       sandbox: true,
       preload: path.join(__dirname, 'preload.cjs'),
     },
-    icon: path.join(
-      __dirname,
-      isDev ? '../public/icons/logo.png' : '../dist/icons/logo.png'
-    ),
+    icon: path.join(__dirname, isDev ? '../public/icons/logo.png' : '../dist/icons/logo.png'),
     title: 'AetherPulse',
   })
 
@@ -61,7 +58,15 @@ ipcMain.handle('get-desktop-sources', async () => {
 
 app.whenReady().then(() => {
   session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
-    const allowed = ['media', 'fullscreen', 'clipboard-read', 'clipboard-sanitized-write', 'window-management', 'display-capture', 'notifications']
+    const allowed = [
+      'media',
+      'fullscreen',
+      'clipboard-read',
+      'clipboard-sanitized-write',
+      'window-management',
+      'display-capture',
+      'notifications',
+    ]
     callback(allowed.includes(permission))
   })
 
