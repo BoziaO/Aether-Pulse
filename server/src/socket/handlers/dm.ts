@@ -1,6 +1,6 @@
 import type { Socket } from 'socket.io'
-import { DmMessage, DmConversation } from '@workspace/db'
 
+import { DmRepository } from '../../repositories/dm.repository'
 import { buildDmMessagePayload, isDmParticipant } from '../../utils/dm-helpers'
 import { isDuplicateMessage } from '../dedup'
 import { logger } from '../../utils/logger'
@@ -74,14 +74,14 @@ export function registerDmHandlers(socket: Socket, io: any, authedUserId: string
     }
 
     try {
-      const msg = await DmMessage.create({
+      const msg = await DmRepository.createMessage({
         conversationId,
         userId: authedUserId,
         content: content.trim(),
         type: 'text',
         replyToId: replyToId || undefined,
       })
-      await DmConversation.findByIdAndUpdate(conversationId, { updatedAt: new Date() })
+      await DmRepository.updateConversationTimestamp(conversationId)
       const payload = await buildDmMessagePayload(msg._id.toString())
       if (payload) {
         io.to(`dm:${conversationId}`).emit('new-dm-message', payload)

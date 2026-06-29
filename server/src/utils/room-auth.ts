@@ -1,6 +1,5 @@
-import { RoomMember } from '@workspace/db'
+import { RoomRepository } from '../repositories/room.repository'
 
 export async function isRoomMember(roomId: string, userId: string): Promise<boolean> {
-  const row = await RoomMember.findOne({ roomId, userId }).lean()
-  return Boolean(row)
+  return RoomRepository.isMember(roomId, userId)
 }

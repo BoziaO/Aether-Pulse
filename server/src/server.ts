@@ -1,6 +1,6 @@
 import { createServer } from 'http'
 import { Server as SocketIOServer } from 'socket.io'
-import { connectDb } from '@workspace/db'
+import { connectDb, disconnectDb } from '@workspace/db'
 
 import app, { allowedOrigins } from './app'
 import { registerSocketHandlers } from './socket'
@@ -53,6 +53,25 @@ if (redisUrl) {
 }
 
 registerSocketHandlers(io)
+
+function gracefulShutdown(signal: string) {
+  logger.info({ signal }, 'Received shutdown signal, closing gracefully...')
+  io.close(() => {
+    logger.info('Socket.IO server closed')
+  })
+  httpServer.close(async () => {
+    logger.info('HTTP server closed')
+    await disconnectDb()
+    process.exit(0)
+  })
+  setTimeout(() => {
+    logger.error('Forced shutdown after timeout')
+    process.exit(1)
+  }, 10_000)
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'))
+process.on('SIGINT', () => gracefulShutdown('SIGINT'))
 
 httpServer.listen(env.PORT, () => {
   logger.info({ port: env.PORT }, 'Server listening')

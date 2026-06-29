@@ -1,6 +1,6 @@
-# AetherPulse Documentation
+# Nicori Documentation
 
-Welcome to the AetherPulse documentation. This project is a modern, real-time communication platform built with Vue,
+Welcome to the Nicori documentation. This project is a modern, real-time communication platform built with Vue,
 Node.js, and WebRTC.
 
 ## Documentation Structure
@@ -18,7 +18,7 @@ Node.js, and WebRTC.
 
 ## Project Overview
 
-AetherPulse provides:
+Nicori provides:
 
 - Real-time text chat with rooms and direct messages
 - Voice and video calls with spatial audio

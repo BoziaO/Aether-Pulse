@@ -29,7 +29,7 @@ export const useDmStore = defineStore('dm', () => {
       updateConversationPreview(msg)
       if (msg.conversationId === currentConversationId.value) {
         if (!messages.value.find((m) => m.id === msg.id)) {
-          messages.value.push(msg)
+          insertSorted(msg)
         }
       }
       if (msg.user && msg.userId !== auth.user?.id) {
@@ -69,6 +69,21 @@ export const useDmStore = defineStore('dm', () => {
     )
 
     globalDmListenerBound = true
+  }
+
+  function insertSorted(message: DmMessage) {
+    const ts = new Date(message.createdAt).getTime()
+    let lo = 0
+    let hi = messages.value.length
+    while (lo < hi) {
+      const mid = (lo + hi) >>> 1
+      if (new Date(messages.value[mid].createdAt).getTime() <= ts) {
+        lo = mid + 1
+      } else {
+        hi = mid
+      }
+    }
+    messages.value.splice(lo, 0, message)
   }
 
   function previewText(msg: DmMessage) {
@@ -216,7 +231,7 @@ export const useDmStore = defineStore('dm', () => {
         dmApi.upload(conversationId, dataUrl, fileName, caption)
       )
       if (!messages.value.find((m) => m.id === msg.id)) {
-        messages.value.push(msg)
+        insertSorted(msg)
       }
       updateConversationPreview(msg)
       replyTo.value = null

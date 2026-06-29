@@ -2,13 +2,13 @@
 
 ## Overview
 
-AetherPulse follows a **monorepo architecture** with clear separation between client, server, and shared code. The
+Nicori follows a **monorepo architecture** with clear separation between client, server, and shared code. The
 application is built on modern web technologies with a focus on real-time communication.
 
 ## Monorepo Structure
 
 ```
-aetherpulse/
+nicori/
 ├── client/           # Vue 3 Frontend
 │   ├── src/
 │   │   ├── app/      # Router, layouts

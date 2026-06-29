@@ -31,6 +31,16 @@ export interface IUser extends Document {
   lastSeenAt?: Date | null
   profileViews: number
   showProfileViews: boolean
+  richPresence: {
+    label: string
+    details?: string | null
+    icon?: string | null
+    startedAt?: number | null
+  } | null
+  googleId?: string | null
+  githubId?: string | null
+  resetPasswordToken?: string | null
+  resetPasswordExpires?: Date | null
   createdAt: Date
   updatedAt: Date
 }
@@ -108,6 +118,19 @@ const UserSchema = new Schema<IUser>(
     lastSeenAt: { type: Date, default: null },
     profileViews: { type: Number, default: 0, min: 0 },
     showProfileViews: { type: Boolean, default: true },
+    richPresence: {
+      type: {
+        label: { type: String, required: true, maxlength: 128 },
+        details: { type: String, default: null, maxlength: 128 },
+        icon: { type: String, default: null, maxlength: 256 },
+        startedAt: { type: Number, default: null },
+      },
+      default: null,
+    },
+    googleId: { type: String, default: null, sparse: true, unique: true },
+    githubId: { type: String, default: null, sparse: true, unique: true },
+    resetPasswordToken: { type: String, default: null },
+    resetPasswordExpires: { type: Date, default: null },
   },
   {
     timestamps: true,

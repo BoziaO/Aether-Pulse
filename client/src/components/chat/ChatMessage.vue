@@ -1,115 +1,115 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import {
-  Reply,
-  Pencil,
-  Trash2,
-  SmilePlus,
-  Download,
-  FileText,
-  Check,
-  CheckCheck,
-  Loader,
-} from 'lucide-vue-next'
+  import { ref, computed } from 'vue'
+  import {
+    Reply,
+    Pencil,
+    Trash2,
+    SmilePlus,
+    Download,
+    FileText,
+    Check,
+    CheckCheck,
+    Loader,
+  } from 'lucide-vue-next'
 
-import type { Message } from '@/types/message.types'
-import { useSettingsStore } from '@/stores/settings.store'
-import UserAvatar from '@/components/profile/UserAvatar.vue'
-import MessageContent from './MessageContent.vue'
+  import type { Message } from '@/types/message.types'
+  import { useSettingsStore } from '@/stores/settings.store'
+  import UserAvatar from '@/components/profile/UserAvatar.vue'
+  import MessageContent from './MessageContent.vue'
 
-const props = defineProps<{
-  message: Message
-  isOwn?: boolean | undefined
-  showAvatar?: boolean | undefined
-  showAuthor?: boolean | undefined
-  roomId?: string | undefined
-  currentUserId?: string | undefined
-}>()
+  const props = defineProps<{
+    message: Message
+    isOwn?: boolean | undefined
+    showAvatar?: boolean | undefined
+    showAuthor?: boolean | undefined
+    roomId?: string | undefined
+    currentUserId?: string | undefined
+  }>()
 
-const emit = defineEmits<{
-  (e: 'open-profile', userId: string): void
-  (e: 'reply', message: Message): void
-  (e: 'edit', message: Message): void
-  (e: 'delete', messageId: string): void
-  (e: 'react', messageId: string, emoji: string): void
-}>()
+  const emit = defineEmits<{
+    (e: 'open-profile', userId: string): void
+    (e: 'reply', message: Message): void
+    (e: 'edit', message: Message): void
+    (e: 'delete', messageId: string): void
+    (e: 'react', messageId: string, emoji: string): void
+  }>()
 
-const showActions = ref(false)
-const showReactionPicker = ref(false)
-const settings = useSettingsStore()
+  const showActions = ref(false)
+  const showReactionPicker = ref(false)
+  const settings = useSettingsStore()
 
-const QUICK_REACTIONS = ['👍', '❤️', '😂', '🔥', '🎉']
-const isCompactMessage = computed(
-  () => settings.compactChatMode || settings.chatLayout === 'compact'
-)
-const layoutClass = computed(() => `layout-${settings.chatLayout}`)
+  const QUICK_REACTIONS = ['👍', '❤️', '😂', '🔥', '🎉']
+  const isCompactMessage = computed(
+    () => settings.compactChatMode || settings.chatLayout === 'compact'
+  )
+  const layoutClass = computed(() => `layout-${settings.chatLayout}`)
 
-const displayName = computed(() => props.message.user?.displayName || 'Unknown')
+  const displayName = computed(() => props.message.user?.displayName || 'Unknown')
 
-function formatTime(iso: string) {
-  const d = new Date(iso)
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-}
-
-function hasReacted(reaction: { emoji: string; userIds: string[] }) {
-  return props.currentUserId != null && reaction.userIds.includes(props.currentUserId)
-}
-
-const isImage = computed(() => props.message.attachmentMime?.startsWith('image/') ?? false)
-
-const replyId = computed(() => props.message.replyTo?.id)
-
-const truncatedContent = computed(() => {
-  const content = props.message.replyTo?.content
-  if (!content) return ''
-  return content.length > 100 ? content.slice(0, 100) + '...' : content
-})
-
-function scrollToMessage(id: string | undefined) {
-  if (!id) return
-  const el = document.getElementById('message-' + id)
-  if (el) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  function formatTime(iso: string) {
+    const d = new Date(iso)
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   }
-}
 
-function hideActions() {
-  showActions.value = false
-  showReactionPicker.value = false
-}
-
-function selectReaction(emoji: string) {
-  emit('react', props.message.id, emoji)
-  showReactionPicker.value = false
-}
-
-const statusIcon = computed(() => {
-  if (!props.isOwn) return null
-  switch (props.message.status) {
-    case 'sending':
-      return Loader
-    case 'delivered':
-      return Check
-    case 'read':
-      return CheckCheck
-    default:
-      return null
+  function hasReacted(reaction: { emoji: string; userIds: string[] }) {
+    return props.currentUserId != null && reaction.userIds.includes(props.currentUserId)
   }
-})
 
-const statusLabel = computed(() => {
-  if (!props.isOwn) return ''
-  switch (props.message.status) {
-    case 'sending':
-      return 'Sending'
-    case 'delivered':
-      return 'Delivered'
-    case 'read':
-      return 'Read'
-    default:
-      return ''
+  const isImage = computed(() => props.message.attachmentMime?.startsWith('image/') ?? false)
+
+  const replyId = computed(() => props.message.replyTo?.id)
+
+  const truncatedContent = computed(() => {
+    const content = props.message.replyTo?.content
+    if (!content) return ''
+    return content.length > 100 ? content.slice(0, 100) + '...' : content
+  })
+
+  function scrollToMessage(id: string | undefined) {
+    if (!id) return
+    const el = document.getElementById('message-' + id)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
   }
-})
+
+  function hideActions() {
+    showActions.value = false
+    showReactionPicker.value = false
+  }
+
+  function selectReaction(emoji: string) {
+    emit('react', props.message.id, emoji)
+    showReactionPicker.value = false
+  }
+
+  const statusIcon = computed(() => {
+    if (!props.isOwn) return null
+    switch (props.message.status) {
+      case 'sending':
+        return Loader
+      case 'delivered':
+        return Check
+      case 'read':
+        return CheckCheck
+      default:
+        return null
+    }
+  })
+
+  const statusLabel = computed(() => {
+    if (!props.isOwn) return ''
+    switch (props.message.status) {
+      case 'sending':
+        return 'Sending'
+      case 'delivered':
+        return 'Delivered'
+      case 'read':
+        return 'Read'
+      default:
+        return ''
+    }
+  })
 </script>
 
 <template>

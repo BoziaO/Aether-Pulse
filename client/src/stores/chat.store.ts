@@ -71,18 +71,33 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
+  function insertSorted(message: Message) {
+    const ts = new Date(message.createdAt).getTime()
+    let lo = 0
+    let hi = messages.value.length
+    while (lo < hi) {
+      const mid = (lo + hi) >>> 1
+      if (new Date(messages.value[mid].createdAt).getTime() <= ts) {
+        lo = mid + 1
+      } else {
+        hi = mid
+      }
+    }
+    messages.value.splice(lo, 0, message)
+  }
+
   function upsertMessage(message: Message) {
     const idx = messages.value.findIndex((m) => m.id === message.id)
     if (idx >= 0) {
       messages.value[idx] = message
     } else {
-      messages.value.push(message)
+      insertSorted(message)
     }
   }
 
   function addMessage(message: Message) {
     if (messages.value.find((m) => m.id === message.id)) return
-    messages.value.push(message)
+    insertSorted(message)
 
     const auth = useAuthStore()
     if (message.type === 'text' && message.user && message.userId !== auth.user?.id) {

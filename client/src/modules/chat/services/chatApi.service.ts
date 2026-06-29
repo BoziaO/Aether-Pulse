@@ -4,7 +4,7 @@ import { serverPayloadToMessage } from '../utils/message.utils'
 const API_BASE = '/api'
 
 async function apiFetch<T>(path: string, opts?: RequestInit): Promise<T> {
-  const token = localStorage.getItem('aetherpulse_access_token')
+  const token = localStorage.getItem('nicori_access_token')
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),

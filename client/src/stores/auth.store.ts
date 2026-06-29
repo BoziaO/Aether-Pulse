@@ -2,111 +2,52 @@ import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
 
 import { authApi } from '@/services/api/auth.api'
+import { setOnUnauthorized } from '@/services/api/client'
+import { TokenManager } from '@/services/auth.token-manager'
 import { userApi } from '@/services/api/user.api'
 import type { User } from '@/types/user.types'
 import { useSettingsStore, type ThemeMode } from './settings.store'
 import { getSocket } from '@/services/socket/socket'
 
-const ACCESS_TOKEN_KEY = 'aetherpulse_access_token'
-const REFRESH_TOKEN_KEY = 'aetherpulse_refresh_token'
-const REMEMBER_ME_KEY = 'aetherpulse_remember_me'
-
-function getRememberMe(): boolean {
-  return localStorage.getItem(REMEMBER_ME_KEY) !== 'false'
-}
-
-function setRememberMe(value: boolean): void {
-  if (value) {
-    localStorage.setItem(REMEMBER_ME_KEY, 'true')
-  } else {
-    localStorage.removeItem(REMEMBER_ME_KEY)
-  }
-}
-
-function getAccessToken(): string | null {
-  return sessionStorage.getItem(ACCESS_TOKEN_KEY) ?? localStorage.getItem(ACCESS_TOKEN_KEY)
-}
-
-function getRefreshToken(): string | null {
-  return sessionStorage.getItem(REFRESH_TOKEN_KEY) ?? localStorage.getItem(REFRESH_TOKEN_KEY)
-}
-
-function setTokens(accessToken: string, refreshToken: string, remember: boolean): void {
-  if (remember) {
-    localStorage.setItem(ACCESS_TOKEN_KEY, accessToken)
-    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
-    sessionStorage.removeItem(ACCESS_TOKEN_KEY)
-    sessionStorage.removeItem(REFRESH_TOKEN_KEY)
-  } else {
-    sessionStorage.setItem(ACCESS_TOKEN_KEY, accessToken)
-    sessionStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
-    localStorage.removeItem(ACCESS_TOKEN_KEY)
-    localStorage.removeItem(REFRESH_TOKEN_KEY)
-  }
-}
-
-function clearTokens(): void {
-  localStorage.removeItem(ACCESS_TOKEN_KEY)
-  localStorage.removeItem(REFRESH_TOKEN_KEY)
-  sessionStorage.removeItem(ACCESS_TOKEN_KEY)
-  sessionStorage.removeItem(REFRESH_TOKEN_KEY)
-}
-
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
-  const accessToken = ref<string | null>(getAccessToken())
-  const refreshToken = ref<string | null>(getRefreshToken())
-  const rememberMe = ref(getRememberMe())
   const isFetchingMe = ref(false)
 
-  const isLoggedIn = computed(() => {
-    // Check if we have a valid access token and user
-    return !!(accessToken.value && user.value)
-  })
+  let refreshPromise: Promise<boolean> | null = null
 
-  /**
-   * Refresh access token using refresh token
-   */
-  async function refreshAccessToken(): Promise<boolean> {
-    const currentRefreshToken = refreshToken.value
-    if (!currentRefreshToken) return false
+  const isLoggedIn = computed(() => !!user.value)
+
+  async function doRefresh(): Promise<boolean> {
+    const rt = TokenManager.getRefreshToken()
+    if (!rt) return false
 
     try {
-      const res = await authApi.refresh(currentRefreshToken)
-      accessToken.value = res.accessToken
-      refreshToken.value = res.refreshToken
-      setTokens(res.accessToken, res.refreshToken, rememberMe.value)
+      const res = await authApi.refresh(rt)
+      TokenManager.setTokens(res.accessToken, res.refreshToken, TokenManager.isRememberMe())
+      TokenManager.scheduleAutoRefresh(doRefresh)
       return true
     } catch {
-      // Refresh failed, clear tokens
-      clearTokens()
-      accessToken.value = null
-      refreshToken.value = null
+      TokenManager.clearTokens()
       user.value = null
       return false
     }
   }
 
-  /**
-   * Make authenticated API request with token refresh on 401
-   */
-  async function authRequest<T>(request: () => Promise<T>): Promise<T> {
+  async function refreshAccessToken(): Promise<boolean> {
+    if (refreshPromise) return refreshPromise
+    refreshPromise = doRefresh()
     try {
-      return await request()
-    } catch (e: unknown) {
-      const error = e as Error & { status?: number }
-      // If unauthorized and we have a refresh token, try to refresh
-      if (error.status === 401 && refreshToken.value) {
-        const refreshed = await refreshAccessToken()
-        if (refreshed) {
-          return await request()
-        }
-      }
-      throw e
+      return await refreshPromise
+    } finally {
+      refreshPromise = null
     }
   }
+
+  setOnUnauthorized(async () => {
+    return refreshAccessToken()
+  })
 
   async function login(username: string, password: string, remember?: boolean) {
     loading.value = true
@@ -114,11 +55,8 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const res = await authApi.login(username, password)
       user.value = res.user
-      accessToken.value = res.accessToken
-      refreshToken.value = res.refreshToken
-      rememberMe.value = remember ?? true
-      setRememberMe(rememberMe.value)
-      setTokens(res.accessToken, res.refreshToken, rememberMe.value)
+      TokenManager.setTokens(res.accessToken, res.refreshToken, remember ?? true)
+      TokenManager.scheduleAutoRefresh(doRefresh)
     } catch (e: unknown) {
       error.value = e instanceof Error ? e.message : 'Login failed'
       throw e
@@ -139,11 +77,8 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const res = await authApi.register(username, email, password, displayName)
       user.value = res.user
-      accessToken.value = res.accessToken
-      refreshToken.value = res.refreshToken
-      rememberMe.value = remember ?? true
-      setRememberMe(rememberMe.value)
-      setTokens(res.accessToken, res.refreshToken, rememberMe.value)
+      TokenManager.setTokens(res.accessToken, res.refreshToken, remember ?? true)
+      TokenManager.scheduleAutoRefresh(doRefresh)
     } catch (e: unknown) {
       error.value = e instanceof Error ? e.message : 'Registration failed'
       throw e
@@ -158,28 +93,26 @@ export const useAuthStore = defineStore('auth', () => {
     } catch {
       /* empty */
     }
-    clearTokens()
-    accessToken.value = null
-    refreshToken.value = null
+    TokenManager.clearTokens()
     user.value = null
-    // Reset socket connection on logout to prevent stale connections
     import('@/services/socket/socket').then(({ resetSocket }) => resetSocket())
   }
 
   async function fetchMe() {
-    // Prevent concurrent fetchMe calls
-    if (isFetchingMe.value) {
-      return
-    }
-
+    if (isFetchingMe.value) return
     isFetchingMe.value = true
+
     try {
+      const token = TokenManager.getAccessToken()
+      if (!token) {
+        user.value = null
+        return
+      }
+
       const res = await authApi.me()
       user.value = res.user
+      TokenManager.scheduleAutoRefresh(doRefresh)
     } catch {
-      // If fetchMe fails, don't clear tokens - they might still be valid
-      // The user will just remain as null until next successful fetch
-      // This prevents being logged out due to temporary network issues
       user.value = null
     } finally {
       isFetchingMe.value = false
@@ -207,6 +140,13 @@ export const useAuthStore = defineStore('auth', () => {
         | 'avatarFrame'
         | 'profileTheme'
         | 'customTheme'
+        | 'socialLinks'
+        | 'profilePrivacy'
+        | 'showTimezone'
+        | 'showLastSeen'
+        | 'showProfileViews'
+        | 'timezone'
+        | 'richPresence'
       >
     >
   ) {
@@ -222,6 +162,30 @@ export const useAuthStore = defineStore('auth', () => {
       /* empty */
     }
     return updated
+  }
+
+  async function forgotPassword(email: string) {
+    return authApi.forgotPassword(email)
+  }
+
+  async function resetPassword(token: string, newPassword: string) {
+    return authApi.resetPassword(token, newPassword)
+  }
+
+  async function getOAuthUrl(provider: 'google' | 'github') {
+    return authApi.getOAuthUrl(provider)
+  }
+
+  async function handleOAuthCallback(provider: string, code: string) {
+    const res = await authApi.oauthCallback(provider, code)
+    user.value = res.user
+    TokenManager.setTokens(res.accessToken, res.refreshToken, true)
+    TokenManager.scheduleAutoRefresh(doRefresh)
+    return res
+  }
+
+  async function authRequest<T>(fn: () => Promise<T>): Promise<T> {
+    return fn()
   }
 
   watch(
@@ -242,15 +206,16 @@ export const useAuthStore = defineStore('auth', () => {
     loading,
     error,
     isLoggedIn,
-    accessToken,
-    refreshToken,
-    rememberMe,
     login,
     register,
     logout,
     fetchMe,
     updateProfile,
     refreshAccessToken,
+    forgotPassword,
+    resetPassword,
+    getOAuthUrl,
+    handleOAuthCallback,
     authRequest,
   }
 })

@@ -1,176 +1,199 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import MarkdownIt from 'markdown-it'
-import hljs from 'highlight.js'
-import DOMPurify from 'dompurify'
+  import { computed, ref, watch } from 'vue'
+  import MarkdownIt from 'markdown-it'
+  import hljs from 'highlight.js/lib/core'
+  import javascript from 'highlight.js/lib/languages/javascript'
+  import typescript from 'highlight.js/lib/languages/typescript'
+  import python from 'highlight.js/lib/languages/python'
+  import css from 'highlight.js/lib/languages/css'
+  import json from 'highlight.js/lib/languages/json'
+  import bash from 'highlight.js/lib/languages/bash'
+  import markdown from 'highlight.js/lib/languages/markdown'
+  import xml from 'highlight.js/lib/languages/xml'
+  import DOMPurify from 'dompurify'
 
-import {
-  fetchLinkPreview,
-  fetchGitHubRepo,
-  extractYouTubeId,
-  extractGitHubRepo,
-} from '@/services/api/linkPreview.api'
-import type { LinkPreview, GitHubRepo, EmbedEntry } from '@/services/api/linkPreview.api'
+  hljs.registerLanguage('javascript', javascript)
+  hljs.registerLanguage('js', javascript)
+  hljs.registerLanguage('typescript', typescript)
+  hljs.registerLanguage('ts', typescript)
+  hljs.registerLanguage('python', python)
+  hljs.registerLanguage('py', python)
+  hljs.registerLanguage('css', css)
+  hljs.registerLanguage('json', json)
+  hljs.registerLanguage('bash', bash)
+  hljs.registerLanguage('sh', bash)
+  hljs.registerLanguage('markdown', markdown)
+  hljs.registerLanguage('md', markdown)
+  hljs.registerLanguage('xml', xml)
+  hljs.registerLanguage('html', xml)
 
-const props = defineProps<{
-  type: string
-  content: string
-}>()
+  import {
+    fetchLinkPreview,
+    fetchGitHubRepo,
+    extractYouTubeId,
+    extractGitHubRepo,
+  } from '@/services/api/linkPreview.api'
+  import type { LinkPreview, GitHubRepo, EmbedEntry } from '@/services/api/linkPreview.api'
 
-const URL_REGEX =
-  /https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_+.~#?&//=]*)/g
+  const props = defineProps<{
+    type: string
+    content: string
+  }>()
 
-const md: MarkdownIt = new MarkdownIt({
-  linkify: true,
-  breaks: true,
-  highlight(str: string, lang: string): string | undefined {
-    if (lang && hljs.getLanguage(lang)) {
-      return `<pre class="md-codeblock"><code>${hljs.highlight(str, { language: lang }).value}</code></pre>`
-    }
-    return `<pre class="md-codeblock"><code>${md.utils.escapeHtml(str)}</code></pre>`
-  },
-})
+  const URL_REGEX =
+    /https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_+.~#?&//=]*)/g
 
-const embeds = computed<EmbedEntry[]>(() => {
-  const raw = props.content || ''
-  const urls = [...new Set(raw.match(URL_REGEX) || [])]
-  const result: EmbedEntry[] = []
+  const md: MarkdownIt = new MarkdownIt({
+    linkify: true,
+    breaks: true,
+    highlight(str: string, lang: string): string | undefined {
+      if (lang && hljs.getLanguage(lang)) {
+        return `<pre class="md-codeblock"><code>${hljs.highlight(str, { language: lang }).value}</code></pre>`
+      }
+      return `<pre class="md-codeblock"><code>${md.utils.escapeHtml(str)}</code></pre>`
+    },
+  })
 
-  for (const url of urls) {
-    const lower = url.toLowerCase()
+  const embeds = computed<EmbedEntry[]>(() => {
+    const raw = props.content || ''
+    const urls = [...new Set(raw.match(URL_REGEX) || [])]
+    const result: EmbedEntry[] = []
 
-    if (lower.includes('youtube.com') || lower.includes('youtu.be')) {
-      const videoId = extractYouTubeId(url)
-      if (videoId) {
-        result.push({ type: 'youtube', url, videoId })
+    for (const url of urls) {
+      const lower = url.toLowerCase()
+
+      if (lower.includes('youtube.com') || lower.includes('youtu.be')) {
+        const videoId = extractYouTubeId(url)
+        if (videoId) {
+          result.push({ type: 'youtube', url, videoId })
+          continue
+        }
+      }
+
+      if (lower.includes('github.com')) {
+        const repo = extractGitHubRepo(url)
+        if (repo) {
+          result.push({ type: 'github', url, owner: repo.owner, repo: repo.repo })
+          continue
+        }
+      }
+
+      if (lower.includes('twitter.com') || lower.includes('x.com')) {
+        result.push({ type: 'twitter', url })
         continue
       }
+
+      result.push({ type: 'preview', url })
     }
 
-    if (lower.includes('github.com')) {
-      const repo = extractGitHubRepo(url)
-      if (repo) {
-        result.push({ type: 'github', url, owner: repo.owner, repo: repo.repo })
-        continue
+    return result
+  })
+
+  // Remove YouTube URLs from content so they don't render as redundant links
+  const cleanContent = computed(() => {
+    let c = props.content || ''
+    for (const e of embeds.value) {
+      if (e.type === 'youtube') {
+        c = c.replace(e.url, '')
       }
     }
+    return c
+  })
 
-    if (lower.includes('twitter.com') || lower.includes('x.com')) {
-      result.push({ type: 'twitter', url })
-      continue
+  const html = computed(() => DOMPurify.sanitize(md.render(cleanContent.value)))
+
+  // Preview cache with TTL
+  const CACHE_TTL = 5 * 60 * 1000
+
+  interface TimedValue<T> {
+    data: T
+    ts: number
+  }
+
+  const previewMeta = ref<Map<string, TimedValue<LinkPreview>>>(new Map())
+  const repoMeta = ref<Map<string, TimedValue<GitHubRepo>>>(new Map())
+
+  // In-flight promises to deduplicate concurrent fetches
+  const pendingPreviews = new Map<string, Promise<LinkPreview | null>>()
+  const pendingRepos = new Map<string, Promise<GitHubRepo | null>>()
+
+  async function loadPreview(url: string): Promise<void> {
+    const existing = previewMeta.value.get(url)
+    if (existing && Date.now() - existing.ts < CACHE_TTL) return
+
+    if (pendingPreviews.has(url)) {
+      await pendingPreviews.get(url)!
+      return
     }
 
-    result.push({ type: 'preview', url })
+    const promise = fetchLinkPreview(url)
+      .then((data) => {
+        previewMeta.value = new Map(previewMeta.value.set(url, { data, ts: Date.now() }))
+        return data
+      })
+      .catch(() => null)
+
+    pendingPreviews.set(url, promise)
+    await promise
+    pendingPreviews.delete(url)
   }
 
-  return result
-})
+  async function loadRepo(owner: string, repo: string): Promise<void> {
+    const key = `${owner}/${repo}`
+    const existing = repoMeta.value.get(key)
+    if (existing && Date.now() - existing.ts < CACHE_TTL) return
 
-// Remove YouTube URLs from content so they don't render as redundant links
-const cleanContent = computed(() => {
-  let c = props.content || ''
-  for (const e of embeds.value) {
-    if (e.type === 'youtube') {
-      c = c.replace(e.url, '')
+    if (pendingRepos.has(key)) {
+      await pendingRepos.get(key)!
+      return
+    }
+
+    const promise = fetchGitHubRepo(owner, repo)
+      .then((data) => {
+        repoMeta.value = new Map(repoMeta.value.set(key, { data, ts: Date.now() }))
+        return data
+      })
+      .catch(() => null)
+
+    pendingRepos.set(key, promise)
+    await promise
+    pendingRepos.delete(key)
+  }
+
+  function triggerLoad(embed: EmbedEntry) {
+    if (embed.type === 'youtube') return
+    if (embed.type === 'github' && embed.owner && embed.repo) {
+      loadRepo(embed.owner, embed.repo)
+      return
+    }
+    loadPreview(embed.url)
+  }
+
+  watch(
+    embeds,
+    () => {
+      for (const e of embeds.value) triggerLoad(e)
+    },
+    { immediate: true }
+  )
+
+  function formatCount(n: number): string {
+    if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`
+    if (n >= 1000) return `${(n / 1000).toFixed(1)}K`
+    return String(n)
+  }
+
+  function repoLink(embed: EmbedEntry): string {
+    return `https://github.com/${embed.owner}/${embed.repo}`
+  }
+
+  function hostname(url: string): string {
+    try {
+      return new URL(url).hostname
+    } catch {
+      return url
     }
   }
-  return c
-})
-
-const html = computed(() => DOMPurify.sanitize(md.render(cleanContent.value)))
-
-// Preview cache with TTL
-const CACHE_TTL = 5 * 60 * 1000
-
-interface TimedValue<T> {
-  data: T
-  ts: number
-}
-
-const previewMeta = ref<Map<string, TimedValue<LinkPreview>>>(new Map())
-const repoMeta = ref<Map<string, TimedValue<GitHubRepo>>>(new Map())
-
-// In-flight promises to deduplicate concurrent fetches
-const pendingPreviews = new Map<string, Promise<LinkPreview | null>>()
-const pendingRepos = new Map<string, Promise<GitHubRepo | null>>()
-
-async function loadPreview(url: string): Promise<void> {
-  const existing = previewMeta.value.get(url)
-  if (existing && Date.now() - existing.ts < CACHE_TTL) return
-
-  if (pendingPreviews.has(url)) {
-    await pendingPreviews.get(url)!
-    return
-  }
-
-  const promise = fetchLinkPreview(url)
-    .then((data) => {
-      previewMeta.value = new Map(previewMeta.value.set(url, { data, ts: Date.now() }))
-      return data
-    })
-    .catch(() => null)
-
-  pendingPreviews.set(url, promise)
-  await promise
-  pendingPreviews.delete(url)
-}
-
-async function loadRepo(owner: string, repo: string): Promise<void> {
-  const key = `${owner}/${repo}`
-  const existing = repoMeta.value.get(key)
-  if (existing && Date.now() - existing.ts < CACHE_TTL) return
-
-  if (pendingRepos.has(key)) {
-    await pendingRepos.get(key)!
-    return
-  }
-
-  const promise = fetchGitHubRepo(owner, repo)
-    .then((data) => {
-      repoMeta.value = new Map(repoMeta.value.set(key, { data, ts: Date.now() }))
-      return data
-    })
-    .catch(() => null)
-
-  pendingRepos.set(key, promise)
-  await promise
-  pendingRepos.delete(key)
-}
-
-function triggerLoad(embed: EmbedEntry) {
-  if (embed.type === 'youtube') return
-  if (embed.type === 'github' && embed.owner && embed.repo) {
-    loadRepo(embed.owner, embed.repo)
-    return
-  }
-  loadPreview(embed.url)
-}
-
-watch(
-  embeds,
-  () => {
-    for (const e of embeds.value) triggerLoad(e)
-  },
-  { immediate: true }
-)
-
-function formatCount(n: number): string {
-  if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`
-  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`
-  return String(n)
-}
-
-function repoLink(embed: EmbedEntry): string {
-  return `https://github.com/${embed.owner}/${embed.repo}`
-}
-
-function hostname(url: string): string {
-  try {
-    return new URL(url).hostname
-  } catch {
-    return url
-  }
-}
 </script>
 
 <template>

@@ -1,10 +1,10 @@
 services:
   - type: web
-    name: aetherpulse-server
+    name: nicori-server
     runtime: node
     region: frankfurt
     plan: free
-    buildCommand: pnpm install && pnpm --filter aetherpulse-server build
+    buildCommand: pnpm install && pnpm --filter nicori-server build
     startCommand: node server/dist/server.mjs
     nodeVersion: 22
     healthCheckPath: /

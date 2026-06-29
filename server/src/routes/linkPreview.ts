@@ -58,7 +58,7 @@ router.get('/link-preview', async (req, res): Promise<void> => {
     const response = await fetch(rawUrl, {
       signal: AbortSignal.timeout(5000),
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; AetherPulse/1.0)',
+        'User-Agent': 'Mozilla/5.0 (compatible; Nicori/1.0)',
         Accept: 'text/html',
       },
       redirect: 'follow',

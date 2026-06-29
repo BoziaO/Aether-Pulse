@@ -33,6 +33,12 @@ export interface User {
   showTimezone: boolean
   showLastSeen: boolean
   showProfileViews: boolean
+  richPresence: {
+    label: string
+    details?: string | null
+    icon?: string | null
+    startedAt?: number | null
+  } | null
   preferredTheme: ThemeMode | null
   lastSeenAt: string | null
   profileViews: number | null

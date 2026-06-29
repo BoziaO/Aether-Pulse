@@ -1,13 +1,4 @@
-export type ThemeMode =
-  | 'dark'
-  | 'light'
-  | 'system'
-  | 'amoled'
-  | 'midnight'
-  | 'sunset'
-  | 'ocean'
-  | 'forest'
-  | 'nord'
+export type ThemeMode = 'midnight-lavender' | 'candlelight' | 'aurora' | 'sakura-night' | 'system'
 
 export type ResolvedThemeMode = ThemeMode
 
@@ -24,58 +15,34 @@ export const THEME_MODES: Array<{
   colors: string[]
 }> = [
   {
-    id: 'dark',
-    name: 'Dark',
-    description: 'Uses the app\u2019s default dark palette.',
-    colors: ['#070a13', '#8b5cf6', '#e2e8f0'],
+    id: 'midnight-lavender',
+    name: 'Midnight Lavender',
+    description: 'Calm night, pastel cyber. The default theme.',
+    colors: ['#0F1018', '#B7A7FF', '#F5F4FF'],
   },
   {
-    id: 'light',
-    name: 'Light',
-    description: 'A brighter interface for daylight use.',
-    colors: ['#f6f7fb', '#6d28d9', '#0f172a'],
+    id: 'candlelight',
+    name: 'Candlelight',
+    description: 'Warm candlelight glow for a cozy atmosphere.',
+    colors: ['#1A1513', '#FFC78E', '#FFF4E7'],
+  },
+  {
+    id: 'aurora',
+    name: 'Aurora',
+    description: 'Northern lights and neon minimalism.',
+    colors: ['#09111D', '#79F2FF', '#F2FBFF'],
+  },
+  {
+    id: 'sakura-night',
+    name: 'Sakura Night',
+    description: 'Delicate, pastel evening vibes.',
+    colors: ['#14121C', '#FFB7D5', '#FFF8FC'],
   },
   {
     id: 'system',
     name: 'System',
     description: 'Follows your operating system preference.',
-    colors: ['#070a13', '#f6f7fb', '#3b82f6'],
-  },
-  {
-    id: 'amoled',
-    name: 'AMOLED',
-    description: 'Pure black backgrounds for true blacks on OLED screens.',
-    colors: ['#000000', '#8b5cf6', '#a78bfa'],
-  },
-  {
-    id: 'midnight',
-    name: 'Midnight',
-    description: 'Deep navy with cool blue accents for late night use.',
-    colors: ['#0f1729', '#38bdf8', '#e2e8f0'],
-  },
-  {
-    id: 'sunset',
-    name: 'Sunset',
-    description: 'Warm dusk tones with orange and rose accents.',
-    colors: ['#1c1414', '#f97316', '#fda4af'],
-  },
-  {
-    id: 'ocean',
-    name: 'Ocean',
-    description: 'Deep teal and aqua tones inspired by the sea.',
-    colors: ['#0f1a1e', '#2dd4bf', '#67e8f9'],
-  },
-  {
-    id: 'forest',
-    name: 'Forest',
-    description: 'Earthy greens with warm amber accents.',
-    colors: ['#0f1a12', '#22c55e', '#fbbf24'],
-  },
-  {
-    id: 'nord',
-    name: 'Nord',
-    description: 'Inspired by the popular Nord color palette.',
-    colors: ['#1c2333', '#81a1c1', '#88c0d0'],
+    colors: ['#0F1018', '#B7A7FF', '#F5F4FF'],
   },
 ]
 

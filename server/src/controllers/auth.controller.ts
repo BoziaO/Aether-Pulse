@@ -64,4 +64,41 @@ export const AuthController = {
     const result = await AuthService.refresh(parsed.data.refreshToken)
     res.json(result)
   }),
+
+  forgotPassword: asyncHandler(async (req: Request, res: Response) => {
+    const { email } = req.body as { email?: string }
+    if (!email) {
+      res.status(400).json({ error: 'Email is required' })
+      return
+    }
+    await AuthService.forgotPassword(email)
+    res.json({ ok: true })
+  }),
+
+  resetPassword: asyncHandler(async (req: Request, res: Response) => {
+    const { token, newPassword } = req.body as { token?: string; newPassword?: string }
+    if (!token || !newPassword) {
+      res.status(400).json({ error: 'Token and new password are required' })
+      return
+    }
+    const result = await AuthService.resetPassword(token, newPassword)
+    res.json(result)
+  }),
+
+  getOAuthUrl: asyncHandler(async (req: Request, res: Response) => {
+    const provider = req.params.provider as 'google' | 'github'
+    const result = await AuthService.getOAuthUrl(provider)
+    res.json(result)
+  }),
+
+  oauthCallback: asyncHandler(async (req: Request, res: Response) => {
+    const provider = req.params.provider as 'google' | 'github'
+    const { code } = req.body as { code?: string }
+    if (!code) {
+      res.status(400).json({ error: 'Authorization code is required' })
+      return
+    }
+    const result = await AuthService.handleOAuthCallback(provider, code)
+    res.json(result)
+  }),
 }

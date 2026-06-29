@@ -1,8 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import { useAuthStore } from '@/stores/auth.store'
+import { TokenManager } from '@/services/auth.token-manager'
 
-// True when running inside Electron or Capacitor (Android/iOS)
 const isNative =
   !!(window as any).electronAPI ||
   (typeof (window as any).Capacitor !== 'undefined' && (window as any).Capacitor.isNativePlatform())
@@ -22,6 +22,18 @@ export const router = createRouter({
     {
       path: '/auth',
       component: () => import('@/views/LoginView.vue'),
+    },
+    {
+      path: '/auth/forgot-password',
+      component: () => import('@/views/ForgotPasswordView.vue'),
+    },
+    {
+      path: '/auth/reset-password/:token',
+      component: () => import('@/views/ResetPasswordView.vue'),
+    },
+    {
+      path: '/auth/oauth/callback',
+      component: () => import('@/views/OAuthCallbackView.vue'),
     },
     {
       path: '/join/:code?',
@@ -44,39 +56,39 @@ export const router = createRouter({
   ],
 })
 
+let authInitialized = false
+
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
 
-  // If going to auth page and already logged in, redirect to app
   if (to.path === '/auth') {
-    // Only fetch user if we don't have one yet
-    if (!auth.user) {
-      try {
-        await auth.fetchMe()
-      } catch {
-        // fetchMe failed, but we're on /auth so just continue
-      }
+    if (!auth.user && TokenManager.getAccessToken()) {
+      await auth.fetchMe()
     }
-    if (auth.user) {
-      return '/app'
-    }
+    if (auth.user) return '/app'
     return true
   }
 
-  // If route requires auth, check authentication
   if (to.meta.requiresAuth) {
     if (!auth.user) {
-      try {
+      if (TokenManager.getAccessToken()) {
         await auth.fetchMe()
-      } catch {
-        // fetchMe failed, redirect to auth
-        return '/auth'
       }
     }
     if (!auth.user) {
-      return '/auth'
+      return { path: '/auth', query: { redirect: to.fullPath } }
     }
   }
 
   return true
+})
+
+router.afterEach(() => {
+  if (!authInitialized) {
+    authInitialized = true
+    const auth = useAuthStore()
+    if (TokenManager.getAccessToken() && !auth.user) {
+      auth.fetchMe()
+    }
+  }
 })

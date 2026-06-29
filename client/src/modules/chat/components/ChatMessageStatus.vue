@@ -1,49 +1,49 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { Loader2, Check, CheckCheck, AlertCircle } from 'lucide-vue-next'
+  import { computed } from 'vue'
+  import { Loader2, Check, CheckCheck, AlertCircle } from 'lucide-vue-next'
 
-import { MessageStatus } from '../types/message.types'
+  import { MessageStatus } from '../types/message.types'
 
-const props = defineProps<{
-  status: MessageStatus
-  isOwn: boolean
-}>()
+  const props = defineProps<{
+    status: MessageStatus
+    isOwn: boolean
+  }>()
 
-const statusIcon = computed(() => {
-  if (!props.isOwn) return null
-  switch (props.status) {
-    case MessageStatus.Sending:
-      return Loader2
-    case MessageStatus.Sent:
-      return Check
-    case MessageStatus.Delivered:
-      return CheckCheck
-    case MessageStatus.Read:
-      return CheckCheck
-    case MessageStatus.Failed:
-      return AlertCircle
-    default:
-      return null
-  }
-})
+  const statusIcon = computed(() => {
+    if (!props.isOwn) return null
+    switch (props.status) {
+      case MessageStatus.Sending:
+        return Loader2
+      case MessageStatus.Sent:
+        return Check
+      case MessageStatus.Delivered:
+        return CheckCheck
+      case MessageStatus.Read:
+        return CheckCheck
+      case MessageStatus.Failed:
+        return AlertCircle
+      default:
+        return null
+    }
+  })
 
-const statusClass = computed(() => {
-  if (!props.isOwn) return ''
-  switch (props.status) {
-    case MessageStatus.Sending:
-      return 'status-sending'
-    case MessageStatus.Sent:
-      return 'status-sent'
-    case MessageStatus.Delivered:
-      return 'status-delivered'
-    case MessageStatus.Read:
-      return 'status-read'
-    case MessageStatus.Failed:
-      return 'status-failed'
-    default:
-      return ''
-  }
-})
+  const statusClass = computed(() => {
+    if (!props.isOwn) return ''
+    switch (props.status) {
+      case MessageStatus.Sending:
+        return 'status-sending'
+      case MessageStatus.Sent:
+        return 'status-sent'
+      case MessageStatus.Delivered:
+        return 'status-delivered'
+      case MessageStatus.Read:
+        return 'status-read'
+      case MessageStatus.Failed:
+        return 'status-failed'
+      default:
+        return ''
+    }
+  })
 </script>
 
 <template>

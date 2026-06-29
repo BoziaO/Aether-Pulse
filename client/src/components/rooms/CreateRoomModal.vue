@@ -1,33 +1,33 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { X } from 'lucide-vue-next'
+  import { ref } from 'vue'
+  import { useRouter } from 'vue-router'
+  import { X } from 'lucide-vue-next'
 
-import { useRoomStore } from '@/stores/room.store'
+  import { useRoomStore } from '@/stores/room.store'
 
-const emit = defineEmits<{ (e: 'close'): void }>()
-const router = useRouter()
-const roomStore = useRoomStore()
-const name = ref('')
-const quality = ref('1080p')
-const QUALITIES = ['360p', '480p', '720p', '1080p', '1440p']
-const loading = ref(false)
-const error = ref('')
+  const emit = defineEmits<{ (e: 'close'): void }>()
+  const router = useRouter()
+  const roomStore = useRoomStore()
+  const name = ref('')
+  const quality = ref('1080p')
+  const QUALITIES = ['360p', '480p', '720p', '1080p', '1440p']
+  const loading = ref(false)
+  const error = ref('')
 
-async function create() {
-  if (!name.value.trim()) return
-  loading.value = true
-  error.value = ''
-  try {
-    const room = await roomStore.createRoom(name.value.trim(), quality.value)
-    emit('close')
-    router.push(`/app/room/${room.id}`)
-  } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : 'Failed to create room'
-  } finally {
-    loading.value = false
+  async function create() {
+    if (!name.value.trim()) return
+    loading.value = true
+    error.value = ''
+    try {
+      const room = await roomStore.createRoom(name.value.trim(), quality.value)
+      emit('close')
+      router.push(`/app/room/${room.id}`)
+    } catch (e: unknown) {
+      error.value = e instanceof Error ? e.message : 'Failed to create room'
+    } finally {
+      loading.value = false
+    }
   }
-}
 </script>
 
 <template>

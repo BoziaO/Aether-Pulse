@@ -13,6 +13,15 @@ const envSchema = z.object({
   LOG_LEVEL: z.string().default('info'),
   SERVER_URL: z.string().optional(),
   RENDER_EXTERNAL_URL: z.string().optional(),
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.coerce.number().int().positive().optional(),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  SMTP_FROM: z.string().optional(),
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  GITHUB_CLIENT_ID: z.string().optional(),
+  GITHUB_CLIENT_SECRET: z.string().optional(),
 })
 
 const parsed = envSchema.safeParse(process.env)

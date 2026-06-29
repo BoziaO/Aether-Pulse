@@ -1,30 +1,47 @@
-import { Friendship, User, mongoose } from '@workspace/db'
+import mongoose from 'mongoose'
+import { Friendship, User } from '@workspace/db'
+
+export type LeanFriendship = {
+  _id: mongoose.Types.ObjectId
+  requesterId: mongoose.Types.ObjectId
+  addresseeId: mongoose.Types.ObjectId
+  status: 'pending' | 'accepted' | 'blocked'
+  createdAt: Date
+  updatedAt: Date
+}
+
+type FriendshipCreateData = {
+  requesterId: string | mongoose.Types.ObjectId
+  addresseeId: string | mongoose.Types.ObjectId
+  status?: 'pending' | 'accepted' | 'blocked'
+}
 
 export const FriendRepository = {
-  async findFriendship(userId: string, otherId: string) {
+  async findFriendship(userId: string, otherId: string): Promise<LeanFriendship | null> {
     return Friendship.findOne({
       $or: [
         { requesterId: userId, addresseeId: otherId },
         { requesterId: otherId, addresseeId: userId },
       ],
-    }).lean() as any
+    }).lean() as Promise<LeanFriendship | null>
   },
 
-  async findAllForUser(userId: string) {
+  async findAllForUser(userId: string): Promise<LeanFriendship[]> {
     return Friendship.find({
       $or: [{ requesterId: userId }, { addresseeId: userId }],
-    }).lean() as any
+    }).lean() as Promise<LeanFriendship[]>
   },
 
-  async create(data: Record<string, any>) {
-    return Friendship.create(data) as any
+  async create(data: FriendshipCreateData): Promise<LeanFriendship> {
+    const doc = await Friendship.create(data)
+    return doc.toObject() as LeanFriendship
   },
 
-  async updateStatus(id: string, status: string) {
+  async updateStatus(id: string | mongoose.Types.ObjectId, status: string): Promise<void> {
     await Friendship.findByIdAndUpdate(id, { status })
   },
 
-  async delete(id: string) {
+  async delete(id: string | mongoose.Types.ObjectId): Promise<void> {
     await Friendship.findByIdAndDelete(id)
   },
 

@@ -1,13 +1,13 @@
 {
-  "name": "aetherpulse-client",
+  "name": "nicori-client",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "main": "electron/main.cjs",
-  "description": "AetherPulse desktop client (Electron wrapper for the Vue web app).",
+  "description": "Nicori desktop client (Electron wrapper for the Vue web app).",
   "author": {
     "name": "Maciej Łada",
-    "email": "contact@aetherpulse.app",
+    "email": "contact@nicori.app",
     "url": "https://github.com/BoziaO"
   },
   "scripts": {
@@ -20,7 +20,7 @@
     "test:coverage": "vitest --coverage",
     "test:ui": "vitest --ui",
     "test:watch": "vitest --watch",
-    "electron:dev": "concurrently --kill-others \"pnpm dev\" \"pnpm --filter aetherpulse-server dev\" \"wait-on http://localhost:5174 && wait-on http://localhost:3000 && cross-env NODE_ENV=development electron .\"",
+    "electron:dev": "concurrently --kill-others \"pnpm dev\" \"pnpm --filter nicori-server dev\" \"wait-on http://localhost:5174 && wait-on http://localhost:3000 && cross-env NODE_ENV=development electron .\"",
     "electron:dev:build": "pnpm build && cross-env NODE_ENV=development electron .",
     "electron:build": "cross-env LOCAL_WRAPPER=true pnpm build && electron-builder --win",
     "electron:build:linux": "cross-env LOCAL_WRAPPER=true pnpm build && electron-builder --linux",
@@ -74,14 +74,15 @@
     "tslib": "^2.8.1",
     "typescript": "~6.0.3",
     "vite": "^6.4.2",
+    "vite-plugin-compression": "^0.5.1",
     "vitest": "^3.2.6",
     "vue-eslint-parser": "^9.0.0",
     "vue-tsc": "^3.3.3",
     "wait-on": "^7.0.1"
   },
   "build": {
-    "appId": "com.aetherpulse.app",
-    "productName": "AetherPulse",
+    "appId": "com.nicori.app",
+    "productName": "Nicori",
     "directories": {
       "output": "dist-electron"
     },

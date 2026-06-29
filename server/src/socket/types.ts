@@ -13,6 +13,7 @@ export interface ServerToClientEvents {
   'call-user-joined': (data: { userId: string; socketId: string }) => void
   'call-user-left': (data: { userId: string; socketId: string }) => void
   'user-status-changed': (data: { userId: string; status: string }) => void
+  'user-rich-presence-changed': (data: { userId: string; richPresence: Record<string, unknown> | null }) => void
   'user-profile-updated': (data: Record<string, unknown>) => void
   'room-activity-changed': (data: { roomId: string; isActive: boolean }) => void
   'room-updated': (data: Record<string, unknown>) => void
@@ -51,6 +52,10 @@ export interface ClientToServerEvents {
   }) => void
   'user-typing': (data: { roomId: string; userId: string; isTyping: boolean }) => void
   'user-status': (data: { userId: string; status: string }) => void
+  'set-rich-presence': (data: {
+    userId: string
+    richPresence: { label: string; details?: string | null; icon?: string | null; startedAt?: number | null } | null
+  }) => void
   'join-dm': (data: { conversationId: string }) => void
   'leave-dm': (data: { conversationId: string }) => void
   'dm-message': (data: { conversationId: string; content: string; replyToId?: string }) => void

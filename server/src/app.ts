@@ -19,7 +19,7 @@ app.set('trust proxy', 1)
 const serverUrl =
   process.env.RENDER_EXTERNAL_URL ||
   process.env.SERVER_URL ||
-  'https://aether-pulse-server.onrender.com'
+  'https://nicori-server.onrender.com'
 
 app.use(
   helmet({

@@ -29,6 +29,13 @@ export const userApi = {
         | 'avatarFrame'
         | 'profileTheme'
         | 'customTheme'
+        | 'socialLinks'
+        | 'profilePrivacy'
+        | 'showTimezone'
+        | 'showLastSeen'
+        | 'showProfileViews'
+        | 'timezone'
+        | 'richPresence'
       >
     >
   ) => apiFetch<User>(`/users/${userId}`, { method: 'PATCH', body: JSON.stringify(data) }),

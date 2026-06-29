@@ -10,7 +10,7 @@ import './styles/main.css'
 
 // Polyfill for browser bundles that depend on Node globals (e.g., simple-peer/readable-stream).
 if (!(globalThis as unknown as { process?: unknown }).process) {
-  ;(globalThis as unknown as { process: unknown }).process = process
+  (globalThis as unknown as { process: unknown }).process = process
 }
 
 const app = createApp(App)

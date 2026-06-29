@@ -1,5 +1,5 @@
 # ============================================================================
-# Client Dockerfile for AetherPulse
+# Client Dockerfile for Nicori
 # Multi-stage build with nginx
 # ============================================================================
 
@@ -29,7 +29,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 COPY . .
 
 # Build client
-RUN pnpm run build --filter aetherpulse-client
+RUN pnpm run build --filter nicori-client
 
 # Stage 3: Production stage with nginx
 FROM nginx:stable-alpine

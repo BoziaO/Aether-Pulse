@@ -1,6 +1,6 @@
 {
-  "appId": "com.aetherpulse.app",
-  "appName": "AetherPulse",
+  "appId": "com.nicori.app",
+  "appName": "Nicori",
   "webDir": "dist",
   "server": {
     "androidScheme": "https"

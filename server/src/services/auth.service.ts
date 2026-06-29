@@ -1,4 +1,6 @@
 import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
+import nodemailer from 'nodemailer'
 
 import { UserRepository } from '../repositories/user.repository'
 import { generateTokens, verifyRefreshToken } from '../middleware/auth'
@@ -9,6 +11,21 @@ import {
   NotFoundError,
   ValidationError,
 } from '../errors/AppError'
+
+const resetTokenExpiresIn = 60 * 60 * 1000
+
+const transporter =
+  process.env.SMTP_HOST
+    ? nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: process.env.SMTP_PORT || 587,
+        secure: process.env.SMTP_PORT === 465,
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
+        },
+      })
+    : null
 
 export const AuthService = {
   async register(data: {
@@ -94,5 +111,196 @@ export const AuthService = {
 
     const tokens = generateTokens(user._id.toString(), user.username)
     return { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken }
+  },
+
+  async forgotPassword(email: string) {
+    const user = await UserRepository.findOne({ email })
+    if (!user) {
+      return { ok: true }
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex')
+    const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex')
+    const expires = new Date(Date.now() + resetTokenExpiresIn)
+
+    await UserRepository.findByIdAndUpdate(user._id.toString(), {
+      resetPasswordToken: resetTokenHash,
+      resetPasswordExpires: expires,
+    } as any)
+
+    if (transporter) {
+      const clientUrl = process.env.CLIENT_URL || 'http://localhost:5174'
+      const resetUrl = `${clientUrl}/reset-password?token=${resetToken}`
+      try {
+        await transporter.sendMail({
+          from: process.env.SMTP_FROM || process.env.SMTP_USER,
+          to: email,
+          subject: 'Reset your password',
+          html: `<p>Hi ${user.displayName},</p>
+<p>You requested a password reset. Click the link below to set a new password:</p>
+<p><a href="${resetUrl}">${resetUrl}</a></p>
+<p>This link expires in 1 hour.</p>
+<p>If you didn't request this, you can safely ignore this email.</p>`,
+        })
+      } catch (err) {
+        console.error('Failed to send reset email:', err)
+      }
+    }
+
+    return { ok: true }
+  },
+
+  async resetPassword(token: string, newPassword: string) {
+    if (newPassword.length < 6) {
+      throw new ValidationError('Password must be at least 6 characters')
+    }
+
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex')
+
+    const user = await UserRepository.findOne({
+      resetPasswordToken: tokenHash,
+      resetPasswordExpires: { $gt: new Date() },
+    })
+
+    if (!user) {
+      throw new UnauthorizedError('Invalid or expired reset token')
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10)
+    await UserRepository.findByIdAndUpdate(user._id.toString(), {
+      passwordHash,
+      resetPasswordToken: null,
+      resetPasswordExpires: null,
+    } as any)
+
+    return { ok: true }
+  },
+
+  async getOAuthUrl(provider: 'google' | 'github') {
+    if (provider === 'google') {
+      const clientId = process.env.GOOGLE_CLIENT_ID
+      if (!clientId) throw new ValidationError('Google OAuth not configured')
+      const redirectUri = `${process.env.SERVER_URL || 'http://localhost:3000'}/api/auth/oauth/google/callback`
+      const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=openid email profile`
+      return { url }
+    }
+
+    if (provider === 'github') {
+      const clientId = process.env.GITHUB_CLIENT_ID
+      if (!clientId) throw new ValidationError('GitHub OAuth not configured')
+      const redirectUri = `${process.env.SERVER_URL || 'http://localhost:3000'}/api/auth/oauth/github/callback`
+      const url = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=read:user user:email`
+      return { url }
+    }
+
+    throw new ValidationError('Unsupported OAuth provider')
+  },
+
+  async handleOAuthCallback(provider: 'google' | 'github', code: string) {
+    let providerId: string
+    let email: string | null = null
+    let displayName: string
+    let avatarUrl: string | null = null
+
+    if (provider === 'google') {
+      const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          code,
+          client_id: process.env.GOOGLE_CLIENT_ID!,
+          client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+          redirect_uri: `${process.env.SERVER_URL || 'http://localhost:3000'}/api/auth/oauth/google/callback`,
+          grant_type: 'authorization_code',
+        }),
+      })
+      const tokenData = await tokenRes.json() as any
+      if (!tokenData.access_token) throw new UnauthorizedError('Google OAuth failed')
+
+      const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+        headers: { Authorization: `Bearer ${tokenData.access_token}` },
+      })
+      const userInfo = await userInfoRes.json() as any
+      providerId = userInfo.id
+      email = userInfo.email
+      displayName = userInfo.name || userInfo.email?.split('@')[0] || 'User'
+      avatarUrl = userInfo.picture || null
+    } else if (provider === 'github') {
+      const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          client_id: process.env.GITHUB_CLIENT_ID,
+          client_secret: process.env.GITHUB_CLIENT_SECRET,
+          code,
+        }),
+      })
+      const tokenData = await tokenRes.json() as any
+      if (!tokenData.access_token) throw new UnauthorizedError('GitHub OAuth failed')
+
+      const userRes = await fetch('https://api.github.com/user', {
+        headers: {
+          Authorization: `Bearer ${tokenData.access_token}`,
+          Accept: 'application/vnd.github.v3+json',
+        },
+      })
+      const githubUser = await userRes.json() as any
+      providerId = githubUser.id.toString()
+      displayName = githubUser.login || githubUser.name || 'User'
+      avatarUrl = githubUser.avatar_url || null
+
+      const emailRes = await fetch('https://api.github.com/user/emails', {
+        headers: {
+          Authorization: `Bearer ${tokenData.access_token}`,
+          Accept: 'application/vnd.github.v3+json',
+        },
+      })
+      const emails = await emailRes.json() as any[]
+      const primaryEmail = emails.find((e: any) => e.primary && e.verified)
+      email = primaryEmail?.email || null
+    } else {
+      throw new ValidationError('Unsupported OAuth provider')
+    }
+
+    const idField = provider === 'google' ? 'googleId' : 'githubId'
+    let user = await UserRepository.findOne({ [idField]: providerId })
+
+    if (!user && email) {
+      user = await UserRepository.findOne({ email })
+      if (user) {
+        await UserRepository.findByIdAndUpdate(user._id.toString(), { [idField]: providerId } as any)
+      }
+    }
+
+    if (!user) {
+      const baseUsername = displayName.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20) || `${provider}user`
+      let username = baseUsername
+      let counter = 1
+      while (await UserRepository.findOne({ username })) {
+        username = `${baseUsername}${counter}`
+        counter++
+      }
+
+      user = await UserRepository.create({
+        username,
+        email,
+        passwordHash: await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10),
+        displayName,
+        avatarUrl,
+        [idField]: providerId,
+        status: 'online',
+      })
+    }
+
+    await UserRepository.updateStatus(user._id.toString(), 'online')
+
+    const tokens = generateTokens(user._id.toString(), user.username)
+    return {
+      user: { ...serializeUser(user as any), status: 'online' },
+      ...tokens,
+    }
   },
 }

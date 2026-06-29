@@ -1,40 +1,40 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+  import { computed } from 'vue'
 
-const props = withDefaults(
-  defineProps<{
-    variant?: 'primary' | 'ghost' | 'danger' | string | undefined
-    size?: 'sm' | 'md' | 'lg' | string | undefined
-    disabled?: boolean | undefined
-  }>(),
-  {
-    variant: undefined,
-    size: undefined,
-    disabled: false,
+  const props = withDefaults(
+    defineProps<{
+      variant?: 'primary' | 'ghost' | 'danger' | string | undefined
+      size?: 'sm' | 'md' | 'lg' | string | undefined
+      disabled?: boolean | undefined
+    }>(),
+    {
+      variant: undefined,
+      size: undefined,
+      disabled: false,
+    }
+  )
+
+  const emit = defineEmits<{
+    (e: 'click', event: MouseEvent): void
+  }>()
+
+  const classes = computed(() => {
+    return [
+      'btn',
+      props.variant ? `btn-${props.variant}` : '',
+      props.size ? `btn-${props.size}` : '',
+      props.disabled ? 'disabled' : '',
+    ].filter(Boolean)
+  })
+
+  function handleClick(event: MouseEvent) {
+    if (props.disabled) {
+      event.preventDefault()
+      event.stopPropagation()
+      return
+    }
+    emit('click', event)
   }
-)
-
-const emit = defineEmits<{
-  (e: 'click', event: MouseEvent): void
-}>()
-
-const classes = computed(() => {
-  return [
-    'btn',
-    props.variant ? `btn-${props.variant}` : '',
-    props.size ? `btn-${props.size}` : '',
-    props.disabled ? 'disabled' : '',
-  ].filter(Boolean)
-})
-
-function handleClick(event: MouseEvent) {
-  if (props.disabled) {
-    event.preventDefault()
-    event.stopPropagation()
-    return
-  }
-  emit('click', event)
-}
 </script>
 
 <template>

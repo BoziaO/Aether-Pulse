@@ -1,79 +1,79 @@
 <script setup lang="ts">
-import { X, Users, Hash, Plus, MessageCircle, Settings, LogOut } from 'lucide-vue-next'
-import { useRouter, useRoute } from 'vue-router'
+  import { X, Users, Hash, Plus, MessageCircle, Settings, LogOut } from 'lucide-vue-next'
+  import { useRouter, useRoute } from 'vue-router'
 
-import { useAuthStore } from '@/stores/auth.store'
-import { useRoomStore } from '@/stores/room.store'
-import { useRtcStore } from '@/stores/rtc.store'
-import { useFriendsStore } from '@/stores/friends.store'
-import { useDmStore } from '@/stores/dm.store'
-import UserAvatar from '@/components/profile/UserAvatar.vue'
+  import { useAuthStore } from '@/stores/auth.store'
+  import { useRoomStore } from '@/stores/room.store'
+  import { useRtcStore } from '@/stores/rtc.store'
+  import { useFriendsStore } from '@/stores/friends.store'
+  import { useDmStore } from '@/stores/dm.store'
+  import UserAvatar from '@/components/profile/UserAvatar.vue'
 
-const router = useRouter()
-const route = useRoute()
-const auth = useAuthStore()
-const roomStore = useRoomStore()
-const rtcStore = useRtcStore()
-const friendsStore = useFriendsStore()
-const dmStore = useDmStore()
+  const router = useRouter()
+  const route = useRoute()
+  const auth = useAuthStore()
+  const roomStore = useRoomStore()
+  const rtcStore = useRtcStore()
+  const friendsStore = useFriendsStore()
+  const dmStore = useDmStore()
 
-const emit = defineEmits<{
-  (e: 'close'): void
-  (e: 'create-room'): void
-}>()
+  const emit = defineEmits<{
+    (e: 'close'): void
+    (e: 'create-room'): void
+  }>()
 
-function goToRoom(roomId: string) {
-  router.push(`/app/room/${roomId}`)
-  emit('close')
-}
+  function goToRoom(roomId: string) {
+    router.push(`/app/room/${roomId}`)
+    emit('close')
+  }
 
-function goToDm(userId: string) {
-  router.push({ name: 'dm', params: { userId } })
-  emit('close')
-}
+  function goToDm(userId: string) {
+    router.push({ name: 'dm', params: { userId } })
+    emit('close')
+  }
 
-function isActiveRoom(roomId: string) {
-  return route.path === `/app/room/${roomId}`
-}
+  function isActiveRoom(roomId: string) {
+    return route.path === `/app/room/${roomId}`
+  }
 
-function isActiveDm(userId: string) {
-  return route.name === 'dm' && route.params.userId === userId
-}
+  function isActiveDm(userId: string) {
+    return route.name === 'dm' && route.params.userId === userId
+  }
 
-function dmPreview(conv: import('@/types/dm.types').DmConversation) {
-  const lm = conv.lastMessage
-  if (!lm) return 'No messages yet'
-  if (lm.type === 'file') return lm.attachmentName || 'Attachment'
-  const text = lm.content
-  const snippet = text.length > 36 ? `${text.slice(0, 36)}…` : text
-  return lm.userId === auth.user?.id ? `You: ${snippet}` : snippet
-}
+  function dmPreview(conv: import('@/types/dm.types').DmConversation) {
+    const lm = conv.lastMessage
+    if (!lm) return 'No messages yet'
+    if (lm.type === 'file') return lm.attachmentName || 'Attachment'
+    const text = lm.content
+    const snippet = text.length > 36 ? `${text.slice(0, 36)}…` : text
+    return lm.userId === auth.user?.id ? `You: ${snippet}` : snippet
+  }
 
-async function handleLogout() {
-  await auth.logout()
-  router.push('/auth')
-  emit('close')
-}
+  async function handleLogout() {
+    await auth.logout()
+    router.push('/auth')
+    emit('close')
+  }
 
-function goToFriends() {
-  router.push('/app/friends')
-  emit('close')
-}
+  function goToFriends() {
+    router.push('/app/friends')
+    emit('close')
+  }
 
-function goToProfile() {
-  router.push('/app/profile')
-  emit('close')
-}
+  function goToProfile() {
+    router.push('/app/profile')
+    emit('close')
+  }
 
-function goToSettings() {
-  router.push('/app/settings')
-  emit('close')
-}
+  function goToSettings() {
+    router.push('/app/settings')
+    emit('close')
+  }
 
-function handleCreateRoom() {
-  emit('create-room')
-  emit('close')
-}
+  function handleCreateRoom() {
+    emit('create-room')
+    emit('close')
+  }
 </script>
 
 <template>
@@ -86,8 +86,8 @@ function handleCreateRoom() {
   >
     <div class="sidebar-mobile" @click.stop>
       <div class="mobile-header">
-        <img src="/icons/logo.png" alt="AetherPulse" class="mobile-logo" />
-        <span class="mobile-brand">AetherPulse</span>
+        <img src="/icons/logo.png" alt="Nicori" class="mobile-logo" />
+        <span class="mobile-brand">Nicori</span>
         <button class="close-btn" aria-label="Close menu" @click="emit('close')">
           <X :size="20" />
         </button>

@@ -1,6 +1,8 @@
 import type { Socket } from 'socket.io'
-import { User, Message, Room } from '@workspace/db'
 
+import { RoomRepository } from '../../repositories/room.repository'
+import { MessageRepository } from '../../repositories/message.repository'
+import { UserRepository } from '../../repositories/user.repository'
 import { serializeUser } from '../../utils/serialize-user'
 import { broadcastMessage } from '../../utils/message-helpers'
 import { isRoomMember } from '../../utils/room-auth'
@@ -10,7 +12,7 @@ import { logger } from '../../utils/logger'
 function updateRoomActiveState(io: any, roomId: string) {
   const callers = callUsers.get(roomId) ?? []
   const isActive = callers.length > 0
-  Room.findByIdAndUpdate(roomId, { isActive })
+  RoomRepository.findByIdAndUpdate(roomId, { isActive })
     .then(() => {
       io.to(roomId).emit('room-activity-changed', { roomId, isActive })
     })
@@ -21,8 +23,8 @@ function updateRoomActiveState(io: any, roomId: string) {
 
 async function insertSystemMessage(io: any, roomId: string, userId: string, content: string) {
   try {
-    const msg = await Message.create({ roomId, userId, content, type: 'system' })
-    const user = await User.findById(userId).lean()
+    const msg = await MessageRepository.create({ roomId, userId, content, type: 'system' })
+    const user = await UserRepository.findById(userId)
     const payload = {
       id: msg._id.toString(),
       roomId: msg.roomId.toString(),
@@ -33,7 +35,7 @@ async function insertSystemMessage(io: any, roomId: string, userId: string, cont
       editedAt: null,
       isDeleted: false,
       createdAt: msg.createdAt.toISOString(),
-      user: user ? serializeUser(user as any) : null,
+      user: user ? serializeUser(user) : null,
       reactions: [],
       replyTo: null,
     }
@@ -81,7 +83,7 @@ export function registerCallHandlers(socket: Socket, io: any, authedUserId: stri
 
       if (!wasInCall) {
         socket.to(roomId).emit('call-user-joined', { userId, socketId: socket.id })
-        const user = await User.findById(userId).lean()
+        const user = await UserRepository.findById(userId)
         if (user) {
           await insertSystemMessage(
             io,

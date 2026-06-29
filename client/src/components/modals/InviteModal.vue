@@ -1,32 +1,32 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { X, Copy, Check, Link } from 'lucide-vue-next'
+  import { ref, computed } from 'vue'
+  import { X, Copy, Check, Link } from 'lucide-vue-next'
 
-import { useRoomStore } from '@/stores/room.store'
-import type { Room } from '@/types/room.types'
+  import { useRoomStore } from '@/stores/room.store'
+  import type { Room } from '@/types/room.types'
 
-const props = defineProps<{ room: Room }>()
-const _emit = defineEmits<{ (e: 'close'): void }>()
-const roomStore = useRoomStore()
-const copied = ref(false)
+  const props = defineProps<{ room: Room }>()
+  const _emit = defineEmits<{ (e: 'close'): void }>()
+  const roomStore = useRoomStore()
+  const copied = ref(false)
 
-const inviteLink = computed(() => roomStore.getInviteLink(props.room))
+  const inviteLink = computed(() => roomStore.getInviteLink(props.room))
 
-async function copyLink() {
-  await navigator.clipboard.writeText(inviteLink.value)
-  copied.value = true
-  setTimeout(() => {
-    copied.value = false
-  }, 2000)
-}
+  async function copyLink() {
+    await navigator.clipboard.writeText(inviteLink.value)
+    copied.value = true
+    setTimeout(() => {
+      copied.value = false
+    }, 2000)
+  }
 
-async function copyCode() {
-  await navigator.clipboard.writeText(props.room.inviteCode)
-  copied.value = true
-  setTimeout(() => {
-    copied.value = false
-  }, 2000)
-}
+  async function copyCode() {
+    await navigator.clipboard.writeText(props.room.inviteCode)
+    copied.value = true
+    setTimeout(() => {
+      copied.value = false
+    }, 2000)
+  }
 </script>
 
 <template>

@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import { X, Loader2, AlertCircle, FileText, Image as ImageIcon } from 'lucide-vue-next'
+  import { X, Loader2, AlertCircle, FileText, Image as ImageIcon } from 'lucide-vue-next'
 
-import type { UploadState } from '../types/composer.types'
+  import type { UploadState } from '../types/composer.types'
 
-const _props = defineProps<{
-  uploads: UploadState[]
-}>()
+  const _props = defineProps<{
+    uploads: UploadState[]
+  }>()
 
-const emit = defineEmits<{
-  (e: 'remove', id: string): void
-  (e: 'retry', id: string): void
-}>()
+  const emit = defineEmits<{
+    (e: 'remove', id: string): void
+    (e: 'retry', id: string): void
+  }>()
 
-function isImage(file: File): boolean {
-  return file.type.startsWith('image/')
-}
+  function isImage(file: File): boolean {
+    return file.type.startsWith('image/')
+  }
 </script>
 
 <template>

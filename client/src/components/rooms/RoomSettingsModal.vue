@@ -1,52 +1,52 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { X, Trash2, LogOut } from 'lucide-vue-next'
+  import { ref, computed } from 'vue'
+  import { X, Trash2, LogOut } from 'lucide-vue-next'
 
-import { useAuthStore } from '@/stores/auth.store'
-import { useRoomStore } from '@/stores/room.store'
-import type { Room } from '@/types/room.types'
+  import { useAuthStore } from '@/stores/auth.store'
+  import { useRoomStore } from '@/stores/room.store'
+  import type { Room } from '@/types/room.types'
 
-const props = defineProps<{ room: Room }>()
-const emit = defineEmits<{
-  (e: 'close'): void
-  (e: 'left'): void
-  (e: 'deleted'): void
-}>()
+  const props = defineProps<{ room: Room }>()
+  const emit = defineEmits<{
+    (e: 'close'): void
+    (e: 'left'): void
+    (e: 'deleted'): void
+  }>()
 
-const auth = useAuthStore()
-const roomStore = useRoomStore()
-const name = ref(props.room.name)
-const quality = ref(props.room.quality)
-const saving = ref(false)
-const error = ref('')
+  const auth = useAuthStore()
+  const roomStore = useRoomStore()
+  const name = ref(props.room.name)
+  const quality = ref(props.room.quality)
+  const saving = ref(false)
+  const error = ref('')
 
-const isOwner = computed(() => auth.user?.id === props.room.ownerId)
-const QUALITIES = ['360p', '480p', '720p', '1080p', '1440p']
+  const isOwner = computed(() => auth.user?.id === props.room.ownerId)
+  const QUALITIES = ['360p', '480p', '720p', '1080p', '1440p']
 
-async function save() {
-  saving.value = true
-  error.value = ''
-  try {
-    await roomStore.updateRoom(props.room.id, { name: name.value, quality: quality.value })
-    emit('close')
-  } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : 'Failed to save'
-  } finally {
-    saving.value = false
+  async function save() {
+    saving.value = true
+    error.value = ''
+    try {
+      await roomStore.updateRoom(props.room.id, { name: name.value, quality: quality.value })
+      emit('close')
+    } catch (e: unknown) {
+      error.value = e instanceof Error ? e.message : 'Failed to save'
+    } finally {
+      saving.value = false
+    }
   }
-}
 
-async function leave() {
-  if (!confirm('Leave this room?')) return
-  await roomStore.leaveRoom(props.room.id)
-  emit('left')
-}
+  async function leave() {
+    if (!confirm('Leave this room?')) return
+    await roomStore.leaveRoom(props.room.id)
+    emit('left')
+  }
 
-async function remove() {
-  if (!confirm('Delete this room permanently? This cannot be undone.')) return
-  await roomStore.deleteRoom(props.room.id)
-  emit('deleted')
-}
+  async function remove() {
+    if (!confirm('Delete this room permanently? This cannot be undone.')) return
+    await roomStore.deleteRoom(props.room.id)
+    emit('deleted')
+  }
 </script>
 
 <template>

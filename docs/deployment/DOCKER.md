@@ -2,7 +2,7 @@
 
 ## Overview
 
-AetherPulse can be deployed using Docker for development or production. This guide covers setting up the application
+Nicori can be deployed using Docker for development or production. This guide covers setting up the application
 with Docker and Docker Compose.
 
 ## Prerequisites
@@ -16,8 +16,8 @@ with Docker and Docker Compose.
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-org/aetherpulse.git
-cd aetherpulse
+git clone https://github.com/your-org/nicori.git
+cd nicori
 ```
 
 ### 2. Copy Environment File
@@ -57,7 +57,7 @@ Edit `.env` with production values:
 ```env
 NODE_ENV=production
 PORT=3000
-DATABASE_URL=postgresql://aetherpulse:your_password@db:5432/aetherpulse
+DATABASE_URL=postgresql://nicori:your_password@db:5432/nicori
 SESSION_SECRET=your_very_strong_secret_here
 JWT_SECRET=your_jwt_secret_here_minimum_32_characters
 CLIENT_URL=https://your-domain.com
@@ -84,7 +84,7 @@ docker-compose -f docker/docker-compose.yml logs -f
 docker-compose -f docker/docker-compose.yml exec server curl http://localhost:3000/api/health
 
 # Test database connection
-docker-compose -f docker/docker-compose.yml exec db psql -U aetherpulse -d aetherpulse -c "SELECT 1;"
+docker-compose -f docker/docker-compose.yml exec db psql -U nicori -d nicori -c "SELECT 1;"
 ```
 
 ## Docker Compose Configuration
@@ -109,7 +109,7 @@ The `docker/docker-compose.yml` file defines the following services:
 
 ### Networks
 
-- `aetherpulse-network`: Internal Docker network for service communication
+- `nicori-network`: Internal Docker network for service communication
 
 ## Customizing the Configuration
 
@@ -138,7 +138,7 @@ To use an external PostgreSQL database instead of the container:
 services:
   server:
     environment:
-      - DATABASE_URL=postgresql://user:password@your-external-db:5432/aetherpulse
+      - DATABASE_URL=postgresql://user:password@your-external-db:5432/nicori
     # Remove db dependency
     # depends_on:
     #   - db
@@ -161,48 +161,48 @@ services:
 ### Build Server Image
 
 ```bash
-docker build -t aetherpulse-server:latest -f docker/server/Dockerfile .
+docker build -t nicori-server:latest -f docker/server/Dockerfile .
 ```
 
 ### Build Client Image
 
 ```bash
-docker build -t aetherpulse-client:latest -f docker/client/Dockerfile .
+docker build -t nicori-client:latest -f docker/client/Dockerfile .
 ```
 
 ### Run Containers
 
 ```bash
 # Run PostgreSQL
-docker run -d --name aetherpulse-db \
-  -e POSTGRES_USER=aetherpulse \
+docker run -d --name nicori-db \
+  -e POSTGRES_USER=nicori \
   -e POSTGRES_PASSWORD=your_password \
-  -e POSTGRES_DB=aetherpulse \
+  -e POSTGRES_DB=nicori \
   -p 5432:5432 \
-  -v aetherpulse-db-data:/var/lib/postgresql/data \
+  -v nicori-db-data:/var/lib/postgresql/data \
   postgres:15-alpine
 
 # Run Redis
-docker run -d --name aetherpulse-redis \
+docker run -d --name nicori-redis \
   -p 6379:6379 \
-  -v aetherpulse-redis-data:/data \
+  -v nicori-redis-data:/data \
   redis:7-alpine
 
 # Run Server
-docker run -d --name aetherpulse-server \
+docker run -d --name nicori-server \
   -e NODE_ENV=production \
   -e PORT=3000 \
-  -e DATABASE_URL=postgresql://aetherpulse:your_password@host.docker.internal:5432/aetherpulse \
+  -e DATABASE_URL=postgresql://nicori:your_password@host.docker.internal:5432/nicori \
   -e SESSION_SECRET=your_secret \
   -e REDIS_URL=redis://host.docker.internal:6379 \
   -p 3000:3000 \
   --add-host=host.docker.internal:host-gateway \
-  aetherpulse-server:latest
+  nicori-server:latest
 
 # Run Client (via Nginx)
-docker run -d --name aetherpulse-client \
+docker run -d --name nicori-client \
   -p 80:80 \
-  aetherpulse-client:latest
+  nicori-client:latest
 ```
 
 ## Docker Hub / Registry
@@ -214,20 +214,20 @@ docker run -d --name aetherpulse-client \
 docker login
 
 # Build and tag
-docker build -t your-username/aetherpulse-server:latest -f docker/server/Dockerfile .
-docker build -t your-username/aetherpulse-client:latest -f docker/client/Dockerfile .
+docker build -t your-username/nicori-server:latest -f docker/server/Dockerfile .
+docker build -t your-username/nicori-client:latest -f docker/client/Dockerfile .
 
 # Push to registry
-docker push your-username/aetherpulse-server:latest
-docker push your-username/aetherpulse-client:latest
+docker push your-username/nicori-server:latest
+docker push your-username/nicori-client:latest
 ```
 
 ### Pull and Run
 
 ```bash
 # Pull images
-docker pull your-username/aetherpulse-server:latest
-docker pull your-username/aetherpulse-client:latest
+docker pull your-username/nicori-server:latest
+docker pull your-username/nicori-client:latest
 
 # Run with docker-compose using custom images
 # Edit docker/docker-compose.yml to use your images
@@ -265,7 +265,7 @@ sudo chown -R 1000:1000 /path/to/volume
 docker-compose -f docker/docker-compose.yml logs db
 
 # Connect to database manually
-docker-compose -f docker/docker-compose.yml exec db psql -U aetherpulse -d aetherpulse
+docker-compose -f docker/docker-compose.yml exec db psql -U nicori -d nicori
 
 # Test connection from server container
 docker-compose -f docker/docker-compose.yml exec server node -e "
@@ -438,7 +438,7 @@ services:
       dockerfile: docker/server/Dockerfile
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://aetherpulse:password@db:5432/aetherpulse
+      - DATABASE_URL=postgresql://nicori:password@db:5432/nicori
       - REDIS_URL=redis://redis:6379
       - SESSION_SECRET=${SESSION_SECRET}
     depends_on:
@@ -450,9 +450,9 @@ services:
   db:
     image: postgres:15
     environment:
-      - POSTGRES_USER=aetherpulse
+      - POSTGRES_USER=nicori
       - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=aetherpulse
+      - POSTGRES_DB=nicori
     volumes:
       - db-data:/var/lib/postgresql/data
     deploy:
@@ -479,5 +479,5 @@ volumes:
 Run with:
 
 ```bash
-docker stack deploy -c docker-compose.prod.yml aetherpulse
+docker stack deploy -c docker-compose.prod.yml nicori
 ```

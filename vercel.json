@@ -1,12 +1,12 @@
 {
-  "buildCommand": "pnpm --filter aetherpulse-client build",
+  "buildCommand": "pnpm --filter nicori-client build",
   "outputDirectory": "dist",
   "installCommand": "pnpm install",
   "framework": "vite",
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://aetherpulse-server.onrender.com/api/$1"
+      "destination": "https://nicori-server.onrender.com/api/$1"
     },
     {
       "source": "/(.*)",

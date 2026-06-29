@@ -1,6 +1,6 @@
 import type { Socket } from 'socket.io'
-import { Message } from '@workspace/db'
 
+import { MessageRepository } from '../../repositories/message.repository'
 import { buildMessagePayload, broadcastMessage } from '../../utils/message-helpers'
 import { isRoomMember } from '../../utils/room-auth'
 import { isDuplicateMessage } from '../dedup'
@@ -40,7 +40,7 @@ export function registerChatHandlers(socket: Socket, io: any, authedUserId: stri
     }
 
     try {
-      const msg = await Message.create({
+      const msg = await MessageRepository.create({
         roomId,
         userId,
         content: content.trim(),

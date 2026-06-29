@@ -76,7 +76,7 @@ export class ChatSocketService {
       return
     }
 
-    const token = localStorage.getItem('aetherpulse_access_token')
+    const token = localStorage.getItem('nicori_access_token')
     const serverUrl = import.meta.env.VITE_API_URL || ''
 
     socket = io(serverUrl, {

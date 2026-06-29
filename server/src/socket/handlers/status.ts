@@ -1,6 +1,6 @@
 import type { Socket } from 'socket.io'
-import { User } from '@workspace/db'
 
+import { UserRepository } from '../../repositories/user.repository'
 import { serializeUser } from '../../utils/serialize-user'
 import { logger } from '../../utils/logger'
 
@@ -12,13 +12,32 @@ export function registerStatusHandlers(socket: Socket, io: any, authedUserId: st
     }
 
     try {
-      const updated = await User.findByIdAndUpdate(userId, { status }, { new: true }).lean()
+      const updated = await UserRepository.findByIdAndUpdate(userId, { status })
       if (updated) {
-        const serialized = serializeUser(updated as any, { viewerId: userId })
+        const serialized = serializeUser(updated, { viewerId: userId })
         io.emit('user-profile-updated', serialized)
       }
     } catch (e) {
       logger.error({ err: e, userId }, 'Error updating status')
+    }
+  })
+
+  socket.on('set-rich-presence', async ({ userId, richPresence }) => {
+    if (!userId || userId !== authedUserId) {
+      socket.emit('error', { message: 'Unauthorized' })
+      return
+    }
+
+    try {
+      const updated = await UserRepository.findByIdAndUpdate(userId, { richPresence })
+      if (updated) {
+        io.emit('user-rich-presence-changed', {
+          userId,
+          richPresence: updated.richPresence ?? null,
+        })
+      }
+    } catch (e) {
+      logger.error({ err: e, userId }, 'Error updating rich presence')
     }
   })
 }

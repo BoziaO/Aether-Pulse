@@ -1,5 +1,7 @@
 import { computed, onScopeDispose, ref } from 'vue'
 
+import type { ThemeMode } from '@/types/settings.types'
+
 function readMatchMedia(query: string) {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
     return null
@@ -28,7 +30,7 @@ export function useSystemTheme() {
     }
   }
 
-  const systemTheme = computed((): 'dark' | 'light' => (prefersDark.value ? 'dark' : 'light'))
+  const systemTheme = computed((): ThemeMode => (prefersDark.value ? 'midnight-lavender' : 'midnight-lavender'))
 
   return {
     prefersDark,

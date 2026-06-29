@@ -1,36 +1,36 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { Monitor, MonitorDown, X } from 'lucide-vue-next'
+  import { ref, computed } from 'vue'
+  import { Monitor, MonitorDown, X } from 'lucide-vue-next'
 
-export interface DesktopSource {
-  id: string
-  name: string
-  thumbnail: string
-}
+  export interface DesktopSource {
+    id: string
+    name: string
+    thumbnail: string
+  }
 
-const props = defineProps<{
-  sources: DesktopSource[]
-}>()
+  const props = defineProps<{
+    sources: DesktopSource[]
+  }>()
 
-const emit = defineEmits<{
-  select: [source: DesktopSource]
-  cancel: []
-}>()
+  const emit = defineEmits<{
+    select: [source: DesktopSource]
+    cancel: []
+  }>()
 
-const selectedId = ref<string | null>(null)
+  const selectedId = ref<string | null>(null)
 
-const screens = computed(() => props.sources.filter((s) => s.id.startsWith('screen:')))
-const windows = computed(() => props.sources.filter((s) => s.id.startsWith('window:')))
-const tab = ref<'screens' | 'windows'>('screens')
+  const screens = computed(() => props.sources.filter((s) => s.id.startsWith('screen:')))
+  const windows = computed(() => props.sources.filter((s) => s.id.startsWith('window:')))
+  const tab = ref<'screens' | 'windows'>('screens')
 
-function select(id: string) {
-  selectedId.value = id
-}
+  function select(id: string) {
+    selectedId.value = id
+  }
 
-function confirm() {
-  const source = props.sources.find((s) => s.id === selectedId.value)
-  if (source) emit('select', source)
-}
+  function confirm() {
+    const source = props.sources.find((s) => s.id === selectedId.value)
+    if (source) emit('select', source)
+  }
 </script>
 
 <template>

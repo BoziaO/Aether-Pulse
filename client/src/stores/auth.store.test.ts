@@ -177,8 +177,8 @@ describe('Auth Store', () => {
     }
     auth.accessToken = 'test-access-token'
     auth.refreshToken = 'test-refresh-token'
-    localStorage.setItem('aetherpulse_access_token', 'test-access-token')
-    localStorage.setItem('aetherpulse_refresh_token', 'test-refresh-token')
+    localStorage.setItem('nicori_access_token', 'test-access-token')
+    localStorage.setItem('nicori_refresh_token', 'test-refresh-token')
 
     expect(auth.isLoggedIn).toBe(true)
 
@@ -188,8 +188,8 @@ describe('Auth Store', () => {
     expect(auth.accessToken).toBeNull()
     expect(auth.refreshToken).toBeNull()
     expect(auth.isLoggedIn).toBe(false)
-    expect(localStorage.getItem('aetherpulse_access_token')).toBeNull()
-    expect(localStorage.getItem('aetherpulse_refresh_token')).toBeNull()
+    expect(localStorage.getItem('nicori_access_token')).toBeNull()
+    expect(localStorage.getItem('nicori_refresh_token')).toBeNull()
   })
 
   it('persists tokens to localStorage on login', async () => {
@@ -221,14 +221,14 @@ describe('Auth Store', () => {
     const auth = useAuthStore()
     await auth.login('testuser', 'password123')
 
-    expect(localStorage.getItem('aetherpulse_access_token')).toBe('test-access-token')
-    expect(localStorage.getItem('aetherpulse_refresh_token')).toBe('test-refresh-token')
+    expect(localStorage.getItem('nicori_access_token')).toBe('test-access-token')
+    expect(localStorage.getItem('nicori_refresh_token')).toBe('test-refresh-token')
   })
 
   it('loads tokens from localStorage on initialization', () => {
     // Set tokens in localStorage
-    localStorage.setItem('aetherpulse_access_token', 'stored-access-token')
-    localStorage.setItem('aetherpulse_refresh_token', 'stored-refresh-token')
+    localStorage.setItem('nicori_access_token', 'stored-access-token')
+    localStorage.setItem('nicori_refresh_token', 'stored-refresh-token')
 
     const auth = useAuthStore()
 
@@ -246,15 +246,15 @@ describe('Auth Store', () => {
 
     // Set initial refresh token
     auth.refreshToken = 'valid-refresh-token'
-    localStorage.setItem('aetherpulse_refresh_token', 'valid-refresh-token')
+    localStorage.setItem('nicori_refresh_token', 'valid-refresh-token')
 
     const result = await auth.refreshAccessToken()
 
     expect(result).toBe(true)
     expect(auth.accessToken).toBe('new-access-token')
     expect(auth.refreshToken).toBe('new-refresh-token')
-    expect(localStorage.getItem('aetherpulse_access_token')).toBe('new-access-token')
-    expect(localStorage.getItem('aetherpulse_refresh_token')).toBe('new-refresh-token')
+    expect(localStorage.getItem('nicori_access_token')).toBe('new-access-token')
+    expect(localStorage.getItem('nicori_refresh_token')).toBe('new-refresh-token')
   })
 
   it('clears tokens on refresh failure', async () => {
@@ -285,8 +285,8 @@ describe('Auth Store', () => {
       badges: [],
       createdAt: new Date().toISOString(),
     }
-    localStorage.setItem('aetherpulse_access_token', 'old-access-token')
-    localStorage.setItem('aetherpulse_refresh_token', 'invalid-refresh-token')
+    localStorage.setItem('nicori_access_token', 'old-access-token')
+    localStorage.setItem('nicori_refresh_token', 'invalid-refresh-token')
 
     const result = await auth.refreshAccessToken()
 
@@ -294,7 +294,7 @@ describe('Auth Store', () => {
     expect(auth.accessToken).toBeNull()
     expect(auth.refreshToken).toBeNull()
     expect(auth.user).toBeNull()
-    expect(localStorage.getItem('aetherpulse_access_token')).toBeNull()
-    expect(localStorage.getItem('aetherpulse_refresh_token')).toBeNull()
+    expect(localStorage.getItem('nicori_access_token')).toBeNull()
+    expect(localStorage.getItem('nicori_refresh_token')).toBeNull()
   })
 })

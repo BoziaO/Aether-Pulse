@@ -1,4 +1,4 @@
-package com.aetherpulse.app;
+package com.nicori.app;
 
 import android.app.PictureInPictureParams;
 import android.os.Build;

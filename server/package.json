@@ -1,5 +1,5 @@
 {
-  "name": "aetherpulse-server",
+  "name": "nicori-server",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -30,6 +30,7 @@
     "media-typer": "^2.0.0",
     "mongoose": "^8.7.0",
     "nanoid": "^5.1.11",
+    "nodemailer": "^9.0.1",
     "pino": "^10.3.1",
     "pino-http": "^11.0.0",
     "sharp": "^0.35.2",
@@ -44,6 +45,7 @@
     "@types/jsonwebtoken": "^9.0.7",
     "@types/mongoose": "^5.11.97",
     "@types/node": "^25.9.1",
+    "@types/nodemailer": "^8.0.1",
     "@types/supertest": "^6.0.2",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",

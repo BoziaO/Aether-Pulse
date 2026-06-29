@@ -1,5 +1,5 @@
 # ============================================================================
-# Server Dockerfile for AetherPulse
+# Server Dockerfile for Nicori
 # Multi-stage build for production
 # ============================================================================
 
@@ -29,7 +29,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 COPY . .
 
 # Build server
-RUN pnpm run build --filter aetherpulse-server
+RUN pnpm run build --filter nicori-server
 
 # Stage 3: Production dependencies
 FROM base AS prod-deps

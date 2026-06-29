@@ -18,10 +18,10 @@ jobs:
         include:
           - os: windows-latest
             script: electron:build
-            artifact-name: aetherpulse-windows
+            artifact-name: nicori-windows
           - os: ubuntu-latest
             script: electron:build:linux
-            artifact-name: aetherpulse-linux
+            artifact-name: nicori-linux
 
     runs-on: ${{ matrix.os }}
 
@@ -123,26 +123,26 @@ jobs:
       - name: Download Windows artifacts
         uses: actions/download-artifact@v4
         with:
-          name: aetherpulse-windows
+          name: nicori-windows
           path: artifacts/windows
 
       - name: Download Linux artifacts
         uses: actions/download-artifact@v4
         with:
-          name: aetherpulse-linux
+          name: nicori-linux
           path: artifacts/linux
 
       - name: Generate release notes
         run: |
           cat > release-notes.md << 'EOF'
-          ## AetherPulse ${{ github.ref_name }}
+          ## Nicori ${{ github.ref_name }}
 
           ### Downloads
 
           | Platform | File |
           |----------|------|
-          | Windows | AetherPulse Setup (attached) |
-          | Linux | AetherPulse AppImage (attached) |
+          | Windows | Nicori Setup (attached) |
+          | Linux | Nicori AppImage (attached) |
           | Docker (server) | \`ghcr.io/${{ github.repository }}-server:${{ github.ref_name }}\` |
           | Docker (client) | \`ghcr.io/${{ github.repository }}-client:${{ github.ref_name }}\` |
 
@@ -150,19 +150,19 @@ jobs:
 
           **Windows**: Run the installer and follow the prompts.
 
-          **Linux**: \`chmod +x *.AppImage && ./AetherPulse-*.AppImage\`
+          **Linux**: \`chmod +x *.AppImage && ./Nicori-*.AppImage\`
 
           **Docker**: See \`docker/docker-compose.yml\` or pull images from GHCR.
 
           ### Notes
           - Requires Node.js >= 22 for local development
-          - Connect to an AetherPulse server (default: https://aetherpulse-server.onrender.com)
+          - Connect to an Nicori server (default: https://nicori-server.onrender.com)
           EOF
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          name: AetherPulse ${{ github.ref_name }}
+          name: Nicori ${{ github.ref_name }}
           body_path: release-notes.md
           files: |
             artifacts/**/*

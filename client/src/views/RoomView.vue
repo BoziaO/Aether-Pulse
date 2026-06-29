@@ -1,243 +1,277 @@
 <script setup lang="ts">
-import { ref, onUnmounted, computed, watch, defineAsyncComponent } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import {
-  Phone,
-  ArrowLeft,
-  Link2,
-  Settings,
-  Users,
-  Radio,
-  PictureInPicture2,
-  Loader2,
-} from 'lucide-vue-next'
+  import { ref, onMounted, onUnmounted, computed, watch, defineAsyncComponent } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
+  import {
+    Phone,
+    ArrowLeft,
+    Link2,
+    Settings,
+    Users,
+    Radio,
+    PictureInPicture2,
+    Loader2,
+    Sparkles,
+  } from 'lucide-vue-next'
 
-import { useAuthStore } from '@/stores/auth.store'
-import { useRoomStore } from '@/stores/room.store'
-import { useRtcStore } from '@/stores/rtc.store'
+  import { useAuthStore } from '@/stores/auth.store'
+  import { useRoomStore } from '@/stores/room.store'
+  import { useRtcStore } from '@/stores/rtc.store'
 
-// Lazy-loaded components for performance
-const VideoTile = defineAsyncComponent(() => import('@/components/call/VideoTile.vue'))
-const CallControls = defineAsyncComponent(() => import('@/components/call/CallControls.vue'))
-const ChatPanel = defineAsyncComponent(() => import('@/modules/chat/components/ChatView.vue'))
-const MemberSidebar = defineAsyncComponent(() => import('@/components/rooms/MemberSidebar.vue'))
-const InviteModal = defineAsyncComponent(() => import('@/components/modals/InviteModal.vue'))
-const RoomSettingsModal = defineAsyncComponent(
-  () => import('@/components/rooms/RoomSettingsModal.vue')
-)
-const UserProfileModal = defineAsyncComponent(
-  () => import('@/components/profile/UserProfileModal.vue')
-)
+  const VideoTile = defineAsyncComponent(() => import('@/components/call/VideoTile.vue'))
+  const CallControls = defineAsyncComponent(() => import('@/components/call/CallControls.vue'))
+  const ChatPanel = defineAsyncComponent(() => import('@/modules/chat/components/ChatView.vue'))
+  const MemberSidebar = defineAsyncComponent(() => import('@/components/rooms/MemberSidebar.vue'))
+  const InviteModal = defineAsyncComponent(() => import('@/components/modals/InviteModal.vue'))
+  const RoomSettingsModal = defineAsyncComponent(
+    () => import('@/components/rooms/RoomSettingsModal.vue')
+  )
+  const UserProfileModal = defineAsyncComponent(
+    () => import('@/components/profile/UserProfileModal.vue')
+  )
 
-const route = useRoute()
-const router = useRouter()
-const auth = useAuthStore()
-const roomStore = useRoomStore()
-const rtc = useRtcStore()
+  const route = useRoute()
+  const router = useRouter()
+  const auth = useAuthStore()
+  const roomStore = useRoomStore()
+  const rtc = useRtcStore()
 
-const showInvite = ref(false)
-const showSettings = ref(false)
-const showMembers = ref(true)
-const callError = ref('')
-const showJoinWithoutMicrophone = ref(false)
-const isCheckingMicrophone = ref(false)
-const selectedUserId = ref<string | null>(null)
-const activeTab = ref<'voice' | 'chat'>('voice')
+  const showInvite = ref(false)
+  const showSettings = ref(false)
+  const showMembers = ref(true)
+  const callError = ref('')
+  const showJoinWithoutMicrophone = ref(false)
+  const isCheckingMicrophone = ref(false)
+  const selectedUserId = ref<string | null>(null)
+  const activeTab = ref<'voice' | 'chat'>('voice')
+  const mouse = ref({ x: 0, y: 0 })
 
-const roomId = computed(() => route.params.roomId as string)
-const room = computed(() => roomStore.currentRoom)
-const membersForChat = computed(() =>
-  (room.value?.members ?? []).map((m) => ({
-    id: m.id,
-    displayName: m.displayName,
-    status: m.status,
-  }))
-)
-const members = computed(() => room.value?.members ?? [])
-const remoteEntries = computed(() => [...rtc.remoteStreams.entries()])
-const inVoiceCount = computed(() => rtc.callUsers.size + (rtc.inCall ? 1 : 0))
-const isAndroidNative = computed(
-  () =>
-    typeof (window as any).Capacitor !== 'undefined' && (window as any).Capacitor.isNativePlatform()
-)
+  let mouseFn: ((e: MouseEvent) => void) | null = null
 
-async function enterRoom(id: string) {
-  if (!auth.user || !id) return
-  try {
-    await roomStore.loadRoom(id)
-    await rtc.joinRoom(id, auth.user.id)
-  } catch (e) {
-    console.error('Failed to join room:', e)
-  }
-}
-
-function leaveCurrentRoom() {
-  if (auth.user && roomId.value) {
-    rtc.leaveRoom(auth.user.id)
-  }
-}
-
-watch(
-  roomId,
-  (newId, oldId) => {
-    if (oldId) {
-      leaveCurrentRoom()
-      activeTab.value = 'voice'
+  onMounted(() => {
+    mouseFn = (e: MouseEvent) => {
+      mouse.value = {
+        x: (e.clientX / window.innerWidth - 0.5) * 2,
+        y: (e.clientY / window.innerHeight - 0.5) * 2,
+      }
     }
-    if (newId) {
-      enterRoom(newId)
+    window.addEventListener('mousemove', mouseFn, { passive: true })
+  })
+
+  onUnmounted(() => {
+    if (mouseFn) window.removeEventListener('mousemove', mouseFn)
+  })
+
+  const roomId = computed(() => route.params.roomId as string)
+  const room = computed(() => roomStore.currentRoom)
+  const membersForChat = computed(() =>
+    (room.value?.members ?? []).map((m) => ({
+      id: m.id,
+      displayName: m.displayName,
+      status: m.status,
+    }))
+  )
+  const members = computed(() => room.value?.members ?? [])
+  const remoteEntries = computed(() => [...rtc.remoteStreams.entries()])
+  const inVoiceCount = computed(() => rtc.callUsers.size + (rtc.inCall ? 1 : 0))
+  const isAndroidNative = computed(
+    () =>
+      typeof (window as any).Capacitor !== 'undefined' && (window as any).Capacitor.isNativePlatform()
+  )
+
+  async function enterRoom(id: string) {
+    if (!auth.user || !id) return
+    try {
+      await roomStore.loadRoom(id)
+      await rtc.joinRoom(id, auth.user.id)
+    } catch (e) {
+      console.error('Failed to join room:', e)
     }
-  },
-  { immediate: true }
-)
-
-onUnmounted(() => {
-  leaveCurrentRoom()
-})
-
-async function handleJoinCall() {
-  callError.value = ''
-  try {
-    await rtc.startCall()
-  } catch (e: unknown) {
-    callError.value = e instanceof Error ? e.message : 'Nie można uzyskać dostępu do mikrofonu'
   }
-}
 
-async function handleJoinWithoutMicrophone() {
-  callError.value = ''
-  try {
-    isCheckingMicrophone.value = true
-    await rtc.startCall(true) // allowWithoutMicrophone = true
-    showJoinWithoutMicrophone.value = false
-  } catch (e: unknown) {
-    callError.value = e instanceof Error ? e.message : 'Nie można dołączyć bez mikrofonu'
-  } finally {
-    isCheckingMicrophone.value = false
+  function leaveCurrentRoom() {
+    if (auth.user && roomId.value) {
+      rtc.leaveRoom(auth.user.id)
+    }
   }
-}
 
-function goBack() {
-  router.push('/app')
-}
+  watch(
+    roomId,
+    (newId, oldId) => {
+      if (oldId) {
+        leaveCurrentRoom()
+        activeTab.value = 'voice'
+      }
+      if (newId) {
+        enterRoom(newId)
+      }
+    },
+    { immediate: true }
+  )
 
-function openUserProfile(userId: string) {
-  selectedUserId.value = userId
-}
+  onUnmounted(() => {
+    leaveCurrentRoom()
+  })
 
-function handleLeftRoom() {
-  showSettings.value = false
-  router.push('/app')
-}
+  async function handleJoinCall() {
+    callError.value = ''
+    try {
+      await rtc.startCall()
+    } catch (e: unknown) {
+      callError.value = e instanceof Error ? e.message : 'Nie można uzyskać dostępu do mikrofonu'
+    }
+  }
 
-function handleDeletedRoom() {
-  showSettings.value = false
-  router.push('/')
-}
+  async function handleJoinWithoutMicrophone() {
+    callError.value = ''
+    try {
+      isCheckingMicrophone.value = true
+      await rtc.startCall(true)
+      showJoinWithoutMicrophone.value = false
+    } catch (e: unknown) {
+      callError.value = e instanceof Error ? e.message : 'Nie można dołączyć bez mikrofonu'
+    } finally {
+      isCheckingMicrophone.value = false
+    }
+  }
+
+  function goBack() {
+    router.push('/app')
+  }
+
+  function openUserProfile(userId: string) {
+    selectedUserId.value = userId
+  }
+
+  function handleLeftRoom() {
+    showSettings.value = false
+    router.push('/app')
+  }
+
+  function handleDeletedRoom() {
+    showSettings.value = false
+    router.push('/')
+  }
 </script>
 
 <template>
   <div class="room-view">
+    <div class="room-bg-orbs" aria-hidden="true">
+      <div class="room-orb room-orb--violet" :style="{ transform: `translate(${mouse.x * 15}px, ${mouse.y * 15}px)` }"></div>
+      <div class="room-orb room-orb--pink" :style="{ transform: `translate(${mouse.x * -10}px, ${mouse.y * -10}px)` }"></div>
+      <div class="room-orb room-orb--blue" :style="{ transform: `translate(${mouse.x * 8}px, ${mouse.y * -12}px)` }"></div>
+      <div class="room-orb room-orb--teal"></div>
+    </div>
+
     <div class="room-main" :class="{ 'mobile-hidden': activeTab !== 'voice' }">
       <div class="room-header">
-        <button class="back-btn" @click="goBack">
-          <ArrowLeft :size="16" />
+        <button class="room-back-btn" @click="goBack">
+          <ArrowLeft :size="18" />
         </button>
         <div class="room-title">
           <span class="room-hash">#</span>
-          <h2>{{ room?.name || 'Loading...' }}</h2>
-          <span v-if="room?.isActive" class="live-badge">LIVE</span>
-          <span class="room-users">{{ rtc.roomUsers.length }} online</span>
-          <span v-if="inVoiceCount > 0" class="voice-badge">{{ inVoiceCount }} in voice</span>
+          <h2>{{ room?.name || 'Ładowanie...' }}</h2>
+          <span v-if="room?.isActive" class="room-live-badge">
+            <Radio :size="10" />
+            LIVE
+          </span>
+          <span class="room-users-badge">
+            <Users :size="12" />
+            {{ rtc.roomUsers.length }}
+          </span>
+          <span v-if="inVoiceCount > 0" class="room-voice-badge">
+            <Phone :size="12" />
+            {{ inVoiceCount }} w głosie
+          </span>
         </div>
         <div class="room-actions">
-          <!-- Mobile tab toggle button -->
           <button
-            class="btn-primary header-btn mobile-tab-btn"
+            class="room-tab-btn mobile-tab-btn"
             @click="activeTab = activeTab === 'voice' ? 'chat' : 'voice'"
           >
-            {{ activeTab === 'voice' ? 'Chat' : 'Voice' }}
+            {{ activeTab === 'voice' ? 'Czat' : 'Głos' }}
           </button>
-
-          <button class="btn-ghost header-btn desktop-only" @click="showMembers = !showMembers">
-            <Users :size="14" />
+          <button class="room-action-btn desktop-only" @click="showMembers = !showMembers">
+            <Users :size="16" />
           </button>
-          <button class="btn-ghost header-btn" @click="showSettings = true">
-            <Settings :size="14" />
+          <button class="room-action-btn" @click="showSettings = true">
+            <Settings :size="16" />
           </button>
-          <button class="btn-ghost header-btn desktop-only" @click="showInvite = true">
-            <Link2 :size="14" />
-            Invite
+          <button class="room-action-btn desktop-only" @click="showInvite = true">
+            <Link2 :size="16" />
+            Zaproś
           </button>
         </div>
       </div>
 
       <div class="room-content">
         <div v-if="!rtc.inCall" class="join-call-screen">
-          <div class="join-card">
-            <div class="join-icon">🎙️</div>
-            <h3>{{ room?.name }}</h3>
-            <p>
+          <div class="join-call-glow"></div>
+          <div class="join-card card glass">
+            <div class="join-icon-wrap">
+              <Phone :size="32" />
+            </div>
+            <div class="badge badge-violet join-badge">
+              <Sparkles :size="12" />
+              Połączenie głosowe
+            </div>
+            <h3 class="join-title">{{ room?.name }}</h3>
+            <p class="join-desc">
               Dołącz do kanału głosowego — dźwięk przestrzenny, udostępnianie ekranu i HD video.
             </p>
             <p v-if="inVoiceCount > 0" class="voice-hint">
-              {{ inVoiceCount }} {{ inVoiceCount === 1 ? 'osoba jest' : 'osoby są' }} już w
-              rozmoowie
+              {{ inVoiceCount }} {{ inVoiceCount === 1 ? 'osoba jest' : 'osoby są' }} już w rozmowie
             </p>
             <p v-if="callError" class="error-msg">{{ callError }}</p>
 
             <div v-if="!showJoinWithoutMicrophone" class="join-options">
               <button
-                class="btn-primary join-btn"
+                class="btn btn-primary join-btn"
                 :disabled="isCheckingMicrophone"
                 @click="handleJoinCall"
               >
                 <Phone :size="18" />
                 Dołącz z mikrofonem
               </button>
-
-              <button class="btn-outline join-btn-no-mic" @click="showJoinWithoutMicrophone = true">
+              <button class="btn btn-ghost join-btn-no-mic" @click="showJoinWithoutMicrophone = true">
                 Dołącz bez mikrofonu
               </button>
             </div>
 
             <div v-else class="confirm-no-microphone">
               <p class="no-microphone-warning">
-                ⚠️ Będziesz mógł słuchać, ale nie mówić. Inni użytkownicy będą widzieć, że
-                dołączyłeś bez mikrofonu.
+                Będziesz mógł słuchać, ale nie mówić. Inni użytkownicy będą widzieć, że dołączyłeś bez mikrofonu.
               </p>
               <div class="confirm-buttons">
                 <button
-                  class="btn-primary"
+                  class="btn btn-primary"
                   :disabled="isCheckingMicrophone"
                   @click="handleJoinWithoutMicrophone"
                 >
-                  <Loader2 v-if="isCheckingMicrophone" class="loader" :size="18" />
+                  <Loader2 v-if="isCheckingMicrophone" class="spin" :size="18" />
                   <span v-else>Potwierdź i dołącz</span>
                 </button>
-                <button class="btn-ghost" @click="showJoinWithoutMicrophone = false">Anuluj</button>
+                <button class="btn btn-ghost" @click="showJoinWithoutMicrophone = false">Anuluj</button>
               </div>
             </div>
 
-            <!-- Audio detection status -->
             <p v-if="rtc.noMicrophoneDetected" class="audio-status warning">
-              ⚠️ Nie wykryto mikrofonu na tym urządzeniu
+              Nie wykryto mikrofonu na tym urządzeniu
             </p>
             <p v-if="rtc.microphonePermissionDenied" class="audio-status error">
-              ❌ Dostęp do mikrofonu został zablokowany
+              Dostęp do mikrofonu został zablokowany
             </p>
           </div>
         </div>
 
         <div v-else class="call-area">
           <div class="stream-status">
-            <span>
+            <span class="stream-status-item">
               <Radio :size="14" />
               {{ rtc.isScreenSharing ? 'Stream aktywny' : 'Voice live' }}
             </span>
-            <span v-if="isAndroidNative">
+            <span v-if="isAndroidNative" class="stream-status-item">
               <PictureInPicture2 :size="14" />
-              PiP po wyjściu z aplikacji
+              PiP po wyjściu
             </span>
           </div>
           <div class="video-grid" :class="`peers-${remoteEntries.length + 1}`">
@@ -246,7 +280,7 @@ function handleDeletedRoom() {
               :user="auth.user"
               :is-muted="rtc.isMuted"
               :is-local="true"
-              label="You"
+              label="Ty"
             />
             <VideoTile
               v-for="[userId, stream] in remoteEntries"
@@ -297,238 +331,302 @@ function handleDeletedRoom() {
   display: flex;
   height: 100%;
   overflow: hidden;
+  position: relative;
 }
+
+/* BG ORBS */
+.room-bg-orbs {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.room-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  will-change: transform;
+  transition: transform 0.5s ease-out;
+}
+
+.room-orb--violet {
+  width: 500px;
+  height: 500px;
+  top: -15%;
+  right: 5%;
+  background: rgba(139, 92, 246, 0.06);
+}
+
+.room-orb--pink {
+  width: 400px;
+  height: 400px;
+  top: 40%;
+  left: -10%;
+  background: rgba(217, 70, 239, 0.04);
+}
+
+.room-orb--blue {
+  width: 350px;
+  height: 350px;
+  top: 60%;
+  right: -5%;
+  background: rgba(59, 130, 246, 0.04);
+}
+
+.room-orb--teal {
+  width: 300px;
+  height: 300px;
+  top: 10%;
+  left: 30%;
+  background: rgba(6, 182, 212, 0.03);
+  animation: roomOrbDrift 20s ease-in-out infinite;
+}
+
+@keyframes roomOrbDrift {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(40px, -30px); }
+}
+
 .room-main {
+  position: relative;
+  z-index: 1;
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--bg-primary);
   min-width: 0;
 }
+
+/* HEADER */
 .room-header {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
+  background: rgba(13, 16, 23, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border);
-  background: var(--bg-secondary);
 }
-.back-btn {
+
+.room-back-btn {
   background: transparent;
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 6px;
-  border-radius: 6px;
+  padding: 8px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
+  transition: all 0.15s;
 }
-.back-btn:hover {
+
+.room-back-btn:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
 }
+
 .room-title {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex: 1;
   flex-wrap: wrap;
+  min-width: 0;
 }
+
 .room-hash {
   font-size: 18px;
   font-weight: 700;
   color: var(--text-muted);
 }
+
 .room-title h2 {
   font-size: 16px;
   font-weight: 700;
   color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.live-badge {
+
+.room-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 10px;
-  font-weight: 800;
-  color: #fff;
-  background: var(--danger);
-  padding: 2px 6px;
-  border-radius: 4px;
+  font-weight: 700;
+  color: white;
+  background: linear-gradient(135deg, var(--danger), #f97316);
+  padding: 3px 8px;
+  border-radius: 20px;
   letter-spacing: 0.5px;
 }
-.room-users,
-.voice-badge {
+
+.room-users-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 12px;
+  font-weight: 600;
   color: var(--success);
   background: rgba(34, 197, 94, 0.1);
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 20px;
-  font-weight: 600;
 }
-.voice-badge {
+
+.room-voice-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--accent-violet);
   background: rgba(139, 92, 246, 0.12);
+  padding: 3px 10px;
+  border-radius: 20px;
 }
+
 .room-actions {
   display: flex;
   gap: 6px;
 }
-.header-btn {
+
+.room-action-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 13px;
-  padding: 6px 10px;
+  font-weight: 500;
+  transition: all 0.15s;
 }
+
+.room-action-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-accent);
+}
+
+.room-tab-btn {
+  display: none;
+}
+
+/* CONTENT */
 .room-content {
   flex: 1;
   overflow: hidden;
   display: flex;
   flex-direction: column;
 }
+
+/* JOIN CALL */
 .join-call-screen {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(
-    ellipse 60% 60% at 50% 50%,
-    rgba(139, 92, 246, 0.08) 0%,
-    transparent 70%
-  );
   position: relative;
   overflow: hidden;
 }
+
+.join-call-glow {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.1), transparent 70%);
+  pointer-events: none;
+}
+
 .join-card {
   text-align: center;
-  padding: 32px 24px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  max-width: 420px;
+  padding: 40px 32px;
+  max-width: 440px;
   width: calc(100% - 32px);
   position: relative;
   z-index: 3;
-}
-.join-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-}
-.join-card h3 {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 8px;
-}
-.join-card p {
-  font-size: 14px;
-  color: var(--text-muted);
-  line-height: 1.5;
-}
-.voice-hint {
-  color: var(--accent-violet) !important;
-  font-weight: 600;
-  margin-top: 8px;
-}
-.join-btn {
-  margin-top: 24px;
-  width: 100%;
-  padding: 14px;
-  font-size: 16px;
-  gap: 10px;
-  touch-action: manipulation;
-}
-.call-area {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  align-items: center;
+  gap: 12px;
 }
-.stream-status {
+
+.join-icon-wrap {
+  width: 80px;
+  height: 80px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.1));
+  border: 1px solid rgba(139, 92, 246, 0.25);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 8px 14px;
-  border-bottom: 1px solid var(--border);
-  background: rgba(139, 92, 246, 0.08);
-  color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 700;
+  justify-content: center;
+  color: var(--accent-violet);
+  margin-bottom: 8px;
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.12);
 }
-.stream-status span {
+
+.join-badge {
+  margin-bottom: 8px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-width: 0;
-}
-.video-grid {
-  flex: 1;
-  display: grid;
-  gap: 8px;
-  padding: 12px;
-  overflow: hidden;
-  align-items: center;
-}
-.video-grid.peers-1 {
-  grid-template-columns: 1fr;
-  max-width: 700px;
-  margin: 0 auto;
-  width: 100%;
-}
-.video-grid.peers-2 {
-  grid-template-columns: 1fr 1fr;
-}
-.video-grid.peers-3 {
-  grid-template-columns: 1fr 1fr;
-}
-.video-grid.peers-4 {
-  grid-template-columns: 1fr 1fr;
 }
 
-@media (max-width: 767px) {
-  .video-grid {
-    padding: 8px;
-    gap: 6px;
-  }
-  .video-grid.peers-1 {
-    max-width: 100%;
-  }
-  .video-grid.peers-2,
-  .video-grid.peers-3,
-  .video-grid.peers-4 {
-    grid-template-columns: 1fr 1fr;
-  }
+.join-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
 }
-.error-msg {
+
+.join-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.voice-hint {
+  color: var(--accent-violet) !important;
+  font-weight: 600;
   font-size: 13px;
-  color: var(--danger);
-  background: rgba(239, 68, 68, 0.1);
-  border-radius: 6px;
-  padding: 8px 12px;
-  margin-top: 8px;
+  margin: 0;
 }
 
 .join-options {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   margin-top: 20px;
   width: 100%;
 }
 
-.join-btn-no-mic {
-  background: transparent !important;
-  border: 1px solid var(--border) !important;
-  color: var(--text-secondary) !important;
+.join-btn {
+  width: 100%;
+  padding: 14px;
+  font-size: 15px;
+  gap: 10px;
 }
 
-.join-btn-no-mic:hover {
-  border-color: var(--accent-violet) !important;
-  color: var(--accent-violet) !important;
+.join-btn-no-mic {
+  width: 100%;
 }
 
 .confirm-no-microphone {
   margin-top: 16px;
-  padding: 12px;
-  background: rgba(255, 182, 0, 0.05);
-  border-radius: 8px;
-  border: 1px solid rgba(255, 182, 0, 0.2);
+  padding: 14px;
+  background: rgba(251, 191, 36, 0.06);
+  border-radius: 12px;
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  width: 100%;
 }
 
 .no-microphone-warning {
@@ -536,7 +634,7 @@ function handleDeletedRoom() {
   color: #fbbf24;
   margin: 0 0 12px 0;
   text-align: center;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .confirm-buttons {
@@ -545,98 +643,166 @@ function handleDeletedRoom() {
   justify-content: center;
 }
 
+.error-msg {
+  font-size: 13px;
+  color: var(--danger);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 10px;
+  padding: 10px 14px;
+  width: 100%;
+}
+
 .audio-status {
   font-size: 12px;
-  padding: 6px 10px;
-  border-radius: 6px;
-  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
   text-align: center;
 }
 
 .audio-status.warning {
   color: #fbbf24;
-  background: rgba(255, 182, 0, 0.1);
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.2);
 }
 
 .audio-status.error {
   color: var(--danger);
   background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
-.loader {
+/* CALL AREA */
+.call-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.stream-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(139, 92, 246, 0.06);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.stream-status-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+}
+
+.video-grid {
+  flex: 1;
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  overflow: hidden;
+  align-items: center;
+}
+
+.video-grid.peers-1 {
+  grid-template-columns: 1fr;
+  max-width: 700px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.video-grid.peers-2,
+.video-grid.peers-3,
+.video-grid.peers-4 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.spin {
   animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* Responsiveness overrides */
-.mobile-tab-btn {
-  display: none;
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 @media (max-width: 767px) {
-  .mobile-tab-btn {
+  .room-tab-btn {
     display: inline-flex !important;
     font-size: 12px;
     padding: 6px 14px;
-    touch-action: manipulation;
   }
+
   .desktop-only {
     display: none !important;
   }
+
   .mobile-hidden {
     display: none !important;
   }
+
   .room-view {
     flex-direction: column;
   }
+
   .room-header {
-    padding: 9px 10px;
+    padding: 10px 12px;
     gap: 8px;
     min-height: 54px;
   }
-  .room-title {
-    gap: 5px;
-    min-width: 0;
-  }
+
   .room-title h2 {
     max-width: 34vw;
-    overflow: hidden;
     font-size: 14px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
-  .room-users {
+
+  .room-users-badge {
     display: none;
   }
-  .voice-badge,
-  .live-badge {
+
+  .room-voice-badge,
+  .room-live-badge {
     font-size: 9px;
     padding: 2px 6px;
   }
+
   .stream-status {
-    align-items: flex-start;
     flex-direction: column;
+    align-items: flex-start;
     gap: 5px;
-    padding: 8px 10px;
+    padding: 8px 12px;
   }
+
   .join-card {
-    width: calc(100% - 20px);
-    padding: 24px 18px;
-    border-radius: 12px;
+    width: calc(100% - 24px);
+    padding: 28px 20px;
+    border-radius: 16px;
   }
+
+  .video-grid {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .video-grid.peers-1 {
+    max-width: 100%;
+  }
+
   :deep(.chat-panel) {
     width: 100% !important;
     min-width: 100% !important;
     border-left: none !important;
     flex: 1 !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .room-orb {
+    animation: none !important;
   }
 }
 </style>

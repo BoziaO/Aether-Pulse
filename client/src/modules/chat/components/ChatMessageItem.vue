@@ -1,72 +1,68 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { MessageSquare, Edit3, Trash2, AlertCircle } from 'lucide-vue-next'
+  import { computed, ref } from 'vue'
+  import { MessageSquare, Edit3, Trash2, AlertCircle } from 'lucide-vue-next'
 
-import type { Message } from '../types/message.types'
-import { MessageStatus } from '../types/message.types'
-import { useAuthStore } from '@/stores/auth.store'
-import ChatMessageStatus from './ChatMessageStatus.vue'
-import ChatReactions from './ChatReactions.vue'
-import UserAvatar from '@/components/profile/UserAvatar.vue'
+  import type { Message } from '../types/message.types'
+  import { MessageStatus } from '../types/message.types'
+  import { useAuthStore } from '@/stores/auth.store'
+  import ChatMessageStatus from './ChatMessageStatus.vue'
+  import ChatReactions from './ChatReactions.vue'
+  import UserAvatar from '@/components/profile/UserAvatar.vue'
+  import MessageContent from '@/components/chat/MessageContent.vue'
 
-const props = defineProps<{
-  message: Message
-  roomId: string
-  showAvatar: boolean
-  showAuthor: boolean
-  isGrouped: boolean
-}>()
+  const props = defineProps<{
+    message: Message
+    roomId: string
+    showAvatar: boolean
+    showAuthor: boolean
+    isGrouped: boolean
+  }>()
 
-const emit = defineEmits<{
-  (e: 'reply', message: Message): void
-  (e: 'edit', message: Message): void
-  (e: 'delete', messageId: string): void
-  (e: 'react', messageId: string, emoji: string): void
-  (e: 'open-profile', userId: string): void
-}>()
+  const emit = defineEmits<{
+    (e: 'reply', message: Message): void
+    (e: 'edit', message: Message): void
+    (e: 'delete', messageId: string): void
+    (e: 'react', messageId: string, emoji: string): void
+    (e: 'open-profile', userId: string): void
+  }>()
 
-const authStore = useAuthStore()
-const showActions = ref(false)
+  const authStore = useAuthStore()
+  const showActions = ref(false)
 
-const isOwn = computed(() => props.message.userId === authStore.user?.id)
+  const isOwn = computed(() => props.message.userId === authStore.user?.id)
 
-const isFailed = computed(() => props.message.status === MessageStatus.Failed)
+  const isFailed = computed(() => props.message.status === MessageStatus.Failed)
 
-const displayContent = computed(() => {
-  if (props.message.isDeleted) return 'This message has been deleted'
-  return props.message.content
-})
+  const messageTime = computed(() => {
+    const date = new Date(props.message.createdAt)
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  })
 
-const messageTime = computed(() => {
-  const date = new Date(props.message.createdAt)
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-})
+  const userForAvatar = computed(() => props.message.user ?? null)
 
-const userForAvatar = computed(() => props.message.user ?? null)
-
-function handleReply(): void {
-  emit('reply', props.message)
-}
-
-function handleEdit(): void {
-  emit('edit', props.message)
-}
-
-function handleDelete(): void {
-  if (props.message.serverId) {
-    emit('delete', props.message.serverId)
+  function handleReply(): void {
+    emit('reply', props.message)
   }
-}
 
-function handleRetry(): void {
-  emit('delete', props.message.clientId)
-}
-
-function handleReact(emoji: string): void {
-  if (props.message.serverId) {
-    emit('react', props.message.serverId, emoji)
+  function handleEdit(): void {
+    emit('edit', props.message)
   }
-}
+
+  function handleDelete(): void {
+    if (props.message.serverId) {
+      emit('delete', props.message.serverId)
+    }
+  }
+
+  function handleRetry(): void {
+    emit('delete', props.message.clientId)
+  }
+
+  function handleReact(emoji: string): void {
+    if (props.message.serverId) {
+      emit('react', props.message.serverId, emoji)
+    }
+  }
 </script>
 
 <template>
@@ -115,7 +111,12 @@ function handleReact(emoji: string): void {
           <span class="reply-content">{{ message.replyTo.content }}</span>
         </div>
 
-        <div class="message-content" v-html="displayContent" />
+        <MessageContent
+          v-if="!message.isDeleted"
+          :type="message.type"
+          :content="message.content"
+        />
+        <div v-else class="message-content message-deleted-content">This message has been deleted</div>
 
         <div v-if="message.attachments.length > 0" class="message-attachments">
           <div v-for="att in message.attachments" :key="att.url" class="attachment">
@@ -238,14 +239,7 @@ function handleReact(emoji: string): void {
   font-size: 10px;
   color: var(--text-muted);
 }
-.message-content {
-  font-size: 14px;
-  line-height: 1.45;
-  color: var(--text-primary);
-  word-break: break-word;
-  white-space: pre-wrap;
-}
-.message-deleted .message-content {
+.message-deleted-content {
   color: var(--text-muted);
   font-style: italic;
   font-size: 13px;

@@ -3,7 +3,7 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: AetherPulse API specification
+  description: Nicori API specification
 servers:
   - url: /api
     description: Base API path
@@ -453,6 +453,39 @@ components:
           type: array
           items:
             type: string
+        socialLinks:
+          type: array
+          items:
+            type: object
+            properties:
+              platform:
+                type: string
+              url:
+                type: string
+              label:
+                type: string
+        timezone:
+          type: ['string', 'null']
+        profilePrivacy:
+          type: string
+          enum: [public, friends, private]
+        showTimezone:
+          type: boolean
+        showLastSeen:
+          type: boolean
+        showProfileViews:
+          type: boolean
+        richPresence:
+          type: ['object', 'null']
+          properties:
+            label:
+              type: string
+            details:
+              type: ['string', 'null']
+            icon:
+              type: ['string', 'null']
+            startedAt:
+              type: ['number', 'null']
         createdAt:
           type: string
 
@@ -504,6 +537,39 @@ components:
           type: array
           items:
             type: string
+        socialLinks:
+          type: array
+          items:
+            type: object
+            properties:
+              platform:
+                type: string
+              url:
+                type: string
+              label:
+                type: string
+        timezone:
+          type: ['string', 'null']
+        profilePrivacy:
+          type: string
+          enum: [public, friends, private]
+        showTimezone:
+          type: boolean
+        showLastSeen:
+          type: boolean
+        showProfileViews:
+          type: boolean
+        richPresence:
+          type: ['object', 'null']
+          properties:
+            label:
+              type: string
+            details:
+              type: ['string', 'null']
+            icon:
+              type: ['string', 'null']
+            startedAt:
+              type: ['number', 'null']
 
     Room:
       type: object

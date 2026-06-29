@@ -6,7 +6,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://aetherpulse-server.onrender.com/api/$1"
+      "destination": "https://nicori-server.onrender.com/api/$1"
     },
     {
       "source": "/(.*)",

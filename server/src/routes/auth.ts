@@ -10,5 +10,9 @@ router.post('/auth/logout', AuthController.logout)
 router.get('/auth/me', AuthController.me)
 router.post('/auth/change-password', AuthController.changePassword)
 router.post('/auth/refresh', AuthController.refresh)
+router.post('/auth/forgot-password', AuthController.forgotPassword)
+router.post('/auth/reset-password', AuthController.resetPassword)
+router.get('/auth/oauth/:provider/url', AuthController.getOAuthUrl)
+router.post('/auth/oauth/:provider/callback', AuthController.oauthCallback)
 
 export default router

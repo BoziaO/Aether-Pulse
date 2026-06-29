@@ -1,14 +1,14 @@
-// Service Worker for AetherPulse
+// Service Worker for Nicori
 // Provides offline support and better caching for improved Core Web Vitals
 
-const CACHE_NAME = 'aetherpulse-v4'
-const OFFLINE_CACHE = 'aetherpulse-offline-v3'
+const CACHE_NAME = 'nicori-v4'
+const OFFLINE_CACHE = 'nicori-offline-v3'
 
 // Files to cache for offline use
 const ASSETS_TO_CACHE = ['/index.html', '/icons/logo.png', '/manifest.json']
 
 // API cache strategy - Network first, then cache
-const API_CACHE_NAME = 'aetherpulse-api-v3'
+const API_CACHE_NAME = 'nicori-api-v3'
 const API_CACHE_TTL = 24 * 60 * 60 * 1000 // 24 hours
 
 self.addEventListener('install', (event) => {
@@ -71,6 +71,11 @@ self.addEventListener('fetch', (event) => {
         return response || fetch(event.request)
       })
     )
+    return
+  }
+
+  // Don't cache auth API responses - tokens change frequently and cached null-user causes redirect loops
+  if (isApiRequest && url.pathname.startsWith('/api/auth/')) {
     return
   }
 
@@ -169,7 +174,7 @@ self.addEventListener('fetch', (event) => {
 // Listen for push notifications (for future PWA features)
 self.addEventListener('push', (event) => {
   const data = event.data?.json()
-  const title = data?.title || 'AetherPulse'
+  const title = data?.title || 'Nicori'
   const options = {
     body: data?.body || 'Masz nowe powiadomienie',
     icon: '/icons/logo.png',

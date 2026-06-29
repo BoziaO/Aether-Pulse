@@ -40,4 +40,25 @@ export const authApi = {
       method: 'POST',
       body: JSON.stringify({ refreshToken }),
     }),
+
+  forgotPassword: (email: string) =>
+    apiFetch<{ ok: boolean }>('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }),
+
+  resetPassword: (token: string, newPassword: string) =>
+    apiFetch<{ ok: boolean }>('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ token, newPassword }),
+    }),
+
+  getOAuthUrl: (provider: 'google' | 'github') =>
+    apiFetch<{ url: string }>(`/auth/oauth/${provider}/url`),
+
+  oauthCallback: (provider: string, code: string) =>
+    apiFetch<AuthResponse>(`/auth/oauth/${provider}/callback`, {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    }),
 }

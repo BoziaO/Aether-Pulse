@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { RouterView } from 'vue-router'
+  import { RouterView } from 'vue-router'
 
-import ToastContainer from '@/components/ui/ToastContainer.vue'
-import CookieConsent from '@/components/ui/CookieConsent.vue'
+  import ToastContainer from '@/components/ui/ToastContainer.vue'
+  import CookieConsent from '@/components/ui/CookieConsent.vue'
 </script>
 
 <template>

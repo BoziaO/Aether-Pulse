@@ -1,58 +1,58 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { Search, X, Clock } from 'lucide-vue-next'
+  import { ref, watch } from 'vue'
+  import { Search, X, Clock } from 'lucide-vue-next'
 
-import { useSearchStore } from '../stores/search.store'
+  import { useSearchStore } from '../stores/search.store'
 
-const props = defineProps<{
-  roomId: string
-}>()
+  const props = defineProps<{
+    roomId: string
+  }>()
 
-const emit = defineEmits<{
-  (e: 'close'): void
-}>()
+  const emit = defineEmits<{
+    (e: 'close'): void
+  }>()
 
-const searchStore = useSearchStore()
-const searchInput = ref('')
-const showHistory = ref(false)
+  const searchStore = useSearchStore()
+  const searchInput = ref('')
+  const showHistory = ref(false)
 
-let searchTimeout: ReturnType<typeof setTimeout> | null = null
+  let searchTimeout: ReturnType<typeof setTimeout> | null = null
 
-function onInput(): void {
-  if (searchTimeout) clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => {
-    searchStore.search(props.roomId, searchInput.value)
-  }, 300)
-}
+  function onInput(): void {
+    if (searchTimeout) clearTimeout(searchTimeout)
+    searchTimeout = setTimeout(() => {
+      searchStore.search(props.roomId, searchInput.value)
+    }, 300)
+  }
 
-function selectHistory(q: string): void {
-  searchInput.value = q
-  showHistory.value = false
-  searchStore.search(props.roomId, q)
-}
-
-function clearSearch(): void {
-  searchInput.value = ''
-  searchStore.clear()
-  showHistory.value = false
-}
-
-function delayHideHistory(): void {
-  setTimeout(() => {
+  function selectHistory(q: string): void {
+    searchInput.value = q
     showHistory.value = false
-  }, 200)
-}
+    searchStore.search(props.roomId, q)
+  }
 
-function close(): void {
-  clearSearch()
-  emit('close')
-}
-
-watch(showHistory, (val) => {
-  if (val && searchStore.history.length === 0) {
+  function clearSearch(): void {
+    searchInput.value = ''
+    searchStore.clear()
     showHistory.value = false
   }
-})
+
+  function delayHideHistory(): void {
+    setTimeout(() => {
+      showHistory.value = false
+    }, 200)
+  }
+
+  function close(): void {
+    clearSearch()
+    emit('close')
+  }
+
+  watch(showHistory, (val) => {
+    if (val && searchStore.history.length === 0) {
+      showHistory.value = false
+    }
+  })
 </script>
 
 <template>

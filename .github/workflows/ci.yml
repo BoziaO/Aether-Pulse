@@ -53,8 +53,8 @@ jobs:
       fail-fast: false
       matrix:
         package:
-          - aetherpulse-client
-          - aetherpulse-server
+          - nicori-client
+          - nicori-server
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v3

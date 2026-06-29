@@ -1,553 +1,531 @@
 <script setup lang="ts">
-import { ref, markRaw, onMounted, onUnmounted, computed, type Component } from 'vue'
-import {
-  Download,
-  Globe2,
-  Laptop,
-  MessageCircle,
-  MonitorUp,
-  PictureInPicture2,
-  Smartphone,
-  Users,
-  Mic,
-  Video,
-  Shield,
-  Zap,
-  Star,
-  ArrowRight,
-  Code2,
-  Menu,
-  X,
-  Sparkles,
-  Waves,
-} from 'lucide-vue-next'
+  import { ref, markRaw, onMounted, onUnmounted, computed, type Component } from 'vue'
+  import {
+    Download,
+    Globe2,
+    Laptop,
+    MonitorUp,
+    Smartphone,
+    Shield,
+    Zap,
+    Star,
+    ArrowRight,
+    Code2,
+    Menu,
+    X,
+    Sparkles,
+    Heart,
+    Gamepad2,
+    Briefcase,
+    Palette,
+    MessageCircle,
+  } from 'lucide-vue-next'
 
-interface DownloadItem {
-  icon: Component
-  platform: string
-  meta: string
-  href: string
-  label: string
-  primary: boolean
-  version?: string
-  size?: string
-  badge?: string
-}
-
-interface FeatureItem {
-  icon: Component
-  title: string
-  desc: string
-  category?: string
-}
-
-const downloads = ref<DownloadItem[]>([
-  {
-    icon: markRaw(MonitorUp),
-    platform: 'Windows',
-    meta: 'Windows 10+',
-    href: 'https://github.com/BoziaO/Aether-Pulse/releases/download/v1.0/AetherPulse-setup-Windows-v1.0.exe',
-    label: 'Pobierz',
-    primary: true,
-    version: 'Najnowsza',
-    size: '120MB',
-    badge: 'POPULARNY',
-  },
-  {
-    icon: markRaw(Smartphone),
-    platform: 'Android',
-    meta: 'APK',
-    href: '',
-    label: 'Wkrótce',
-    primary: false,
-    version: 'Najnowsza',
-    size: '45MB',
-    badge: 'MOBILNY',
-  },
-  {
-    icon: markRaw(Laptop),
-    platform: 'Linux',
-    meta: 'x64',
-    href: 'https://github.com/BoziaO/Aether-Pulse/releases/download/v1.0/AetherPulse-setup-Linux-v1.0.zip',
-    label: 'Pobierz',
-    primary: false,
-    version: 'Najnowsza',
-    size: '140MB',
-    badge: 'DEVELOPER',
-  },
-])
-
-const features = ref<FeatureItem[]>([
-  {
-    icon: markRaw(Mic),
-    title: 'Krystalicznie czysty dźwięk',
-    desc: 'Dźwięk przestrzenny z redukcją szumów i ech, by każda rozmowa brzmiała profesjonalnie.',
-    category: 'audio',
-  },
-  {
-    icon: markRaw(Video),
-    title: 'Streaming w HD',
-    desc: 'Udostępniaj swój ekran lub kamerę w jakości do 1080p z niską latencją.',
-    category: 'video',
-  },
-  {
-    icon: markRaw(MessageCircle),
-    title: 'Chat w czasie rzeczywistym',
-    desc: 'Szybkie wiadomości, reakcje i prywatne pokoje dla Twojej załogi.',
-    category: 'chat',
-  },
-  {
-    icon: markRaw(Users),
-    title: 'Pokoje głosowe',
-    desc: 'Tworzenie prywatnych i publicznych pokoi z kontrolą dostępu.',
-    category: 'social',
-  },
-  {
-    icon: markRaw(PictureInPicture2),
-    title: 'Picture-in-Picture',
-    desc: 'Oglądaj streamy w mini playerze, nawet gdy przełączysz aplikację.',
-    category: 'mobile',
-  },
-  {
-    icon: markRaw(Shield),
-    title: 'Bezpieczeństwo',
-    desc: 'E2E szyfrowanie, JWT autentykacja i ochrona przed nadużyciami.',
-    category: 'security',
-  },
-])
-
-const selectedPlatform = ref<string>('')
-const currentFeatureTab = ref<
-  'all' | 'audio' | 'video' | 'chat' | 'social' | 'mobile' | 'security'
->('all')
-const isScrolled = ref<boolean>(false)
-const mobileMenuOpen = ref<boolean>(false)
-const visibleSections = ref<Set<string>>(new Set())
-
-const isElectron = ref<boolean>(false)
-const isMobile = ref<boolean>(false)
-
-const filteredFeatures = computed(() => {
-  if (currentFeatureTab.value === 'all') return features.value
-  return features.value.filter((f) => f.category === currentFeatureTab.value)
-})
-
-const featureCategories = ref<
-  Array<{
-    id: 'all' | 'chat' | 'audio' | 'video' | 'social' | 'mobile' | 'security'
-    label: string
+  interface DownloadItem {
     icon: Component
-  }>
->([
-  { id: 'all', label: 'Wszystkie', icon: markRaw(Star) },
-  { id: 'audio', label: 'Dźwięk', icon: markRaw(Mic) },
-  { id: 'video', label: 'Wideo', icon: markRaw(Video) },
-  { id: 'chat', label: 'Chat', icon: markRaw(MessageCircle) },
-  { id: 'social', label: 'Społeczność', icon: markRaw(Users) },
-  { id: 'mobile', label: 'Mobilne', icon: markRaw(Smartphone) },
-  { id: 'security', label: 'Bezpieczeństwo', icon: markRaw(Shield) },
-])
-
-let observer: IntersectionObserver | null = null
-
-onMounted(() => {
-  isElectron.value = typeof window !== 'undefined' && !!(window as any).process?.versions?.electron
-
-  if (typeof window !== 'undefined') {
-    isMobile.value = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-      navigator.userAgent
-    )
+    platform: string
+    meta: string
+    href: string
+    label: string
+    primary: boolean
+    badge?: string
   }
 
-  window.addEventListener('scroll', () => {
-    isScrolled.value = window.scrollY > 50
+  interface AudienceItem {
+    icon: Component
+    title: string
+    desc: string
+    color: string
+  }
+
+  interface ShowcaseItem {
+    icon: Component
+    title: string
+    desc: string
+    stat: string
+  }
+
+  const downloads: DownloadItem[] = [
+    {
+      icon: markRaw(MonitorUp),
+      platform: 'Windows',
+      meta: 'Windows 10+',
+      href: 'https://github.com/BoziaO/Nicori/releases/download/v1.0/Nicori-setup-Windows-v1.0.exe',
+      label: 'Pobierz',
+      primary: true,
+      badge: 'POPULARNY',
+    },
+    {
+      icon: markRaw(Smartphone),
+      platform: 'Android',
+      meta: 'APK',
+      href: '',
+      label: 'Wkrótce',
+      primary: false,
+      badge: 'MOBILNY',
+    },
+    {
+      icon: markRaw(Laptop),
+      platform: 'Linux',
+      meta: 'x64',
+      href: 'https://github.com/BoziaO/Nicori/releases/download/v1.0/Nicori-setup-Linux-v1.0.zip',
+      label: 'Pobierz',
+      primary: false,
+      badge: 'DEVELOPER',
+    },
+  ]
+
+  const audienceItems: AudienceItem[] = [
+    {
+      icon: markRaw(Gamepad2),
+      title: 'Gracze',
+      desc: 'Niska latencja i krystaliczny dźwięk dla najlepszych wrażeń z rozgrywki.',
+      color: '#d946ef',
+    },
+    {
+      icon: markRaw(Briefcase),
+      title: 'Zespoły',
+      desc: 'Efektywna współpraca dzięki dedykowanym kanałom głosowym i tekstowym.',
+      color: '#8b5cf6',
+    },
+    {
+      icon: markRaw(Palette),
+      title: 'Twórcy',
+      desc: 'Streamuj w HD, nagrywaj i dziel się swoją twórczością ze światem.',
+      color: '#3b82f6',
+    },
+    {
+      icon: markRaw(MessageCircle),
+      title: 'Przyjaciele',
+      desc: 'Prywatne pokoje i bezpieczne rozmowy z najbliższymi.',
+      color: '#06b6d4',
+    },
+  ]
+
+  const showcaseItems: ShowcaseItem[] = [
+    {
+      icon: markRaw(Zap),
+      title: 'Szybkość i lekkość',
+      desc: 'Zoptymalizowany pod kątem wydajności, działa płynnie nawet na słabszych urządzeniach.',
+      stat: '2x',
+    },
+    {
+      icon: markRaw(Shield),
+      title: 'Prywatność przede wszystkim',
+      desc: 'Szyfrowanie end-to-end, brak śledzenia i zero reklam.',
+      stat: '0',
+    },
+    {
+      icon: markRaw(Heart),
+      title: 'Open source',
+      desc: 'Kod w pełni otwarty na GitHubie. Społeczność współtworzyć każdą linię.',
+      stat: '100%',
+    },
+    {
+      icon: markRaw(Star),
+      title: 'Kawaii design',
+      desc: 'Nowoczesny design z możliwością personalizacji. Nicori wygląda jak nikt inny.',
+      stat: '∞',
+    },
+  ]
+
+  const isScrolled = ref(false)
+  const mobileOpen = ref(false)
+  const visible = ref(new Set<string>())
+  const downloadingPlatform = ref('')
+  const scrollY = ref(0)
+  const mouse = ref({ x: 0, y: 0 })
+
+  let scrollFn: (() => void) | null = null
+  let mouseFn: ((e: MouseEvent) => void) | null = null
+  let obs: IntersectionObserver | null = null
+
+  onMounted(() => {
+    scrollFn = () => {
+      isScrolled.value = window.scrollY > 50
+      scrollY.value = window.scrollY
+    }
+    window.addEventListener('scroll', scrollFn, { passive: true })
+
+    mouseFn = (e: MouseEvent) => {
+      mouse.value = {
+        x: (e.clientX / window.innerWidth - 0.5) * 2,
+        y: (e.clientY / window.innerHeight - 0.5) * 2,
+      }
+    }
+    window.addEventListener('mousemove', mouseFn, { passive: true })
+
+    obs = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const key = (entry.target as HTMLElement).dataset.reveal
+            if (key) {
+              visible.value.add(key)
+              visible.value = new Set(visible.value)
+            }
+          }
+        }
+      },
+      { threshold: 0.15 }
+    )
+
+    document.querySelectorAll('[data-reveal]').forEach((el) => obs?.observe(el))
   })
 
-  observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          visibleSections.value = new Set([...visibleSections.value, entry.target.id])
-        }
-      })
-    },
-    { threshold: 0.1 }
+  onUnmounted(() => {
+    obs?.disconnect()
+    if (scrollFn) window.removeEventListener('scroll', scrollFn)
+    if (mouseFn) window.removeEventListener('mousemove', mouseFn)
+  })
+
+  function is(id: string) {
+    return visible.value.has(id)
+  }
+
+  function handleDownload(platform: string, href: string) {
+    if (!href) return
+    downloadingPlatform.value = platform
+    try {
+      window.open(href, '_blank', 'noopener,noreferrer')
+    } catch {
+      window.location.href = href
+    }
+    setTimeout(() => { downloadingPlatform.value = '' }, 3000)
+  }
+
+  function go(id: string) {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  const platform = computed(() => {
+    const ua = navigator.userAgent
+    if (/Android/i.test(ua)) return 'Android'
+    if (/Windows/i.test(ua)) return 'Windows'
+    if (/Linux/i.test(ua)) return 'Linux'
+    return 'Windows'
+  })
+
+  const recommended = computed(
+    () => downloads.find((d) => d.platform === platform.value) || downloads[0]
   )
-
-  document.querySelectorAll('[data-observe]').forEach((el) => observer?.observe(el))
-})
-
-onUnmounted(() => {
-  observer?.disconnect()
-})
-
-function isVisible(id: string): boolean {
-  return visibleSections.value.has(id)
-}
-
-function handleDownload(platform: string, href: string) {
-  selectedPlatform.value = platform
-  try {
-    window.open(href, '_blank', 'noopener,noreferrer')
-  } catch {
-    window.location.href = href
-  }
-}
-
-function scrollToSection(sectionId: string) {
-  const element = document.getElementById(sectionId)
-  if (element) {
-    element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
-}
-
-function scrollToSectionMobile(sectionId: string) {
-  scrollToSection(sectionId)
-  mobileMenuOpen.value = false
-}
-
-const recommendedPlatform = computed(() => {
-  const ua = navigator.userAgent
-  if (/Android/i.test(ua)) return 'Android'
-  if (/Windows/i.test(ua)) return 'Windows'
-  if (/Linux/i.test(ua)) return 'Linux'
-  return 'Windows'
-})
-
-const recommendedDownload = computed(
-  () => downloads.value.find((d) => d.platform === recommendedPlatform.value) || downloads.value[0]
-)
 </script>
 
 <template>
-  <div class="landing">
-    <!-- Navigation -->
-    <nav class="nav" :class="{ scrolled: isScrolled }">
-      <div class="nav-container">
-        <a class="brand" href="/">
-          <div class="brand-icon">
-            <Waves :size="24" />
-          </div>
-          <span>AetherPulse</span>
+  <div class="lp">
+    <div class="bg-orbs" aria-hidden="true">
+      <div class="bg-orb bg-orb--violet" :style="{ transform: `translate(${mouse.x * 15}px, ${mouse.y * 15}px)` }"></div>
+      <div class="bg-orb bg-orb--pink" :style="{ transform: `translate(${mouse.x * -10}px, ${mouse.y * -10}px)` }"></div>
+      <div class="bg-orb bg-orb--blue" :style="{ transform: `translate(${mouse.x * 8}px, ${mouse.y * -12}px)` }"></div>
+      <div class="bg-orb bg-orb--teal"></div>
+    </div>
+    <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-1/2 focus:-translate-x-1/2 focus:z-[9999] focus:px-5 focus:py-2.5 focus:rounded-full focus:bg-[var(--accent-violet)] focus:text-white focus:text-sm focus:font-semibold">
+      Przejdź do treści
+    </a>
+
+    <!-- NAV -->
+    <header class="nav" :class="{ scrolled: isScrolled }">
+      <div class="nav-inner">
+        <a href="/" class="nav-brand">
+          <img src="/icons/logo.png" alt="" class="nav-logo" />
+          <span class="nav-name">Nicori</span>
         </a>
 
-        <div class="nav-links">
-          <button class="nav-link" @click="scrollToSection('features')">Funkcje</button>
-          <button class="nav-link" @click="scrollToSection('download')">Pobierz</button>
-        </div>
+        <nav class="nav-links">
+          <button @click="go('showcase')">Wyróżniki</button>
+          <button @click="go('audience')">Dla kogo?</button>
+          <button @click="go('download')">Pobierz</button>
+        </nav>
 
-        <button class="mobile-menu-btn" aria-label="Menu" @click="mobileMenuOpen = !mobileMenuOpen">
-          <Menu v-if="!mobileMenuOpen" :size="24" />
-          <X v-else :size="24" />
+        <a href="/auth" class="btn btn-primary btn-sm nav-cta">
+          <Zap :size="14" />
+          Otwórz
+        </a>
+
+        <button class="nav-toggle" :aria-label="mobileOpen ? 'Zamknij' : 'Menu'" @click="mobileOpen = !mobileOpen">
+          <Menu v-if="!mobileOpen" :size="20" />
+          <X v-else :size="20" />
         </button>
-
-        <div v-if="mobileMenuOpen" class="mobile-menu">
-          <button class="nav-link" @click="scrollToSectionMobile('features')">Funkcje</button>
-          <button class="nav-link" @click="scrollToSectionMobile('download')">Pobierz</button>
-          <a href="/auth" class="btn secondary" @click="mobileMenuOpen = false">Zaloguj się</a>
-          <a href="/auth" class="btn primary" @click="mobileMenuOpen = false">
-            <Zap :size="16" />
-            Otwórz AetherPulse
-          </a>
-        </div>
-
-        <div class="nav-actions">
-          <a href="/auth" class="btn secondary">Zaloguj się</a>
-          <a href="/auth" class="btn primary">
-            <Zap :size="16" />
-            Otwórz AetherPulse
-          </a>
-        </div>
       </div>
-    </nav>
 
-    <!-- Hero Section -->
-    <section class="hero">
-      <div class="hero-container">
-        <div class="hero-content">
-          <div class="hero-badge">
-            <Sparkles :size="14" />
-            Darmowa platforma do rozmów głosowych i streamingu
+      <Transition name="drawer">
+        <div v-if="mobileOpen" class="nav-mobile">
+          <button @click="go('showcase'); mobileOpen = false">Wyróżniki</button>
+          <button @click="go('audience'); mobileOpen = false">Dla kogo?</button>
+          <button @click="go('download'); mobileOpen = false">Pobierz</button>
+          <hr />
+          <a href="/auth" class="btn btn-primary" @click="mobileOpen = false">
+            <Zap :size="14" />
+            Otwórz Nicori
+          </a>
+        </div>
+      </Transition>
+    </header>
+
+    <!-- HERO -->
+    <section id="main" class="hero">
+      <div class="hero-inner">
+        <div class="hero-text">
+          <div class="badge badge-violet hero-badge">
+            <Sparkles :size="12" />
+            Darmowa platforma komunikacyjna
           </div>
 
           <h1 class="hero-title">
-            <span class="hero-title-line">Rozmawiaj, streamuj,</span>
-            <span class="hero-title-line hero-title-gradient">współtwórz</span>
+            Rozmawiaj,<br />
+            streamuj,<br />
+            <span class="gradient-text">baw się!</span>
           </h1>
 
-          <p class="hero-subtitle">
-            AetherPulse to nowoczesna platforma do komunikacji głosowej, wideorozmów i współpracy.
-            <strong>Bez ograniczeń, na każdej platformie.</strong>
+          <p class="hero-desc">
+            Nicori to nowoczesna platforma do komunikacji głosowej,
+            wideorozmów i streamingu.
           </p>
 
           <div class="hero-actions">
-            <button
-              class="btn primary large"
-              @click="handleDownload(recommendedDownload.platform, recommendedDownload.href)"
-            >
-              <Download :size="20" />
-              <span>Pobierz dla {{ recommendedDownload.platform }}</span>
+            <button class="btn btn-primary btn-lg" @click="handleDownload(recommended.platform, recommended.href)">
+              <Download :size="18" />
+              Pobierz na {{ recommended.platform }}
             </button>
+            <a href="/auth" class="btn btn-ghost btn-lg">
+              <Globe2 :size="18" />
+              Otwórz w przeglądarce
+            </a>
+          </div>
 
-            <div class="hero-secondary-actions">
-              <a href="/auth" class="btn secondary large">
-                <Globe2 :size="20" />
-                Otwórz w przeglądarce
-              </a>
-              <div class="platform-icons">
-                <span class="platform-icon" title="Windows"><MonitorUp :size="18" /></span>
-                <span class="platform-icon" title="Android"><Smartphone :size="18" /></span>
-                <span class="platform-icon" title="Linux"><Laptop :size="18" /></span>
-                <span class="platform-icon" title="Web"><Globe2 :size="18" /></span>
-              </div>
+          <div class="hero-stats">
+            <div class="stat">
+              <span class="stat-val">120MB</span>
+              <span class="stat-lbl">Windows</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat">
+              <span class="stat-val">45MB</span>
+              <span class="stat-lbl">Android</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat">
+              <span class="stat-val">140MB</span>
+              <span class="stat-lbl">Linux</span>
             </div>
           </div>
         </div>
 
-        <!-- Hero Visual - App mockup -->
-        <div class="hero-visual">
-          <div class="mockup">
-            <div class="mockup-header">
-              <div class="mockup-dots"><span /><span /><span /></div>
-              <div class="mockup-title">AetherPulse</div>
-            </div>
-            <div class="mockup-body">
-              <div class="mockup-sidebar">
-                <div class="mockup-avatar" />
-                <div class="mockup-avatar" />
-                <div class="mockup-avatar" />
-                <div class="mockup-avatar muted" />
-              </div>
-              <div class="mockup-main">
-                <div class="mockup-topbar">
-                  <div class="mockup-tag"># ogólny</div>
-                  <div class="mockup-icons">
-                    <Mic :size="14" />
-                    <Video :size="14" />
-                  </div>
-                </div>
-                <div class="mockup-messages">
-                  <div class="mockup-msg theirs" style="width: 70%" />
-                  <div class="mockup-msg theirs" style="width: 50%" />
-                  <div class="mockup-msg mine" style="width: 60%" />
-                  <div class="mockup-msg theirs" style="width: 80%" />
-                  <div class="mockup-msg mine" style="width: 45%" />
-                </div>
-                <div class="mockup-input">
-                  <div class="mockup-input-dot" />
-                </div>
-              </div>
-            </div>
+        <div class="hero-visual" aria-hidden="true">
+          <div class="hero-glow"></div>
+          <div class="hero-ring hero-ring--outer"></div>
+          <div class="hero-ring hero-ring--inner"></div>
+          <img src="/icons/logo-simp.png" alt="" class="hero-mascot" />
+          <div class="orbit-dot orbit-dot--1"></div>
+          <div class="orbit-dot orbit-dot--2"></div>
+          <div class="orbit-dot orbit-dot--3"></div>
+        </div>
+      </div>
+
+      <div class="hero-scroll" @click="go('showcase')">
+        <ArrowRight :size="16" class="rotate-90" />
+      </div>
+    </section>
+
+    <!-- SHOWCASE -->
+    <section id="showcase" class="section">
+      <div class="container">
+        <div class="section-head" data-reveal="showcase-head" :class="{ 'is-visible': is('showcase-head') }">
+          <div class="badge badge-violet">
+            <Star :size="12" />
+            Wyróżniki
           </div>
-        </div>
-      </div>
-
-      <!-- Decorative elements -->
-      <div class="hero-decoration">
-        <div class="hero-gradient-sphere s1" />
-        <div class="hero-gradient-sphere s2" />
-        <div class="hero-gradient-sphere s3" />
-      </div>
-    </section>
-
-    <!-- Features Section -->
-    <section id="features" class="features-section">
-      <div class="section-container">
-        <div
-          class="section-header"
-          data-observe="features-header"
-          :class="{ visible: isVisible('features-header') }"
-        >
-          <span class="section-badge">
-            <Sparkles :size="14" />
-            Funkcjonalności
-          </span>
-          <h2 class="section-title">Wszystko, czego potrzebujesz<br />w jednym miejscu</h2>
-          <p class="section-subtitle">
-            Od rozmów głosowych po streaming w jakości HD &mdash; AetherPulse oferuje kompletny
-            zestaw narzędzi dla Twojej społeczności.
-          </p>
+          <h2 class="section-title">
+            Nie kolejny klon Discorda<br />
+            <span class="gradient-text">coś zupełnie nowego</span>
+          </h2>
         </div>
 
-        <!-- Feature Categories -->
-        <div
-          class="feature-tabs"
-          data-observe="features-tabs"
-          :class="{ visible: isVisible('features-tabs') }"
-        >
-          <button
-            v-for="tab in featureCategories"
-            :key="tab.id"
-            class="feature-tab"
-            :class="{ active: currentFeatureTab === tab.id }"
-            @click="currentFeatureTab = tab.id"
-          >
-            <component :is="tab.icon" :size="18" />
-            {{ tab.label }}
-          </button>
-        </div>
-
-        <!-- Features Grid -->
-        <div class="features-grid">
-          <article
-            v-for="(feature, i) in filteredFeatures"
-            :id="'feature-' + i"
-            :key="feature.title"
-            class="feature-card"
-            :class="{ visible: isVisible('feature-' + i) }"
-            :data-observe="'feature-' + i"
-            :style="{ transitionDelay: i * 100 + 'ms' }"
-          >
-            <div class="feature-card-glow" />
-            <div class="feature-icon-wrapper">
-              <component :is="feature.icon" :size="28" />
-            </div>
-            <h3 class="feature-title">{{ feature.title }}</h3>
-            <p class="feature-description">{{ feature.desc }}</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- Downloads Section -->
-    <section id="download" class="downloads-section">
-      <div class="section-container">
-        <div
-          class="section-header"
-          data-observe="download-header"
-          :class="{ visible: isVisible('download-header') }"
-        >
-          <span class="section-badge">
-            <Download :size="14" />
-            Pobierz
-          </span>
-          <h2 class="section-title">Dołącz do społeczności<br />już teraz</h2>
-          <p class="section-subtitle">
-            Dostępne na Windows, Android, Linux i w przeglądarce. Wybierz swoją platformę i zaczynaj
-            przygodę.
-          </p>
-        </div>
-
-        <div class="download-platforms">
+        <div class="showcase-grid">
           <div
-            v-for="item in downloads"
+            v-for="(item, i) in showcaseItems"
+            :key="item.title"
+            class="card glass showcase-card"
+            :data-reveal="'sc-' + i"
+            :class="{ 'is-visible': is('sc-' + i) }"
+            :style="{ transitionDelay: i * 80 + 'ms' }"
+          >
+            <div class="showcase-stat gradient-text">{{ item.stat }}</div>
+            <div class="showcase-icon-wrap">
+              <component :is="item.icon" :size="20" />
+            </div>
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.desc }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- AUDIENCE -->
+    <section id="audience" class="section">
+      <div class="container">
+        <div class="section-head" data-reveal="aud-head" :class="{ 'is-visible': is('aud-head') }">
+          <div class="badge badge-violet">
+            <Heart :size="12" />
+            Dla kogo?
+          </div>
+          <h2 class="section-title">
+            Dla każdego,<br />
+            <span class="gradient-text">kto kocha rozmawiać</span>
+          </h2>
+        </div>
+
+        <div class="audience-grid">
+          <div
+            v-for="(item, i) in audienceItems"
+            :key="item.title"
+            class="card audience-card"
+            :data-reveal="'ac-' + i"
+            :class="{ 'is-visible': is('ac-' + i) }"
+            :style="{ '--accent': item.color, transitionDelay: i * 80 + 'ms' }"
+          >
+            <div class="audience-accent"></div>
+            <div class="audience-icon" :style="{ background: item.color }">
+              <component :is="item.icon" :size="20" color="white" />
+            </div>
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.desc }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DOWNLOAD -->
+    <section id="download" class="section">
+      <div class="container">
+        <div class="section-head" data-reveal="dl-head" :class="{ 'is-visible': is('dl-head') }">
+          <div class="badge badge-violet">
+            <Download :size="12" />
+            Pobierz
+          </div>
+          <h2 class="section-title">
+            Dołącz do społeczności<br />
+            <span class="gradient-text">już teraz</span>
+          </h2>
+          <p class="section-desc">Dostępne na Windows, Android i Linux. Wybierz platformę i zaczynaj.</p>
+        </div>
+
+        <div class="download-grid">
+          <div
+            v-for="(item, i) in downloads"
             :key="item.platform"
             class="download-card"
-            :class="{ featured: item.primary }"
+            :class="{ 'is-featured': item.primary, 'is-disabled': !item.href }"
+            :style="{ transitionDelay: i * 100 + 'ms' }"
+            role="button"
+            :tabindex="item.href ? 0 : -1"
+            :aria-disabled="!item.href"
             @click="handleDownload(item.platform, item.href)"
+            @keydown.enter.prevent="handleDownload(item.platform, item.href)"
+            @keydown.space.prevent="handleDownload(item.platform, item.href)"
           >
-            <div class="download-icon">
+            <div v-if="item.primary" class="dl-glow"></div>
+            <div class="dl-icon-wrap">
               <component :is="item.icon" :size="32" />
             </div>
-            <div class="download-info">
+            <div class="dl-info">
               <h4>{{ item.platform }}</h4>
-              <p>{{ item.meta }}</p>
+              <span class="dl-meta">{{ item.meta }}</span>
             </div>
-            <div class="download-details">
-              <span class="download-badge">{{ item.badge }}</span>
-              <span class="download-size">{{ item.size }}</span>
+            <div v-if="item.badge" class="dl-badge">{{ item.badge }}</div>
+            <div class="dl-action-row">
+              <span v-if="item.href" class="dl-action">
+                <template v-if="downloadingPlatform !== item.platform">
+                  {{ item.label }}
+                  <ArrowRight :size="14" />
+                </template>
+                <span v-else class="spinner"></span>
+              </span>
+              <span v-else class="dl-action dl-action--muted">Wkrótce</span>
             </div>
-            <button class="download-btn">
-              <Download :size="18" />
-              {{ item.label }}
-            </button>
           </div>
         </div>
 
-        <!-- Browser option -->
-        <div
-          class="browser-promo"
-          data-observe="browser-promo"
-          :class="{ visible: isVisible('browser-promo') }"
-        >
-          <div class="browser-promo-content">
-            <Globe2 :size="24" />
-            <div class="browser-promo-text">
+        <div class="card glass browser-row" data-reveal="browser" :class="{ 'is-visible': is('browser') }">
+          <div class="browser-left">
+            <Globe2 :size="20" class="text-[var(--accent-teal)]" />
+            <div>
               <strong>Wolisz przeglądarkę?</strong>
-              <p>
-                Uruchom AetherPulse bezpośrednio w przeglądarce bez instalacji &mdash; wystarczy
-                konto.
-              </p>
+              <p class="text-sm text-[var(--text-secondary)]">Uruchom Nicori bezpośrednio — wystarczy konto.</p>
             </div>
           </div>
-          <a href="/auth" class="btn secondary"> Otwórz w przeglądarce </a>
+          <a href="/auth" class="btn btn-ghost btn-sm">Otwórz w przeglądarce</a>
         </div>
       </div>
     </section>
 
-    <!-- CTA Section -->
-    <section class="cta-section">
-      <div class="cta-container" data-observe="cta" :class="{ visible: isVisible('cta') }">
-        <div class="cta-content">
-          <h2>Gotowy na nową erę<br />komunikacji?</h2>
-          <p>
-            Dołącz do tysięcy użytkowników, którzy już odkryli swobodę AetherPulse.
-            <strong>Za darmo.</strong>
-          </p>
-        </div>
+    <!-- CTA -->
+    <section class="cta">
+      <div class="cta-glow"></div>
+      <div class="cta-inner">
+        <h2 class="cta-title">
+          Gotowy na nową erę<br />
+          <span class="gradient-text">komunikacji?</span>
+        </h2>
+        <p class="cta-desc">
+          Dołącz do tysięcy użytkowników, którzy już odkryli swobodę Nicori.
+        </p>
         <div class="cta-actions">
-          <button class="btn primary large" @click="handleDownload('Windows', downloads[0].href)">
-            <Download :size="20" />
+          <button class="btn btn-primary btn-lg" @click="handleDownload(recommended.platform, recommended.href)">
+            <Download :size="18" />
             Pobierz teraz
           </button>
-          <a href="/auth" class="btn ghost large">
+          <a href="/auth" class="btn btn-ghost btn-lg">
             Zaczynaj za darmo
             <ArrowRight :size="18" />
           </a>
         </div>
       </div>
-      <div class="cta-decoration">
-        <div class="cta-glow" />
-      </div>
     </section>
 
-    <!-- Footer -->
+    <!-- FOOTER -->
     <footer class="footer">
-      <div class="footer-container">
-        <div class="footer-main">
-          <div class="footer-brand-col">
-            <a class="footer-brand" href="/">
-              <Waves :size="24" />
-              <span>AetherPulse</span>
+      <div class="container footer-inner">
+        <div class="footer-top">
+          <div class="footer-brand">
+            <a href="/" class="footer-logo">
+              <img src="/icons/logo-mono.png" alt="" class="footer-logo-img" />
+              <span>Nicori</span>
             </a>
-            <p class="footer-desc">
-              Nowoczesna platforma do komunikacji głosowej, wideorozmów i współpracy zespołowej.
-            </p>
+            <p>Nowoczesna platforma do komunikacji głosowej, wideorozmów i współpracy zespołowej.</p>
           </div>
-
-          <div class="footer-links">
-            <div class="footer-column">
+          <div class="footer-cols">
+            <div class="footer-col">
               <h4>Produkt</h4>
-              <a href="#features">Funkcje</a>
+              <a href="#showcase">Wyróżniki</a>
               <a href="#download">Pobierz</a>
+              <a href="#audience">Dla kogo?</a>
             </div>
-            <div class="footer-column">
+            <div class="footer-col">
               <h4>Społeczność</h4>
-              <a href="https://github.com/BoziaO/Aether-Pulse" target="_blank">GitHub</a>
+              <a href="https://github.com/BoziaO/Nicori" target="_blank">GitHub</a>
               <a href="https://discord.gg/example" target="_blank">Discord</a>
             </div>
-            <div class="footer-column">
+            <div class="footer-col">
               <h4>Wsparcie</h4>
               <a href="/docs">Dokumentacja</a>
-              <a href="mailto:support@aetherpulse.app">Kontakt</a>
+              <a href="mailto:support@nicori.app">Kontakt</a>
             </div>
           </div>
         </div>
-
         <div class="footer-bottom">
-          <p>&copy; {{ new Date().getFullYear() }} AetherPulse. Wszelkie prawa zastrzeżone.</p>
-          <div class="footer-social">
-            <a href="https://github.com/BoziaO/Aether-Pulse" target="_blank" title="GitHub">
-              <Code2 :size="18" />
-            </a>
-          </div>
+          <p>&copy; {{ new Date().getFullYear() }} Nicori. Wszelkie prawa zastrzeżone.</p>
+          <a href="https://github.com/BoziaO/Nicori" target="_blank" aria-label="GitHub">
+            <Code2 :size="16" />
+          </a>
         </div>
       </div>
     </footer>
 
-    <div class="mobile-download-bar">
-      <button class="btn primary large" @click="handleDownload('Windows', downloads[0].href)">
-        <Download :size="18" />
+    <!-- MOBILE BAR -->
+    <div class="mobile-bar">
+      <button class="btn btn-primary" @click="handleDownload(recommended.platform, recommended.href)">
+        <Download :size="16" />
         Pobierz aplikację
       </button>
     </div>
@@ -555,1088 +533,879 @@ const recommendedDownload = computed(
 </template>
 
 <style scoped>
-/* CSS Variables */
-:root {
-  --primary: #5865f2;
-  --primary-hover: #4752c4;
-  --primary-gradient: linear-gradient(135deg, #5865f2, #7289da);
-  --secondary: #3ba55c;
-  --secondary-hover: #2e8e49;
-  --danger: #ed4245;
-  --warning: #faa61a;
-  --bg-primary: #0a0a0f;
-  --bg-secondary: #1e1e2e;
-  --bg-tertiary: #2e2e42;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-hover: rgba(255, 255, 255, 0.16);
-  --text-primary: #ffffff;
-  --text-secondary: #b9bbbe;
-  --text-muted: #72767d;
-  --accent: #5865f2;
-  --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 16px 64px rgba(0, 0, 0, 0.4);
-}
-
-/* Reset & Base */
-* {
-  box-sizing: border-box;
-}
-
-html,
-body {
-  margin: 0;
-  padding: 0;
-  scroll-behavior: smooth;
-}
-
-.landing {
-  min-height: 100vh;
+/* ========== BASE ========== */
+.lp {
+  min-height: 100dvh;
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-family:
-    'Inter',
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   overflow-x: hidden;
   position: relative;
 }
 
-/* Typography */
-h1,
-h2,
-h3,
-h4,
-p {
-  margin: 0;
-  line-height: 1.5;
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
-  transition: color 0.2s ease;
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 20px;
 }
 
-/* Buttons */
-.btn {
+.gradient-text {
+  background: linear-gradient(135deg, var(--accent-violet), var(--accent-blue), var(--accent-teal));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.lp .badge {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: none;
-  white-space: nowrap;
+  gap: 6px;
+  width: auto;
 }
 
-.btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.btn.primary {
-  background: var(--primary-gradient);
-  color: white;
-  box-shadow: 0 4px 14px rgba(88, 101, 242, 0.4);
-}
-
-.btn.primary:hover:not(:disabled) {
-  box-shadow: 0 6px 20px rgba(88, 101, 242, 0.5);
-}
-
-.btn.secondary {
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
-  border: 1px solid var(--border);
-}
-
-.btn.secondary:hover {
-  border-color: var(--border-hover);
-  background: rgba(255, 255, 255, 0.02);
-}
-
-.btn.ghost {
-  background: transparent;
-  color: var(--text-secondary);
-  border: 1px solid var(--border);
-}
-
-.btn.ghost:hover {
-  border-color: var(--border-hover);
-  color: var(--text-primary);
-}
-
-.btn.large {
-  padding: 14px 28px;
-  font-size: 15px;
-}
-
-/* Navigation */
+/* ========== NAV ========== */
 .nav {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 1000;
-  background: rgba(10, 10, 15, 0.8);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border);
+  z-index: 100;
+  padding: 0 20px;
   transition: all 0.3s ease;
 }
 
 .nav.scrolled {
-  background: rgba(10, 10, 15, 0.95);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  background: rgba(7, 10, 19, 0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
 }
 
-.nav-container {
-  max-width: 1280px;
+.nav-inner {
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 12px 24px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
 }
 
-.brand {
+.nav-brand {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 18px;
-  font-weight: 700;
+  text-decoration: none;
   color: var(--text-primary);
 }
 
-.brand-icon {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--primary-gradient);
-  border-radius: 8px;
-  color: white;
+.nav-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  object-fit: contain;
+}
+
+.nav-name {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .nav-links {
   display: flex;
-  gap: 24px;
+  gap: 4px;
 }
 
-.nav-link {
+.nav-links button {
   background: none;
   border: none;
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 8px;
   cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 6px;
-  transition: all 0.2s ease;
+  transition: all 0.15s;
 }
 
-.nav-link:hover {
+.nav-links button:hover {
   color: var(--text-primary);
-  background: var(--bg-tertiary);
+  background: var(--bg-hover);
 }
 
-.nav-actions {
-  display: flex;
-  gap: 12px;
+.nav-cta {
+  border-radius: 9999px;
 }
 
-.mobile-menu-btn {
+.nav-toggle {
   display: none;
   background: none;
   border: none;
   color: var(--text-secondary);
   cursor: pointer;
   padding: 8px;
-  border-radius: 6px;
-  transition: all 0.2s ease;
+  border-radius: 8px;
 }
 
-.mobile-menu-btn:hover {
+.nav-toggle:hover {
   color: var(--text-primary);
-  background: var(--bg-tertiary);
+  background: var(--bg-hover);
 }
 
-.mobile-menu {
-  display: none;
-  flex-direction: column;
-  gap: 8px;
-  padding: 16px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  margin-top: 8px;
-}
-
-.mobile-menu .nav-link {
-  width: 100%;
-  text-align: center;
-  padding: 12px;
-}
-
-.mobile-menu .btn {
-  width: 100%;
-  justify-content: center;
-}
-
-/* Hero Section */
-.hero {
-  padding: 120px 24px 80px;
-  position: relative;
-  overflow: hidden;
-}
-
-.hero-container {
-  max-width: 1280px;
+.nav-mobile {
+  max-width: 1100px;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  align-items: center;
-  gap: 48px;
-}
-
-.hero-content {
-  z-index: 1;
-}
-
-.hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin-bottom: 24px;
-}
-
-.badge-dot {
-  width: 6px;
-  height: 6px;
-  background: var(--primary);
-  border-radius: 50%;
-  animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.hero-title {
-  font-size: clamp(40px, 7vw, 80px);
-  font-weight: 800;
-  line-height: 1.05;
-  letter-spacing: -0.03em;
-  margin-bottom: 24px;
+  padding: 8px 16px 16px;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.hero-title-line {
-  display: block;
-}
-
-.hero-title-gradient {
-  background: linear-gradient(135deg, #a78bfa, #67e8f9, #5865f2);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.hero-subtitle {
-  font-size: clamp(18px, 2.5vw, 24px);
+.nav-mobile button {
+  background: none;
+  border: none;
   color: var(--text-secondary);
-  max-width: 600px;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 12px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+}
+
+.nav-mobile button:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.nav-mobile hr {
+  border: none;
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+.nav-mobile .btn {
+  width: 100%;
+  justify-content: center;
+}
+
+/* Drawer transition */
+.drawer-enter-active,
+.drawer-leave-active {
+  transition: all 0.25s ease;
+}
+.drawer-enter-from,
+.drawer-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+/* ========== HERO ========== */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 100px 20px 60px;
+}
+
+/* ========== BG ORBS (fixed, full-page) ========== */
+.bg-orbs {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  will-change: transform;
+  transition: transform 0.5s ease-out;
+}
+
+.bg-orb--violet {
+  width: 600px;
+  height: 600px;
+  top: -15%;
+  right: 5%;
+  background: rgba(139, 92, 246, 0.08);
+}
+
+.bg-orb--pink {
+  width: 500px;
+  height: 500px;
+  top: 40%;
+  left: -10%;
+  background: rgba(217, 70, 239, 0.06);
+}
+
+.bg-orb--blue {
+  width: 450px;
+  height: 450px;
+  top: 60%;
+  right: -5%;
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.bg-orb--teal {
+  width: 350px;
+  height: 350px;
+  top: 10%;
+  left: 30%;
+  background: rgba(6, 182, 212, 0.04);
+  animation: orbDrift 20s ease-in-out infinite;
+}
+
+@keyframes orbDrift {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(40px, -30px); }
+}
+
+.hero-inner {
+  max-width: 1100px;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.hero-badge {
+  align-self: flex-start;
+  margin-bottom: 28px;
+  animation: fadeSlideUp 0.5s ease both;
+}
+
+.hero-title {
+  font-size: clamp(38px, 5.5vw, 64px);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  margin-bottom: 20px;
+  animation: fadeSlideUp 0.5s ease 0.1s both;
+}
+
+.hero-desc {
+  font-size: 17px;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  max-width: 440px;
   margin-bottom: 32px;
-  line-height: 1.6;
+  animation: fadeSlideUp 0.5s ease 0.2s both;
 }
 
 .hero-actions {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   flex-wrap: wrap;
+  margin-bottom: 48px;
+  animation: fadeSlideUp 0.5s ease 0.3s both;
 }
 
-.hero-secondary-actions {
+.hero-stats {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  animation: fadeSlideUp 0.5s ease 0.4s both;
+}
+
+.stat {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  align-items: flex-start;
 }
 
-.platform-icons {
-  display: flex;
-  gap: 8px;
+.stat-val {
+  font-size: 18px;
+  font-weight: 700;
 }
 
-.platform-icon {
-  font-size: 20px;
-  padding: 6px 10px;
-  background: var(--bg-tertiary);
-  border-radius: 6px;
-  transition: transform 0.2s ease;
+.stat-lbl {
+  font-size: 12px;
+  color: var(--text-muted);
 }
 
-.platform-icon:hover {
-  transform: scale(1.1);
+.stat-divider {
+  width: 1px;
+  height: 32px;
+  background: var(--border);
 }
 
 /* Hero Visual */
 .hero-visual {
   position: relative;
+  height: 420px;
   display: flex;
-  justify-content: center;
   align-items: center;
-}
-
-.hero-visual {
-  display: flex;
   justify-content: center;
-  align-items: center;
 }
 
-.hero-visual .mockup {
-  animation: mockupEnter 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: 0.3s;
-}
-
-@keyframes mockupEnter {
-  from {
-    opacity: 0;
-    transform: translateY(30px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* Decorative Elements */
-.hero-decoration {
+.hero-glow {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  z-index: 0;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.15), transparent 70%);
+  animation: heroGlow 4s ease-in-out infinite;
 }
 
-.hero-gradient-sphere {
+.hero-ring {
   position: absolute;
   border-radius: 50%;
-  filter: blur(100px);
-  will-change: transform;
+  border: 1px solid var(--border);
 }
 
-.hero-gradient-sphere.s1 {
-  width: 500px;
-  height: 500px;
-  top: -200px;
-  right: -100px;
-  background: radial-gradient(circle, rgba(88, 101, 242, 0.15), transparent);
-  animation: sphereFloat 10s ease-in-out infinite;
+.hero-ring--outer {
+  width: 300px;
+  height: 300px;
+  animation: heroSpin 25s linear infinite;
 }
 
-.hero-gradient-sphere.s2 {
-  width: 400px;
-  height: 400px;
-  bottom: -150px;
-  left: -100px;
-  background: radial-gradient(circle, rgba(167, 139, 250, 0.1), transparent);
-  animation: sphereFloat 14s ease-in-out infinite reverse;
+.hero-ring--inner {
+  width: 220px;
+  height: 220px;
+  animation: heroSpin 18s linear infinite reverse;
+  border-color: rgba(139, 92, 246, 0.1);
 }
 
-.hero-gradient-sphere.s3 {
-  width: 250px;
-  height: 250px;
+.hero-mascot {
+  position: relative;
+  z-index: 2;
+  width: 160px;
+  height: 160px;
+  object-fit: contain;
+  animation: heroFloat 5s ease-in-out infinite;
+  filter: drop-shadow(0 0 40px rgba(139, 92, 246, 0.2));
+}
+
+.orbit-dot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.orbit-dot--1 {
+  top: 8%;
+  right: 20%;
+  background: var(--accent-violet);
+  animation: dotPulse 3s ease-in-out infinite;
+}
+
+.orbit-dot--2 {
+  bottom: 15%;
+  left: 10%;
+  background: var(--accent-blue);
+  animation: dotPulse 3.5s ease-in-out infinite 1s;
+}
+
+.orbit-dot--3 {
   top: 40%;
-  left: 20%;
-  background: radial-gradient(circle, rgba(103, 232, 249, 0.08), transparent);
-  animation: sphereFloat 12s ease-in-out infinite;
+  right: 5%;
+  background: var(--accent-teal);
+  animation: dotPulse 2.8s ease-in-out infinite 0.5s;
 }
 
-@keyframes sphereFloat {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-  33% {
-    transform: translate(30px, -30px) scale(1.05);
-  }
-  66% {
-    transform: translate(-20px, 10px) scale(0.95);
-  }
-}
-
-@keyframes float {
-  0%,
-  100% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-  50% {
-    transform: translate(20px, -20px) rotate(5deg);
-  }
-}
-
-/* App Mockup */
-.mockup {
-  width: 100%;
-  max-width: 540px;
-  background: rgba(30, 30, 46, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  overflow: hidden;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-.mockup-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  background: rgba(20, 20, 30, 0.8);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.mockup-dots {
-  display: flex;
-  gap: 6px;
-}
-
-.mockup-dots span {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-}
-
-.mockup-dots span:nth-child(1) {
-  background: #ed4245;
-}
-.mockup-dots span:nth-child(2) {
-  background: #faa61a;
-}
-.mockup-dots span:nth-child(3) {
-  background: #3ba55c;
-}
-
-.mockup-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-muted);
-  letter-spacing: 0.5px;
-}
-
-.mockup-body {
-  display: flex;
-  height: 320px;
-}
-
-.mockup-sidebar {
-  width: 56px;
-  padding: 12px 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  background: rgba(10, 10, 15, 0.4);
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
-  align-items: center;
-}
-
-.mockup-avatar {
+.hero-scroll {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(88, 101, 242, 0.3), rgba(88, 101, 242, 0.1));
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.mockup-avatar.muted {
-  opacity: 0.4;
-}
-
-.mockup-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 12px;
-}
-
-.mockup-topbar {
+  border: 1px solid var(--border);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.mockup-tag {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-
-.mockup-icons {
-  display: flex;
-  gap: 8px;
+  justify-content: center;
+  cursor: pointer;
   color: var(--text-muted);
+  transition: all 0.2s;
+  animation: fadeSlideUp 0.5s ease 0.6s both;
 }
 
-.mockup-messages {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  justify-content: flex-end;
-  padding-bottom: 12px;
+.hero-scroll:hover {
+  color: var(--text-primary);
+  border-color: var(--border-accent);
+  background: var(--bg-hover);
 }
 
-.mockup-msg {
-  height: 10px;
-  border-radius: 4px;
-  animation: msgPulse 2s ease-in-out infinite;
+.rotate-90 {
+  transform: rotate(90deg);
 }
 
-.mockup-msg.theirs {
-  background: rgba(255, 255, 255, 0.08);
-  align-self: flex-start;
+/* ========== SECTIONS ========== */
+.section {
+  padding: 100px 0;
+  position: relative;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 600px;
 }
 
-.mockup-msg.mine {
-  background: linear-gradient(90deg, rgba(88, 101, 242, 0.3), rgba(88, 101, 242, 0.15));
-  align-self: flex-end;
-}
-
-@keyframes msgPulse {
-  0%,
-  100% {
-    opacity: 0.6;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
-.mockup-input {
-  height: 36px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  padding: 0 12px;
-}
-
-.mockup-input-dot {
-  width: 40%;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
-}
-
-/* Features Section */
-.features-section {
-  padding: 80px 24px;
-}
-
-.section-container {
-  max-width: 1280px;
-  margin: 0 auto;
-}
-
-.section-header {
+.section-head {
   text-align: center;
-  margin-bottom: 64px;
-  opacity: 0;
-  transform: translateY(20px);
-  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.section-header.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.section-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  background: var(--primary-gradient);
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  color: white;
-  margin-bottom: 24px;
-  box-shadow: 0 4px 14px rgba(88, 101, 242, 0.3);
-}
-
-.section-title {
-  font-size: clamp(36px, 5vw, 56px);
-  font-weight: 800;
-  line-height: 1.1;
-  margin-bottom: 20px;
-}
-
-.section-subtitle {
-  font-size: clamp(16px, 2vw, 18px);
-  color: var(--text-secondary);
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-/* Feature Tabs */
-.feature-tabs {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-bottom: 48px;
-  flex-wrap: wrap;
-  opacity: 0;
-  transform: translateY(12px);
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  transition-delay: 200ms;
-}
-
-.feature-tabs.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.feature-tab {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 16px;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 13px;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.feature-tab:hover {
-  border-color: var(--border-hover);
-  color: var(--text-primary);
-}
-
-.feature-tab.active {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: white;
-}
-
-/* Features Grid */
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 24px;
-}
-
-.feature-card {
-  position: relative;
-  background: rgba(30, 30, 46, 0.5);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 32px;
-  cursor: default;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  overflow: hidden;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  opacity: 0;
-  transform: translateY(24px);
-}
-
-.feature-card.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.feature-card:hover {
-  transform: translateY(-6px) scale(1.01);
-  border-color: rgba(88, 101, 242, 0.3);
-  box-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.3),
-    0 0 40px rgba(88, 101, 242, 0.05);
-  background: rgba(30, 30, 46, 0.7);
-}
-
-.feature-card-glow {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(88, 101, 242, 0.4), transparent);
-  opacity: 0;
-  transition: opacity 0.4s ease;
-}
-
-.feature-card:hover .feature-card-glow {
-  opacity: 1;
-}
-
-.feature-icon-wrapper {
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--primary-gradient);
-  border-radius: 12px;
-  margin-bottom: 20px;
-  color: white;
-  position: relative;
-}
-
-.feature-icon-wrapper::after {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: 14px;
-  background: var(--primary-gradient);
-  opacity: 0.2;
-  filter: blur(8px);
-  z-index: -1;
-}
-
-.feature-title {
-  font-size: 18px;
-  font-weight: 700;
-  margin-bottom: 12px;
-  color: var(--text-primary);
-}
-
-.feature-description {
-  font-size: 14px;
-  color: var(--text-secondary);
-  line-height: 1.6;
-}
-
-/* Downloads Section */
-.downloads-section {
-  padding: 80px 24px;
-  background: linear-gradient(180deg, transparent, rgba(30, 30, 46, 0.2));
-}
-
-.download-platforms {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 24px;
-  margin-bottom: 48px;
-}
-
-.download-card {
-  background: rgba(30, 30, 46, 0.5);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 24px;
-  cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  position: relative;
-  overflow: hidden;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-}
-
-.download-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--border-hover);
-  box-shadow: var(--shadow);
-}
-
-.download-card.featured {
-  border-color: rgba(88, 101, 242, 0.4);
-  background: linear-gradient(135deg, rgba(88, 101, 242, 0.12), rgba(30, 30, 46, 0.5));
-  box-shadow: 0 0 30px rgba(88, 101, 242, 0.08);
-}
-
-.download-icon {
-  color: var(--primary);
-  margin-bottom: 16px;
-}
-
-.download-info {
-  margin-bottom: 20px;
-}
-
-.download-info h4 {
-  font-size: 18px;
-  font-weight: 700;
-  margin-bottom: 4px;
-}
-
-.download-info p {
-  font-size: 13px;
-  color: var(--text-muted);
-}
-
-.download-details {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.download-badge {
-  padding: 4px 10px;
-  background: var(--primary);
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  color: white;
-  text-transform: uppercase;
-}
-
-.download-size {
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
-.download-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 12px 16px;
-  background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.download-btn:hover {
-  background: var(--primary-hover);
-}
-
-.download-progress-inner {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--bg-tertiary);
-}
-
-.progress-fill {
-  height: 100%;
-  background: var(--primary-gradient);
-  border-radius: 0 0 8px 8px;
-  transition: width 0.3s ease;
-}
-
-/* Browser Promo */
-.browser-promo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 24px;
-  padding: 32px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  flex-wrap: wrap;
+  margin-bottom: 56px;
   opacity: 0;
   transform: translateY(16px);
   transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.browser-promo.visible {
+.section-head.is-visible {
   opacity: 1;
   transform: translateY(0);
 }
 
-.browser-promo-content {
-  display: flex;
-  align-items: center;
+.section-head .badge {
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.section-desc {
+  font-size: 16px;
+  color: var(--text-secondary);
+  margin-top: 12px;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ========== SHOWCASE ========== */
+.showcase-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
 }
 
-.browser-promo-content svg {
-  color: var(--primary);
+.showcase-card {
+  padding: 28px;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.browser-promo-text strong {
-  display: block;
+.showcase-card.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.showcase-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--border-accent);
+}
+
+.showcase-card.is-visible:hover {
+  transform: translateY(-3px);
+}
+
+.showcase-stat {
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 16px;
+}
+
+.showcase-icon-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(139, 92, 246, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-violet);
+  margin-bottom: 14px;
+}
+
+.showcase-card h3 {
   font-size: 16px;
-  margin-bottom: 4px;
+  font-weight: 700;
+  margin-bottom: 8px;
 }
 
-.browser-promo-text p {
+.showcase-card p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ========== AUDIENCE ========== */
+.audience-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.audience-card {
+  padding: 28px 24px;
+  position: relative;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.audience-card.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.audience-card:hover {
+  transform: translateY(-3px);
+}
+
+.audience-card.is-visible:hover {
+  transform: translateY(-3px);
+}
+
+.audience-accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.audience-card:hover .audience-accent {
+  opacity: 1;
+}
+
+.audience-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.audience-card h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.audience-card p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ========== DOWNLOAD ========== */
+.download-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.download-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px 28px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.download-card:hover {
+  border-color: var(--border-accent);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(139, 92, 246, 0.08);
+}
+
+.download-card.is-featured {
+  border-color: var(--border-accent);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.06), rgba(59, 130, 246, 0.04), var(--bg-surface));
+}
+
+.dl-glow {
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.12), transparent 70%);
+  pointer-events: none;
+}
+
+.download-card.is-disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.dl-icon-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: rgba(139, 92, 246, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-violet);
+}
+
+.download-card.is-featured .dl-icon-wrap {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.15));
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.15);
+}
+
+.dl-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dl-info h4 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.dl-meta {
   font-size: 13px;
   color: var(--text-muted);
 }
 
-/* CTA Section */
-.cta-section {
-  padding: 100px 24px;
-  position: relative;
-  overflow: hidden;
-  text-align: center;
+.dl-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: linear-gradient(135deg, var(--accent-violet), var(--accent-blue));
+  color: white;
 }
 
-.cta-container {
-  max-width: 600px;
-  margin: 0 auto;
-  position: relative;
-  z-index: 1;
+.dl-action-row {
+  width: 100%;
+  margin-top: auto;
+}
+
+.dl-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-violet);
+  background: rgba(139, 92, 246, 0.08);
+  border: 1px solid rgba(139, 92, 246, 0.15);
+  transition: all 0.2s;
+  width: 100%;
+  justify-content: center;
+}
+
+.dl-action:hover {
+  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+.dl-action--muted {
+  color: var(--text-muted);
+  background: var(--bg-hover);
+  border-color: var(--border);
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(139, 92, 246, 0.2);
+  border-top-color: var(--accent-violet);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+/* Browser row */
+.browser-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  gap: 16px;
+  flex-wrap: wrap;
   opacity: 0;
-  transform: translateY(20px);
-  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(12px);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.cta-container.visible {
+.browser-row.is-visible {
   opacity: 1;
   transform: translateY(0);
 }
 
-.cta-content {
-  margin-bottom: 32px;
+.browser-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.cta-content h2 {
-  font-size: clamp(32px, 5vw, 48px);
+.browser-left strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+/* ========== CTA ========== */
+.cta {
+  padding: 100px 20px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 400px;
+  background: radial-gradient(ellipse, rgba(139, 92, 246, 0.08), transparent 60%);
+  pointer-events: none;
+}
+
+.cta-inner {
+  max-width: 520px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.cta-title {
+  font-size: clamp(28px, 4vw, 40px);
   font-weight: 800;
-  line-height: 1.1;
-  margin-bottom: 16px;
+  line-height: 1.15;
+  margin-bottom: 12px;
 }
 
-.cta-content p {
-  font-size: clamp(16px, 2vw, 18px);
+.cta-desc {
+  font-size: 16px;
   color: var(--text-secondary);
+  margin-bottom: 28px;
 }
 
 .cta-actions {
   display: flex;
   justify-content: center;
-  gap: 16px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
-.cta-decoration {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-}
-
-.cta-glow {
-  width: 800px;
-  height: 400px;
-  background: radial-gradient(ellipse, rgba(88, 101, 242, 0.1), transparent);
-  filter: blur(100px);
-}
-
-/* Footer */
+/* ========== FOOTER ========== */
 .footer {
-  padding: 64px 24px 32px;
-  background: var(--bg-secondary);
+  padding: 48px 0 28px;
   border-top: 1px solid var(--border);
 }
 
-.footer-container {
-  max-width: 1280px;
-  margin: 0 auto;
+.footer-inner {
+  display: flex;
+  flex-direction: column;
 }
 
-.footer-main {
+.footer-top {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
   gap: 48px;
-  margin-bottom: 48px;
+  margin-bottom: 36px;
   flex-wrap: wrap;
 }
 
-.footer-brand-col {
-  max-width: 300px;
+.footer-brand {
+  max-width: 260px;
 }
 
-.footer-brand {
+.footer-logo {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 18px;
+  gap: 8px;
+  font-size: 16px;
   font-weight: 700;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
+  color: var(--text-primary);
 }
 
-.footer-brand svg {
-  color: var(--primary);
+.footer-logo-img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
 }
 
-.footer-desc {
+.footer-brand p {
   font-size: 13px;
   color: var(--text-muted);
   line-height: 1.6;
 }
 
-.footer-links {
+.footer-cols {
   display: flex;
-  gap: 64px;
+  gap: 48px;
   flex-wrap: wrap;
 }
 
-.footer-column h4 {
-  font-size: 13px;
+.footer-col h4 {
+  font-size: 12px;
   font-weight: 600;
-  color: var(--text-secondary);
-  margin-bottom: 16px;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  margin-bottom: 12px;
 }
 
-.footer-column a {
+.footer-col a {
   display: block;
   font-size: 13px;
-  color: var(--text-muted);
-  padding: 6px 0;
-  transition: color 0.2s ease;
+  color: var(--text-secondary);
+  padding: 4px 0;
+  transition: color 0.15s;
 }
 
-.footer-column a:hover {
+.footer-col a:hover {
   color: var(--text-primary);
 }
 
@@ -1644,10 +1413,8 @@ a {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 24px;
-  padding-top: 32px;
+  padding-top: 20px;
   border-top: 1px solid var(--border);
-  flex-wrap: wrap;
 }
 
 .footer-bottom p {
@@ -1655,220 +1422,245 @@ a {
   color: var(--text-muted);
 }
 
-.footer-social {
-  display: flex;
-  gap: 12px;
-}
-
-.footer-social a {
+.footer-bottom a {
   color: var(--text-muted);
-  transition: color 0.2s ease;
+  transition: color 0.15s;
 }
 
-.footer-social a:hover {
-  color: var(--primary);
+.footer-bottom a:hover {
+  color: var(--accent-violet);
 }
 
-/* Animations */
-@keyframes fadeInUp {
+/* ========== MOBILE BAR ========== */
+.mobile-bar {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 90;
+  padding: 12px 16px;
+  background: rgba(7, 10, 19, 0.92);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border);
+}
+
+.mobile-bar .btn {
+  width: 100%;
+  justify-content: center;
+}
+
+/* ========== ANIMATIONS ========== */
+@keyframes fadeSlideUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(16px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-.hero-content > * {
-  animation: fadeInUp 0.6s ease-out both;
+@keyframes heroGlow {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
 }
 
-.hero-content > *:nth-child(1) {
-  animation-delay: 0.1s;
+@keyframes heroSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-.hero-content > *:nth-child(2) {
-  animation-delay: 0.2s;
+@keyframes heroFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
 }
 
-.hero-content > *:nth-child(3) {
-  animation-delay: 0.3s;
+@keyframes dotPulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.6); }
 }
 
-.hero-content > *:nth-child(4) {
-  animation-delay: 0.4s;
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-/* Responsive Design */
+/* ========== REDUCED MOTION ========== */
+@media (prefers-reduced-motion: reduce) {
+  .bg-orb,
+  .hero-ring,
+  .hero-glow,
+  .hero-mascot,
+  .orbit-dot,
+  .hero-text > * {
+    animation: none !important;
+  }
+  .section-head,
+  .showcase-card,
+  .audience-card,
+  .browser-row {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ========== RESPONSIVE ========== */
 @media (max-width: 1024px) {
-  .hero-container {
+  .hero-inner {
     grid-template-columns: 1fr;
     text-align: center;
+    gap: 40px;
   }
 
-  .hero-content {
-    order: 2;
+  .hero-text {
+    align-items: center;
   }
 
-  .hero-visual {
-    order: 1;
-    margin-bottom: 48px;
+  .hero-badge {
+    align-self: center;
+  }
+
+  .hero-desc {
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .hero-actions {
     justify-content: center;
   }
 
-  .hero-secondary-actions {
-    align-items: center;
+  .hero-stats {
+    justify-content: center;
+  }
+
+  .hero-visual {
+    height: 320px;
+  }
+
+  .hero-mascot {
+    width: 130px;
+    height: 130px;
+  }
+
+  .hero-ring--outer {
+    width: 240px;
+    height: 240px;
+  }
+
+  .hero-ring--inner {
+    width: 180px;
+    height: 180px;
   }
 
   .nav-links {
     display: none;
   }
 
-  .mobile-menu-btn {
+  .nav-toggle {
     display: flex;
   }
 
-  .mobile-menu {
-    display: flex;
+  .audience-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 768px) {
-  .nav-actions {
+  .nav-cta {
     display: none;
   }
 
-  .hero-container {
-    grid-template-columns: 1fr;
-    text-align: center;
-  }
-
-  .hero-content {
-    order: 2;
-  }
-
-  .hero-visual {
-    order: -1;
-    margin-bottom: 32px;
-  }
-
-  .hero-title {
-    font-size: 48px;
-  }
-
-  .btn.large {
-    padding: 12px 20px;
-    font-size: 13px;
-  }
-
-  .hero {
-    padding: 80px 24px 60px;
-  }
-
-  .hero-badge {
-    font-size: 12px;
-    padding: 4px 10px;
-  }
-
-  .download-platforms {
+  .audience-grid,
+  .showcase-grid,
+  .download-grid {
     grid-template-columns: 1fr;
   }
 
-  .browser-promo {
+  .browser-row {
     flex-direction: column;
     text-align: center;
   }
 
-  .footer-main {
+  .browser-left {
+    flex-direction: column;
+  }
+
+  .footer-top {
     flex-direction: column;
     text-align: center;
   }
 
-  .footer-links {
+  .footer-cols {
     justify-content: center;
   }
 
   .footer-bottom {
     flex-direction: column;
+    gap: 12px;
     text-align: center;
+  }
+
+  .mobile-bar {
+    display: block;
+  }
+
+  .hero-visual {
+    height: 260px;
+  }
+
+  .hero-mascot {
+    width: 110px;
+    height: 110px;
+  }
+
+  .hero-ring--outer {
+    width: 200px;
+    height: 200px;
+  }
+
+  .hero-ring--inner {
+    width: 150px;
+    height: 150px;
+  }
+
+  .hero-glow {
+    width: 200px;
+    height: 200px;
   }
 }
 
 @media (max-width: 480px) {
-  .hero-actions {
-    flex-direction: column;
+  .hero {
+    padding: 80px 16px 40px;
   }
 
-  .btn {
+  .hero-actions {
+    flex-direction: column;
     width: 100%;
   }
 
-  .hero-subtitle {
-    font-size: 16px;
-  }
-
-  .section-title {
-    font-size: 28px;
-  }
-
-  .feature-tabs {
+  .hero-actions .btn {
+    width: 100%;
     justify-content: center;
-  }
-
-  .feature-tab {
-    padding: 8px 12px;
-    font-size: 12px;
   }
 
   .cta-actions {
     flex-direction: column;
   }
-}
 
-/* Loader */
-.loader {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
+  .cta-actions .btn {
+    width: 100%;
+    justify-content: center;
   }
 
-  to {
-    transform: rotate(360deg);
+  .hero-stats {
+    gap: 14px;
   }
-}
 
-/* Mobile Download Bar */
-.mobile-download-bar {
-  display: none;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 999;
-  padding: 12px 16px;
-  background: rgba(10, 10, 15, 0.9);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid var(--border);
-}
-
-.mobile-download-bar .btn {
-  width: 100%;
-  justify-content: center;
-}
-
-@media (max-width: 768px) {
-  .mobile-download-bar {
-    display: block;
+  .section {
+    padding: 60px 0;
   }
 }
 </style>

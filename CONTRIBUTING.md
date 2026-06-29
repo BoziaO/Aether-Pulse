@@ -1,26 +1,26 @@
-# Contributing to AetherPulse
+# Contributing to Nicori
 
 First off, thanks for taking the time to contribute! ❤️
 
-The following is a set of guidelines for contributing to AetherPulse. These are mostly guidelines, not rules. Use your best judgment, and feel free to propose changes to this document in a pull request.
+The following is a set of guidelines for contributing to Nicori. These are mostly guidelines, not rules. Use your best judgment, and feel free to propose changes to this document in a pull request.
 
 ## How Can I Contribute?
 
 ### Reporting Bugs
 
-This section guides you through submitting a bug report for AetherPulse. Following these guidelines helps maintainers and the community understand your report, reproduce the behavior, and find related reports.
+This section guides you through submitting a bug report for Nicori. Following these guidelines helps maintainers and the community understand your report, reproduce the behavior, and find related reports.
 
 When you are creating a bug report, please [include as many details as possible](#how-do-i-submit-a-good-bug-report). Fill out [the required template](.github/ISSUE_TEMPLATE/bug_report.yml), the information it asks for helps us resolve issues faster.
 
 ### Suggesting Enhancements
 
-This section guides you through submitting an enhancement suggestion for AetherPulse, including completely new features and minor improvements to existing functionality. Following these guidelines helps maintainers and the community understand your suggestion and find related suggestions.
+This section guides you through submitting an enhancement suggestion for Nicori, including completely new features and minor improvements to existing functionality. Following these guidelines helps maintainers and the community understand your suggestion and find related suggestions.
 
 When you are creating an enhancement suggestion, please [include as many details as possible](#how-do-i-submit-a-good-enhancement-suggestion). Fill out [the template](.github/ISSUE_TEMPLATE/feature_request.yml), including the steps that you imagine you would take if the feature you're requesting existed.
 
 ### Pull Requests
 
-The process which described below has been designed to make contributing to AetherPulse as easy as possible.
+The process which described below has been designed to make contributing to Nicori as easy as possible.
 
 1. Fork the repo and create your branch from `main`.
 2. If you've added code that should be tested, add tests.
@@ -52,4 +52,4 @@ The process which described below has been designed to make contributing to Aeth
 4. Build: `pnpm build`
 
 Thanks!
-AetherPulse Team
+Nicori Team

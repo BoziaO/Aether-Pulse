@@ -1,116 +1,116 @@
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue'
-import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller'
+  import { ref, computed, watch, nextTick } from 'vue'
+  import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller'
 
-import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
-import type { Message } from '../types/message.types'
-import { messageGroupMeta } from '../utils/message.utils'
-import { useAuthStore } from '@/stores/auth.store'
-import { useChatStore } from '../stores/chat.store'
-import { usePresenceStore } from '../stores/presence.store'
-import { useSettingsStore } from '@/stores/settings.store'
-import ChatMessageItem from './ChatMessageItem.vue'
-import ChatTypingIndicator from './ChatTypingIndicator.vue'
-import ChatNewMessage from './ChatNewMessage.vue'
-import { useInfiniteScroll } from '../composables/useInfiniteScroll'
+  import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
+  import type { Message } from '../types/message.types'
+  import { messageGroupMeta } from '../utils/message.utils'
+  import { useAuthStore } from '@/stores/auth.store'
+  import { useChatStore } from '../stores/chat.store'
+  import { usePresenceStore } from '../stores/presence.store'
+  import { useSettingsStore } from '@/stores/settings.store'
+  import ChatMessageItem from './ChatMessageItem.vue'
+  import ChatTypingIndicator from './ChatTypingIndicator.vue'
+  import ChatNewMessage from './ChatNewMessage.vue'
+  import { useInfiniteScroll } from '../composables/useInfiniteScroll'
 
-const props = defineProps<{
-  roomId: string
-  members?: Array<{ id: string; displayName: string; status?: string | undefined }>
-  searchActive?: boolean
-  searchResults?: Message[]
-}>()
+  const props = defineProps<{
+    roomId: string
+    members?: Array<{ id: string; displayName: string; status?: string | undefined }>
+    searchActive?: boolean
+    searchResults?: Message[]
+  }>()
 
-const emit = defineEmits<{
-  (e: 'reply', message: Message): void
-  (e: 'edit', message: Message): void
-  (e: 'delete', messageId: string): void
-  (e: 'react', messageId: string, emoji: string): void
-  (e: 'open-profile', userId: string): void
-  (e: 'load-more'): void
-}>()
+  const emit = defineEmits<{
+    (e: 'reply', message: Message): void
+    (e: 'edit', message: Message): void
+    (e: 'delete', messageId: string): void
+    (e: 'react', messageId: string, emoji: string): void
+    (e: 'open-profile', userId: string): void
+    (e: 'load-more'): void
+  }>()
 
-const chatStore = useChatStore()
-const presenceStore = usePresenceStore()
-const settingsStore = useSettingsStore()
+  const chatStore = useChatStore()
+  const presenceStore = usePresenceStore()
+  const settingsStore = useSettingsStore()
 
-const containerRef = ref<HTMLElement | null>(null)
+  const containerRef = ref<HTMLElement | null>(null)
 
-const {
-  nearBottom: _,
-  showNewMessage,
-  onScroll,
-  scrollDown,
-  onNewMessage,
-} = useInfiniteScroll(
-  containerRef,
-  () => chatStore.loadMore(),
-  () => chatStore.hasMore,
-  () => chatStore.loadingMore
-)
+  const {
+    nearBottom: _,
+    showNewMessage,
+    onScroll,
+    scrollDown,
+    onNewMessage,
+  } = useInfiniteScroll(
+    containerRef,
+    () => chatStore.loadMore(),
+    () => chatStore.hasMore,
+    () => chatStore.loadingMore
+  )
 
-const displayMessages = computed(() => {
-  if (props.searchActive && props.searchResults) {
-    return props.searchResults
+  const displayMessages = computed(() => {
+    if (props.searchActive && props.searchResults) {
+      return props.searchResults
+    }
+    return chatStore.sortedMessages
+  })
+
+  const groupMeta = computed(() => messageGroupMeta(displayMessages.value))
+
+  const typingNames = computed(() => {
+    const typingIds = presenceStore.getTypingUsers(props.roomId)
+    const authStore = useAuthStore()
+    const memberMap = new Map(props.members?.map((m) => [m.id, m.displayName]) || [])
+    return typingIds
+      .filter((id) => id !== authStore.user?.id)
+      .map((id) => memberMap.get(id) || 'Someone')
+  })
+
+  const isCompactPanel = computed(
+    () => settingsStore.compactChatMode || settingsStore.chatLayout === 'compact'
+  )
+  const layoutClass = computed(() => `layout-${settingsStore.chatLayout}`)
+
+  const minItemSize = computed(() => (isCompactPanel.value ? 48 : 64))
+
+  function handleScroll(): void {
+    onScroll()
   }
-  return chatStore.sortedMessages
-})
 
-const groupMeta = computed(() => messageGroupMeta(displayMessages.value))
-
-const typingNames = computed(() => {
-  const typingIds = presenceStore.getTypingUsers(props.roomId)
-  const authStore = useAuthStore()
-  const memberMap = new Map(props.members?.map((m) => [m.id, m.displayName]) || [])
-  return typingIds
-    .filter((id) => id !== authStore.user?.id)
-    .map((id) => memberMap.get(id) || 'Someone')
-})
-
-const isCompactPanel = computed(
-  () => settingsStore.compactChatMode || settingsStore.chatLayout === 'compact'
-)
-const layoutClass = computed(() => `layout-${settingsStore.chatLayout}`)
-
-const minItemSize = computed(() => (isCompactPanel.value ? 48 : 64))
-
-function handleScroll(): void {
-  onScroll()
-}
-
-function handleScrollerUpdate(
-  _startIndex: number,
-  _endIndex: number,
-  visibleStartIndex: number
-): void {
-  if (visibleStartIndex < 3 && chatStore.hasMore && !chatStore.loadingMore && !props.searchActive) {
-    emit('load-more')
+  function handleScrollerUpdate(
+    _startIndex: number,
+    _endIndex: number,
+    visibleStartIndex: number
+  ): void {
+    if (visibleStartIndex < 3 && chatStore.hasMore && !chatStore.loadingMore && !props.searchActive) {
+      emit('load-more')
+    }
   }
-}
 
-function scrollToBottom(smooth = false): void {
-  scrollDown(smooth)
-}
-
-function handleReact(msgId: string, emoji: string): void {
-  emit('react', msgId, emoji)
-}
-
-watch(
-  () => chatStore.sortedMessages.length,
-  () => {
-    onNewMessage()
+  function scrollToBottom(smooth = false): void {
+    scrollDown(smooth)
   }
-)
 
-watch(
-  () => props.roomId,
-  () => {
-    nextTick(() => scrollToBottom())
+  function handleReact(msgId: string, emoji: string): void {
+    emit('react', msgId, emoji)
   }
-)
 
-defineExpose({ scrollToBottom })
+  watch(
+    () => chatStore.sortedMessages.length,
+    () => {
+      onNewMessage()
+    }
+  )
+
+  watch(
+    () => props.roomId,
+    () => {
+      nextTick(() => scrollToBottom())
+    }
+  )
+
+  defineExpose({ scrollToBottom })
 </script>
 
 <template>

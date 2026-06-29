@@ -1,26 +1,26 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { Cookie, X } from 'lucide-vue-next'
+  import { ref, onMounted } from 'vue'
+  import { Cookie, X } from 'lucide-vue-next'
 
-const COOKIE_CONSENT_KEY = 'aetherpulse_cookie_consent'
-const visible = ref(false)
+  const COOKIE_CONSENT_KEY = 'nicori_cookie_consent'
+  const visible = ref(false)
 
-onMounted(() => {
-  const stored = localStorage.getItem(COOKIE_CONSENT_KEY)
-  if (!stored) {
-    visible.value = true
+  onMounted(() => {
+    const stored = localStorage.getItem(COOKIE_CONSENT_KEY)
+    if (!stored) {
+      visible.value = true
+    }
+  })
+
+  function accept() {
+    localStorage.setItem(COOKIE_CONSENT_KEY, 'accepted')
+    visible.value = false
   }
-})
 
-function accept() {
-  localStorage.setItem(COOKIE_CONSENT_KEY, 'accepted')
-  visible.value = false
-}
-
-function decline() {
-  localStorage.setItem(COOKIE_CONSENT_KEY, 'declined')
-  visible.value = false
-}
+  function decline() {
+    localStorage.setItem(COOKIE_CONSENT_KEY, 'declined')
+    visible.value = false
+  }
 </script>
 
 <template>

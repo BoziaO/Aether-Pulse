@@ -17,7 +17,7 @@ export function notifyNewMessage(title: string, body: string, onClick?: () => vo
   const n = new Notification(title, {
     body,
     icon: '/icons/logo.png',
-    tag: 'aetherpulse-message',
+    tag: 'nicori-message',
   })
   if (onClick) {
     n.onclick = () => {

@@ -1,4 +1,29 @@
-import { Message, MessageReaction, mongoose } from '@workspace/db'
+import mongoose from 'mongoose'
+import { Message, MessageReaction } from '@workspace/db'
+
+export type LeanMessage = {
+  _id: mongoose.Types.ObjectId
+  roomId: mongoose.Types.ObjectId
+  userId: mongoose.Types.ObjectId
+  content: string
+  type: 'text' | 'system' | 'file'
+  replyToId?: mongoose.Types.ObjectId | null
+  editedAt?: Date | null
+  isDeleted: boolean
+  attachmentUrl?: string | null
+  attachmentName?: string | null
+  attachmentMime?: string | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type LeanReaction = {
+  _id: mongoose.Types.ObjectId
+  messageId: mongoose.Types.ObjectId
+  userId: mongoose.Types.ObjectId
+  emoji: string
+  createdAt: Date
+}
 
 export type ReactionSummary = {
   emoji: string
@@ -6,30 +31,55 @@ export type ReactionSummary = {
   userIds: string[]
 }
 
+type MessageCreateData = {
+  roomId: string | mongoose.Types.ObjectId
+  userId: string | mongoose.Types.ObjectId
+  content: string
+  type?: string
+  replyToId?: string | mongoose.Types.ObjectId | null | undefined
+  attachmentUrl?: string | null
+  attachmentName?: string | null
+  attachmentMime?: string | null
+}
+
+type MessageUpdateData = {
+  content?: string
+  editedAt?: Date
+  isDeleted?: boolean
+  attachmentUrl?: string | null
+  attachmentName?: string | null
+  attachmentMime?: string | null
+}
+
 export const MessageRepository = {
-  async findById(id: string) {
-    return Message.findById(id).lean() as any
+  async findById(id: string): Promise<LeanMessage | null> {
+    return Message.findById(id).lean() as Promise<LeanMessage | null>
   },
 
-  async findOne(filter: Record<string, any>) {
-    return Message.findOne(filter).lean() as any
+  async findOne(filter: Record<string, unknown>): Promise<LeanMessage | null> {
+    return Message.findOne(filter).lean() as Promise<LeanMessage | null>
   },
 
-  async create(data: Record<string, any>) {
-    return Message.create(data) as any
+  async create(data: MessageCreateData): Promise<LeanMessage> {
+    const doc = await Message.create(data)
+    return doc.toObject() as LeanMessage
   },
 
-  async findByIdAndUpdate(id: string, data: Record<string, any>) {
+  async findByIdAndUpdate(id: string, data: MessageUpdateData): Promise<void> {
     await Message.findByIdAndUpdate(id, data)
   },
 
-  async findMessagesBefore(roomId: string, before: string | null, limit: number) {
-    const query: any = { roomId }
+  async findMessagesBefore(
+    roomId: string,
+    before: string | null,
+    limit: number
+  ): Promise<LeanMessage[]> {
+    const query: Record<string, unknown> = { roomId }
     if (before) query._id = { $lt: before }
-    return Message.find(query).sort({ createdAt: -1 }).limit(limit).lean() as any
+    return Message.find(query).sort({ createdAt: -1 }).limit(limit).lean() as Promise<LeanMessage[]>
   },
 
-  async searchMessages(roomId: string, query: string, limit = 25) {
+  async searchMessages(roomId: string, query: string, limit = 25): Promise<LeanMessage[]> {
     return Message.find({
       roomId,
       isDeleted: false,
@@ -38,17 +88,19 @@ export const MessageRepository = {
     })
       .sort({ createdAt: -1 })
       .limit(limit)
-      .lean() as any
+      .lean() as Promise<LeanMessage[]>
   },
 
-  async softDelete(id: string) {
+  async softDelete(id: string): Promise<void> {
     await Message.findByIdAndUpdate(id, { isDeleted: true, content: '' })
   },
 
   async getReactions(messageIds: string[]): Promise<Map<string, ReactionSummary[]>> {
     const map = new Map<string, ReactionSummary[]>()
     if (messageIds.length === 0) return map
-    const rows = (await MessageReaction.find({ messageId: { $in: messageIds } }).lean()) as any[]
+
+    const rows = await MessageReaction.find({ messageId: { $in: messageIds } }).lean() as LeanReaction[]
+
     for (const row of rows) {
       const key = row.messageId.toString()
       const list = map.get(key) ?? []
@@ -64,20 +116,24 @@ export const MessageRepository = {
     return map
   },
 
-  async addReaction(messageId: string, userId: string, emoji: string) {
+  async addReaction(messageId: string, userId: string, emoji: string): Promise<void> {
     await MessageReaction.create({ messageId, userId, emoji })
   },
 
-  async removeReaction(reactionId: string) {
+  async removeReaction(reactionId: string | mongoose.Types.ObjectId): Promise<void> {
     await MessageReaction.findByIdAndDelete(reactionId)
   },
 
-  async findReaction(messageId: string, userId: string, emoji: string) {
-    return MessageReaction.findOne({ messageId, userId, emoji }).lean() as any
+  async findReaction(
+    messageId: string,
+    userId: string,
+    emoji: string
+  ): Promise<LeanReaction | null> {
+    return MessageReaction.findOne({ messageId, userId, emoji }).lean() as Promise<LeanReaction | null>
   },
 
-  async findByIds(ids: string[]) {
-    return Message.find({ _id: { $in: ids } }).lean() as any
+  async findByIds(ids: string[]): Promise<LeanMessage[]> {
+    return Message.find({ _id: { $in: ids } }).lean() as Promise<LeanMessage[]>
   },
 
   async countByUser(userId: string): Promise<number> {

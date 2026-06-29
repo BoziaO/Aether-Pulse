@@ -1,6 +1,6 @@
-# Podręcznik Wdrożenia Aether-Pulse na Maszynie Wirtualnej (VM)
+# Podręcznik Wdrożenia Nicori na Maszynie Wirtualnej (VM)
 
-Ten dokument zawiera instrukcję krok po kroku, jak wdrożyć zoptymalizowaną produkcyjnie aplikację **Aether-Pulse** na
+Ten dokument zawiera instrukcję krok po kroku, jak wdrożyć zoptymalizowaną produkcyjnie aplikację **Nicori** na
 maszynie wirtualnej (np. VPS z systemem Ubuntu/Debian).
 
 Nasza konfiguracja opiera się na **kontenerach Docker**, co zapewnia pełną izolację, wysokie bezpieczeństwo,
@@ -17,7 +17,7 @@ Przed rozpoczęciem wdrożenia upewnij się, że na maszynie wirtualnej zainstal
 3. **Node.js** (wersja 22) oraz **pnpm** (wersja 11.5.0) — wymagane na hoście tylko do pierwszej instalacji i
    inicjalizacji bazy danych.
 
-### Szybka instalacja Docker i Compose na Ubuntu:
+### Szybka instalacja Docker i Compose na Ubuntu
 
 ```bash
 # Aktualizacja pakietów
@@ -39,8 +39,8 @@ newgrp docker
 1. Sklonuj repozytorium na swoją maszynę wirtualną:
 
    ```bash
-   git clone <URL_REPOZYTORIUM> /app/aether-pulse
-   cd /app/aether-pulse
+   git clone <URL_REPOZYTORIUM> /app/nicori
+   cd /app/nicori
    ```
 
 2. Utwórz plik produkcyjny `.env` w głównym katalogu aplikacji:
@@ -110,6 +110,7 @@ Zoptymalizowany pod kątem wdrożenia produkcyjnego plik `docker-compose.yml` zn
    ```
 
 2. Zbuduj i uruchom kontenery w tle:
+
    ```bash
    docker compose up -d --build
    ```
@@ -117,7 +118,8 @@ Zoptymalizowany pod kątem wdrożenia produkcyjnego plik `docker-compose.yml` zn
 Docker automatycznie pobierze wymagane obrazy bazowe, skompiluje frontend w Nginx oraz uruchomi produkcyjny serwer Node
 zintegrowany z brokerem Redis.
 
-3. Sprawdź status uruchomionych kontenerów:
+1. Sprawdź status uruchomionych kontenerów:
+
    ```bash
    docker compose ps
    ```
@@ -130,7 +132,7 @@ Oczekiwany wynik powinien pokazywać trzy kontenery w stanie `running` i ze stat
 
 Wszystkie poniższe polecenia należy wykonywać w katalogu `docker/`:
 
-### Podgląd logów w czasie rzeczywistym:
+### Podgląd logów w czasie rzeczywistym
 
 ```bash
 # Logi wszystkich usług
@@ -140,24 +142,24 @@ docker compose logs -f
 docker compose logs -f server
 ```
 
-### Zatrzymanie aplikacji:
+### Zatrzymanie aplikacji
 
 ```bash
 docker compose down
 ```
 
-### Restart aplikacji:
+### Restart aplikacji
 
 ```bash
 docker compose restart
 ```
 
-### Aktualizacja aplikacji po nowym commicie (Redeployment):
+### Aktualizacja aplikacji po nowym commicie (Redeployment)
 
 Gdy wdrożysz nowe zmiany na gałąź główną, zaktualizuj aplikację na maszynie VM w następujący sposób:
 
 ```bash
-cd /app/aether-pulse
+cd /app/nicori
 git pull
 
 # Jeśli zmieniła się struktura bazy danych, zsynchronizuj ją:
@@ -191,7 +193,7 @@ wirtualnej:
   - Serwer Nginx: max 128MB RAM, 0.5 CPU
   - Redis: max 128MB RAM, 0.5 CPU (dodatkowo skonfigurowana czystka pamięci LRU przy 128MB).
 - **Trwałość wolumenów (Data Persistence)**: Baza SQLite oraz wysyłane przez użytkowników awatary są bezpiecznie
-  zapisywane w wolumenach Docker na hoście (odpowiednio `aetherpulse_db_data` i `aetherpulse_uploads_data`), dzięki
+  zapisywane w wolumenach Docker na hoście (odpowiednio `nicori_db_data` i `nicori_uploads_data`), dzięki
   czemu redeployment lub restart kontenera nie kasuje żadnych danych!
 - **Rotacja Logów**: Docker ogranicza rozmiar logów każdego kontenera do maksymalnie 10MB na plik (maksymalnie 3 pliki
   historyczne), co zapobiega powolnemu zapychaniu się dysku twardego maszyny wirtualnej.

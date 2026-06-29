@@ -1,6 +1,6 @@
 {
-  "name": "AetherPulse",
-  "short_name": "AetherPulse",
+  "name": "Nicori",
+  "short_name": "Nicori",
   "description": "Prywatne pokoje głosowe, chat realtime, stream z kamery lub ekranu i wygodny tryb Picture-in-Picture na telefonie.",
   "start_url": "/",
   "display": "standalone",
@@ -21,7 +21,7 @@
     {
       "name": "Open App",
       "short_name": "Open",
-      "description": "Open AetherPulse in browser",
+      "description": "Open Nicori in browser",
       "url": "/auth",
       "icons": [
         {
@@ -34,7 +34,7 @@
   "related_applications": [
     {
       "platform": "webapp",
-      "url": "https://aetherpulse.app"
+      "url": "https://nicori.app"
     }
   ],
   "prefer_related_applications": true,
@@ -48,7 +48,7 @@
   "display_override": ["window-controls-overlay", "standalone", "browser"],
   "protocol_handlers": [
     {
-      "protocol": "web+aetherpulse",
+      "protocol": "web+nicori",
       "url": "/join?room=%s"
     }
   ],

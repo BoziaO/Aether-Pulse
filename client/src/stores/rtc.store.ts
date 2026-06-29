@@ -12,6 +12,7 @@ import { useRoomStore } from './room.store'
 import { useSettingsStore } from './settings.store'
 import { useToastStore } from './toast.store'
 import { router } from '@/app/router'
+import { notifyNewMessage } from '@/utils/notifications'
 import type { Message } from '@/types/message.types'
 import type { User } from '@/types/user.types'
 
@@ -38,6 +39,9 @@ export const useRtcStore = defineStore('rtc', () => {
   let pipVideo: HTMLVideoElement | null = null
   let audioContext: AudioContext | null = null
   let audioAnalyser: AnalyserNode | null = null
+  let inputGainNode: GainNode | null = null
+  let inputDestination: MediaStreamAudioDestinationNode | null = null
+  let processedLocalStream: MediaStream | null = null
   let microphoneCheckInterval: NodeJS.Timeout | null = null
   let connectionTimeout: NodeJS.Timeout | null = null
 
@@ -235,6 +239,46 @@ export const useRtcStore = defineStore('rtc', () => {
     }
 
     audioAnalyser = null
+    inputGainNode = null
+    inputDestination = null
+    processedLocalStream = null
+  }
+
+  /**
+   * Apply input volume to local mic stream via GainNode.
+   * Returns a new stream with volume-adjusted audio track.
+   */
+  function applyInputVolume(stream: MediaStream, volumePercent: number): MediaStream {
+    const audioTracks = stream.getAudioTracks()
+    if (!audioTracks.length) return stream
+
+    try {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+      }
+
+      inputGainNode = audioContext.createGain()
+      inputGainNode.gain.value = volumePercent / 100
+
+      inputDestination = audioContext.createMediaStreamDestination()
+      const source = audioContext.createMediaStreamSource(stream)
+      source.connect(inputGainNode)
+      inputGainNode.connect(inputDestination)
+
+      const processedAudioTrack = inputDestination.stream.getAudioTracks()[0]
+      const videoTracks = stream.getVideoTracks()
+      processedLocalStream = new MediaStream([processedAudioTrack, ...videoTracks])
+      return processedLocalStream
+    } catch (e) {
+      console.warn('Failed to apply input volume:', e)
+      return stream
+    }
+  }
+
+  function updateInputVolume(volumePercent: number) {
+    if (inputGainNode) {
+      inputGainNode.gain.value = volumePercent / 100
+    }
   }
 
   /**
@@ -291,6 +335,7 @@ export const useRtcStore = defineStore('rtc', () => {
     socket.off('user-joined')
     socket.off('user-left')
     socket.off('user-status-changed')
+    socket.off('user-rich-presence-changed')
     socket.off('room-activity-changed')
     socket.off('room-updated')
     socket.off('room-member-joined')
@@ -307,6 +352,9 @@ export const useRtcStore = defineStore('rtc', () => {
 
     socket.on('new-message', (msg: Message) => {
       chatStore.addMessage(msg)
+      if (msg.user && msg.userId !== authStore.user?.id) {
+        notifyNewMessage(msg.user.displayName, msg.content.slice(0, 120))
+      }
     })
 
     socket.on('message-updated', (msg: Message) => {
@@ -342,6 +390,13 @@ export const useRtcStore = defineStore('rtc', () => {
           const member = roomStore.currentRoom.members.find((m) => m.id === uid)
           if (member) member.status = status
         }
+      }
+    )
+
+    socket.on(
+      'user-rich-presence-changed',
+      ({ userId: uid, richPresence }: { userId: string; richPresence: any }) => {
+        presenceStore.setRichPresence(uid, richPresence)
       }
     )
 
@@ -444,6 +499,7 @@ export const useRtcStore = defineStore('rtc', () => {
       socket.removeAllListeners('user-left')
       socket.removeAllListeners('room-users')
       socket.removeAllListeners('user-status-changed')
+      socket.removeAllListeners('user-rich-presence-changed')
       socket.removeAllListeners('room-activity-changed')
       socket.removeAllListeners('room-updated')
       socket.removeAllListeners('room-member-joined')
@@ -509,7 +565,17 @@ export const useRtcStore = defineStore('rtc', () => {
 
       const socket = getSocket()
       peerManager = new PeerManager(socket, authStore.user.id, onRemoteStream, onPeerClose)
-      peerManager.setLocalStream(stream)
+
+      let peerStream = stream
+      if (stream && settings.inputVolume !== 100) {
+        peerStream = applyInputVolume(stream, settings.inputVolume)
+      }
+      peerManager.setLocalStream(peerStream)
+
+      watch(
+        () => settings.inputVolume,
+        (v) => updateInputVolume(v)
+      )
 
       // Start audio monitoring if we have a stream
       if (stream) {
@@ -668,7 +734,7 @@ export const useRtcStore = defineStore('rtc', () => {
   function exitPiP() {
     try {
       if ((document as any).pictureInPictureElement) {
-        ;(document as any).exitPictureInPicture().catch(() => {})
+        (document as any).exitPictureInPicture().catch(() => {})
       }
     } catch {
       /* empty */

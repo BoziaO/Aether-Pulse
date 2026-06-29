@@ -12,7 +12,6 @@ body,
 #app {
   height: 100%;
   width: 100%;
-  overflow: hidden;
 }
 
 body {
@@ -32,19 +31,19 @@ body {
     border-color 0.3s ease;
 }
 
-body,
-.app-layout,
-.sidebar,
-.app-main,
-.card,
-.input,
-button,
-a {
+body {
   transition:
     background-color 0.3s ease,
     color 0.3s ease,
-    border-color 0.3s ease,
-    box-shadow 0.3s ease;
+    border-color 0.3s ease;
+}
+
+.card {
+  transition: border-color 0.15s ease;
+}
+
+.input {
+  transition: border-color 0.15s ease;
 }
 
 ::-webkit-scrollbar {
@@ -64,8 +63,8 @@ a {
 
 .glass {
   background: var(--glass);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--glass-border);
 }
 
@@ -180,6 +179,53 @@ a {
   border: 1px solid rgba(124, 90, 240, 0.3);
 }
 
+.toggle {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.toggle-slider::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: all 0.25s;
+}
+
+.toggle input:checked + .toggle-slider {
+  background: var(--accent-violet);
+  border-color: var(--accent-violet);
+}
+
+.toggle input:checked + .toggle-slider::after {
+  transform: translateX(20px);
+  background: #fff;
+}
+
 .avatar {
   border-radius: 50%;
   object-fit: cover;
@@ -255,4 +301,49 @@ a {
 /* Remove default focus outline on elements that have custom focus styles */
 .toggle input:focus + .toggle-slider {
   outline: none;
+}
+
+/* ===== Font Size ===== */
+[data-fontSize="small"] {
+  font-size: 13px;
+}
+[data-fontSize="small"] .setting-title { font-size: 13px; }
+[data-fontSize="small"] .setting-desc { font-size: 12px; }
+
+[data-fontSize="large"] {
+  font-size: 17px;
+}
+[data-fontSize="large"] .setting-title { font-size: 16px; }
+[data-fontSize="large"] .setting-desc { font-size: 15px; }
+
+/* ===== High Contrast ===== */
+[data-highContrast="true"] {
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --border: rgba(255, 255, 255, 0.25);
+  --border-accent: rgba(139, 92, 246, 0.6);
+  --bg-hover: rgba(255, 255, 255, 0.08);
+}
+[data-highContrast="true"] .card {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+[data-highContrast="true"] .card:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+[data-highContrast="true"] .toggle-slider {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+[data-highContrast="true"] .toggle input:checked + .toggle-slider {
+  border-color: var(--accent-violet);
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
+}
+
+/* ===== Reduced Motion ===== */
+[data-reduceMotion="true"],
+[data-reduceMotion="true"] * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }

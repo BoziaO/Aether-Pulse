@@ -24,8 +24,8 @@ Before you begin, ensure you have the following installed:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-org/aetherpulse.git
-cd aetherpulse
+git clone https://github.com/your-org/nicori.git
+cd nicori
 ```
 
 ### 2. Install Dependencies
@@ -37,8 +37,8 @@ pnpm install
 
 This will install dependencies for all packages in the monorepo:
 
-- `aetherpulse-client` (frontend)
-- `aetherpulse-server` (backend)
+- `nicori-client` (frontend)
+- `nicori-server` (backend)
 - `@workspace/db` (database)
 - `@workspace/api-zod` (API schemas)
 
@@ -116,7 +116,7 @@ turbo dev
 turbo dev --no-cache
 
 # Run specific package
-turbo dev --filter aetherpulse-client
+turbo dev --filter nicori-client
 
 # Clean cache
 turbo daemon clean
@@ -125,7 +125,7 @@ turbo daemon clean
 ## Project Structure
 
 ```
-aetherpulse/
+nicori/
 ├── client/                    # Vue 3 Frontend
 │   ├── public/               # Static assets
 │   │   └── icons/            # App icons
@@ -242,8 +242,8 @@ pnpm typecheck
 pnpm test
 
 # Run tests for specific package
-pnpm --filter aetherpulse-client test
-pnpm --filter aetherpulse-server test
+pnpm --filter nicori-client test
+pnpm --filter nicori-server test
 ```
 
 ### 4. Cleanup

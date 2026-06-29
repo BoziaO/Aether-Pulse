@@ -1,11 +1,11 @@
 <script setup lang="ts">
-defineProps<{
-  count: number
-}>()
+  defineProps<{
+    count: number
+  }>()
 
-const emit = defineEmits<{
-  (e: 'scroll-down'): void
-}>()
+  const emit = defineEmits<{
+    (e: 'scroll-down'): void
+  }>()
 </script>
 
 <template>

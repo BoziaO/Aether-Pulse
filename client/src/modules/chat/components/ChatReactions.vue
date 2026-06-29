@@ -1,24 +1,24 @@
 <script setup lang="ts">
-import type { Reaction } from '../types/message.types'
-import { useAuthStore } from '@/stores/auth.store'
+  import type { Reaction } from '../types/message.types'
+  import { useAuthStore } from '@/stores/auth.store'
 
-const props = defineProps<{
-  reactions: Reaction[]
-  messageId: string
-  onReact: (messageId: string, emoji: string) => void
-}>()
+  const props = defineProps<{
+    reactions: Reaction[]
+    messageId: string
+    onReact: (messageId: string, emoji: string) => void
+  }>()
 
-const authStore = useAuthStore()
+  const authStore = useAuthStore()
 
-const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏']
+  const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏']
 
-function hasReacted(reaction: Reaction): boolean {
-  return authStore.user ? reaction.userIds.includes(authStore.user.id) : false
-}
+  function hasReacted(reaction: Reaction): boolean {
+    return authStore.user ? reaction.userIds.includes(authStore.user.id) : false
+  }
 
-function handleToggle(emoji: string): void {
-  props.onReact(props.messageId, emoji)
-}
+  function handleToggle(emoji: string): void {
+    props.onReact(props.messageId, emoji)
+  }
 </script>
 
 <template>

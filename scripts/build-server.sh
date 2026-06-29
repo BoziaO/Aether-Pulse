@@ -1,2 +1,2 @@
 #!/bin/bash
-pnpm --filter aetherpulse-server build
+pnpm --filter nicori-server build

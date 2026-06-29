@@ -1,4 +1,4 @@
--- AetherPulse Database Initialization
+-- Nicori Database Initialization
 -- This script runs when PostgreSQL container starts for the first time
 
 -- Create extension for UUID if needed

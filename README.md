@@ -1,73 +1,127 @@
-# AetherPulse
+<p align="center">
+  <img src="client/public/icons/logo.png" alt="Nicori" width="100" />
+</p>
 
-**Darmowa, otwartoźródłowa platforma do rozmów głosowych, wideorozmów i współpracy — na każdą platformę.**
+<h1 align="center">Nicori</h1>
 
-AetherPulse łączy w sobie najlepsze cechy Discorda, Zoom i Slacka, dając Ci pełną kontrolę nad Twoją komunikacją. Prywatne pokoje głosowe, czat w czasie rzeczywistym, streaming ekranu, wideorozmowy w jakości HD — wszystko w jednym miejscu, bez subskrypcji i bez ograniczeń.
+<p align="center">
+  <strong>Darmowa, otwartoźródłowa platforma do rozmów głosowych, wideorozmów i współpracy — na każdą platformę.</strong>
+</p>
 
-> 🌐 **Wypróbuj online**: [aetherpulse-beta.app](aether-pulse-beta.vercel.app)  
-> 💻 **Pobierz na Windows / Linux / Android** → [Aether-Pulse/releases](https://github.com/BoziaO/Aether-Pulse/releases)
+<p align="center">
+  <a href="https://nicori-beta.vercel.app">🌐 Wypróbuj online</a> ·
+  <a href="https://github.com/BoziaO/Nicori/releases">💻 Pobierz</a> ·
+  <a href="https://github.com/BoziaO/Nicori/issues">🐛 Zgłoś problem</a> ·
+  <a href="https://github.com/BoziaO/Nicori/tree/main/.github/Assets">📷 Zrzuty ekranu</a>
+</p>
 
 ---
 
-## ✨ Dlaczego AetherPulse?
+## ✨ Dlaczego Nicori?
 
-| Co zyskujesz     | Szczegóły                                                              |
-| ---------------- | ---------------------------------------------------------------------- |
-| **Prywatność**   | Kod open source — hostuj samodzielnie lub korzystaj z naszej instancji |
-| **Zero opłat**   | Żadnych subskrypcji, żadnych limitów, żadnego premium                  |
-| **Wszędzie**     | Web, Windows, Linux, Android — to samo konto, to samo doświadczenie    |
-| **Nowoczesność** | WebRTC, Socket.io, Vue 3 — technologia, która działa                   |
+> Nie kolejny klon Discorda — coś zupełnie nowego.
+
+| Prywatność | Zero opłat | Wszędzie | Nowoczesność |
+|:---:|:---:|:---:|:---:|
+| 🔓 Kod open source | 💸 Żadnych subskrypcji | 🌍 Web, Windows, Linux, Android | ⚡ WebRTC, Socket.io, Vue 3 |
+| Hostuj samodzielnie lub korzystaj z naszej instancji | Żadnych limitów, żadnego premium | To samo konto, to samo doświadczenie | Technologia, która działa |
+
+---
 
 ## 🚀 Możliwości
 
-- **Pokoje głosowe** — twórz prywatne i publiczne pokoje z kontrolą dostępu, zapraszaj znajomych kodem
-- **Czat w czasie rzeczywistym** — szybkie wiadomości, reakcje, @wzmianki, edycja i usuwanie
-- **Wideorozmowy i streaming** — kamera HD, udostępnianie ekranu, Picture-in-Picture
-- **Krystaliczny dźwięk** — redukcja szumów, dźwięk przestrzenny, niska latencja
-- **System znajomych** — dodawaj, obserwuj status, wysyłaj zaproszenia do pokoi
-- **Profile i personalizacja** — avatar, status, badge'y, ustawienia dostępności
-- **Bezpieczeństwo** — E2E szyfrowanie, JWT autentykacja, ochrona przed nadużyciami
-- **Developer mode** — debug panel, podgląd WebRTC, logi Socket.io
+| Feature | Opis |
+|---------|------|
+| 🎙️ **Pokoje głosowe** | Twórz prywatne i publiczne pokoje z kontrolą dostępu, zapraszaj znajomych kodem |
+| 💬 **Czat w czasie rzeczywistym** | Szybkie wiadomości, reakcje, @wzmianki, edycja i usuwanie |
+| 📺 **Wideorozmowy i streaming** | Kamera HD, udostępnianie ekranu, Picture-in-Picture |
+| 🔊 **Krystaliczny dźwięk** | Redukcja szumów, dźwięk przestrzenny, niska latencja |
+| 👥 **System znajomych** | Dodawaj, obserwuj status, wysyłaj zaproszenia do pokoi |
+| 🎨 **Profile i personalizacja** | Avatar, status, badge'y, 4 motywy kolorystyczne |
+| 🔒 **Bezpieczeństwo** | JWT autentykacja, ochrona przed nadużyciami, szyfrowanie |
+| 🛠 **Developer mode** | Debug panel, podgląd WebRTC, logi Socket.io |
+
+---
+
+## 🎨 Motywy
+
+| Midnight Lavender | Candlelight | Aurora | Sakura Night |
+|:---:|:---:|:---:|:---:|
+| `#0F1018` · `#B7A7FF` | `#1A1513` · `#FFC78E` | `#09111D` · `#79F2FF` | `#14121C` · `#FFB7D5` |
+| Cicha noc, pastelowy cyber | Ciepły blask świec | Zorza północna i neon minimalizm | Delikatny, pastelowy wieczór |
+
+---
 
 ## 🛠 Tech Stack
 
-| Obszar      | Technologia                                                   |
-| ----------- | ------------------------------------------------------------- |
-| Frontend    | Vue 3, Vite, Pinia, Vue Router, Tailwind CSS, lucide-vue-next |
-| Realtime    | Socket.io, WebRTC, simple-peer                                |
-| Backend     | Node.js, Express 5, Socket.io, Helmet, rate limiting, Pino    |
-| Baza danych | MongoDB, Mongoose                                             |
-| Desktop     | Electron, electron-builder                                    |
-| Mobile      | Capacitor Android                                             |
-| Język       | TypeScript (typowanie wszędzie)                               |
-| Narzędzia   | pnpm workspaces, Turborepo, Vitest                            |
+| Obszar | Technologia |
+|--------|-------------|
+| **Frontend** | Vue 3, Vite, Pinia, Vue Router, Tailwind CSS 4, lucide-vue-next |
+| **Realtime** | Socket.io, WebRTC, simple-peer |
+| **Backend** | Node.js, Express 5, Socket.io, Helmet, rate limiting, Pino |
+| **Baza danych** | MongoDB, Mongoose |
+| **Desktop** | Electron, electron-builder |
+| **Mobile** | Capacitor Android |
+| **Język** | TypeScript (typowanie wszędzie) |
+| **Narzędzia** | pnpm workspaces, Turborepo, Vitest |
+| **Czat** | markdown-it, highlight.js, DOMPurify (Markdown + embedy) |
+| **Wydajność** | Code splitting, virtual scrolling, gzip/brotli, service worker |
+
+---
+
+## ⚡ Wydajność
+
+Nicori jest zoptymalizowany pod kątem szybkości i lekkości:
+
+| Technika | Opis |
+|----------|------|
+| **Route-based code splitting** | 13 lazy-loaded route chunks — żaden komponent nie blokuje startu |
+| **Component-level splitting** | 9 `defineAsyncComponent` w ciężkich widokach (RoomView, HomeView) |
+| **Vendor chunking** | 5 niezależnych chunków (vue, socket, webrtc, lucide, vueuse) |
+| **Virtual scrolling** | `vue-virtual-scroller` dla listy wiadomości (chat + DM) |
+| **`v-memo` optimization** | Memoizacja komponentów wiadomości zapobiega re-renderom |
+| **Selective imports** | `highlight.js/lib/core` zamiast pełnego pakietu (~300KB → ~50KB) |
+| **CSS: LightningCSS** | Ultra-szybka transformacja CSS zamiast PostCSS |
+| **CSS: content-visibility** | Off-screen sections pomijane podczas renderowania |
+| **Non-blocking fonts** | Google Fonts z `preload` + `onload` pattern |
+| **Compression** | gzip + brotli w build output |
+| **Service Worker** | Cache-first dla static assets, network-first dla API |
+| **`shallowRef`** | Maps i Streams bez deep reactivity overhead |
+
+---
 
 ## 📁 Struktura projektu
 
 ```text
-Aether-Pulse/
+Nicori/
 ├── client/                 # Aplikacja Vue + Electron + Android
 │   ├── src/
 │   │   ├── app/            # Router i layout
 │   │   ├── components/     # UI, czat, pokoje, profile, rozmowy
+│   │   ├── modules/        # Feature modules (chat z własnym store)
 │   │   ├── services/       # API, Socket.io, WebRTC
 │   │   ├── stores/         # Stan aplikacji (Pinia)
-│   │   ├── styles/         # Motyw i globalne style
+│   │   ├── composables/    # Reusable logic (useSystemTheme, etc.)
+│   │   ├── styles/         # Motyw (4 theme) i globalne style
 │   │   └── views/          # Strony aplikacji
 │   ├── electron/           # Skrypty Electrona
 │   └── android/            # Aplikacja Capacitor
 ├── server/                 # API Express + Socket.io
 │   └── src/
 │       ├── routes/         # Endpointy REST
-│       ├── middleware/     # Autoryzacja
+│       ├── repositories/   # Warstwa dostępu do bazy (Mongoose)
+│       ├── socket/         # Handler'y Socket.io
+│       ├── middleware/     # Autoryzacja, walidacja
 │       └── utils/          # Pomocniki
 ├── shared/                 # Wspólne pakiety
-│   ├── db/                 # Mongoose schemas
+│   ├── db/                 # Mongoose schemas + repozytoria
 │   ├── api-zod/            # Walidacja Zod
 │   └── api-client-react/   # Generowany klient API
 ├── docker/                 # Docker Compose na produkcję
 └── docs/                   # Dokumentacja techniczna
 ```
+
+---
 
 ## 🏁 Szybki start
 
@@ -75,8 +129,8 @@ Aether-Pulse/
 
 ```bash
 # 1. Sklonuj repozytorium
-git clone https://github.com/BoziaO/Aether-Pulse.git
-cd Aether-Pulse
+git clone https://github.com/BoziaO/Nicori.git
+cd Nicori
 
 # 2. Zainstaluj zależności
 pnpm install
@@ -93,20 +147,47 @@ Aplikacja będzie dostępna pod adresem `http://localhost:5174`.
 
 > 🔧 Szczegółowe opcje konfiguracji znajdziesz w pliku `.env.example` oraz w dokumentacji `docs/`.
 
+---
+
 ## ✅ Skrypty
 
-| Komenda               | Opis                         |
-| --------------------- | ---------------------------- |
-| `pnpm dev`            | Uruchom wszystko (Turborepo) |
-| `pnpm build`          | Zbuduj wszystkie pakiety     |
-| `pnpm typecheck`      | Sprawdź typy TypeScript      |
-| `pnpm lint`           | Sprawdź kod linterem         |
-| `pnpm start:client`   | Tylko klient Vite            |
-| `pnpm start:server`   | Tylko serwer Express         |
-| `pnpm electron:dev`   | Desktop (dev)                |
-| `pnpm electron:build` | Desktop (Windows)            |
-| `pnpm android:sync`   | Sync do Capacitor            |
-| `pnpm docker:up`      | Stack produkcyjny            |
+| Komenda | Opis |
+|---------|------|
+| `pnpm dev` | Uruchom wszystko (Turborepo) |
+| `pnpm build` | Zbuduj wszystkie pakiety |
+| `pnpm typecheck` | Sprawdź typy TypeScript |
+| `pnpm lint` | Sprawdź kod linterem |
+| `pnpm test` | Uruchom testy (Vitest) |
+| `pnpm start:client` | Tylko klient Vite |
+| `pnpm start:server` | Tylko serwer Express |
+| `pnpm electron:dev` | Desktop (dev) |
+| `pnpm electron:build` | Desktop (Windows/Linux/Mac) |
+| `pnpm android:sync` | Sync do Capacitor |
+| `pnpm docker:up` | Stack produkcyjny |
+
+---
+
+## 🧪 Testy
+
+```bash
+pnpm typecheck    # TypeScript
+pnpm lint         # ESLint
+pnpm --filter nicori-client test   # Testy klienta
+pnpm --filter nicori-server test   # Testy serwera
+```
+
+### Coverage
+
+| Area | Status |
+|------|--------|
+| Client stores | ✅ auth, settings |
+| Client components | ✅ Button |
+| Client utils | ✅ markdown, files |
+| Client composables | ✅ useSystemTheme |
+| Server utils | ✅ upload, serialize-user, room-auth |
+| Server routes | ✅ health, auth |
+
+---
 
 ## 🐳 Docker
 
@@ -116,6 +197,8 @@ pnpm docker:up
 ```
 
 Stack uruchamia: klient (port 80), serwer (3000), MongoDB (27017), Redis (6379).
+
+---
 
 ## 📦 Deploy
 
@@ -132,14 +215,7 @@ Repozytorium zawiera gotowe konfiguracje dla:
 
 > 📖 Pełny poradnik deploy: [docs/DEPLOY.md](docs/DEPLOY.md)
 
-## 🧪 Testy
-
-```bash
-pnpm typecheck    # TypeScript
-pnpm lint         # ESLint
-pnpm --filter aetherpulse-client test   # Testy klienta
-pnpm --filter aetherpulse-server test   # Testy serwera
-```
+---
 
 ## 📄 Licencja
 
@@ -147,4 +223,7 @@ MIT — możesz używać, modyfikować i rozpowszechniać bez ograniczeń. Szcze
 
 ---
 
-**AetherPulse** — rozmawiaj, streamuj, współtwórz. 🚀
+<p align="center">
+  <strong>Nicori</strong> — rozmawiaj, streamuj, baw sie.
+  <img src="client/public/icons/logo-mono.png" alt="Nicori" width="50" />
+</p>

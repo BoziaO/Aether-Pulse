@@ -1,14 +1,7 @@
-import { Friendship } from '@workspace/db'
-import type { IFriendship } from '@workspace/db'
+import { FriendRepository, type LeanFriendship } from '../repositories/friend.repository'
 
-export async function getFriendship(userId: string, otherId: string): Promise<IFriendship | null> {
-  const row = await Friendship.findOne({
-    $or: [
-      { requesterId: userId, addresseeId: otherId },
-      { requesterId: otherId, addresseeId: userId },
-    ],
-  })
-  return row ?? null
+export async function getFriendship(userId: string, otherId: string): Promise<LeanFriendship | null> {
+  return FriendRepository.findFriendship(userId, otherId)
 }
 
 export async function areFriends(userId: string, otherId: string): Promise<boolean> {
@@ -23,7 +16,7 @@ export async function isBlocked(userId: string, otherId: string): Promise<boolea
 }
 
 export function friendshipStatusFor(
-  row: IFriendship | null,
+  row: LeanFriendship | null,
   currentUserId: string
 ): 'none' | 'friends' | 'pending_outgoing' | 'pending_incoming' | 'blocked' {
   if (!row) return 'none'

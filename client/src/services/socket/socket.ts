@@ -7,12 +7,12 @@ const BASE_RECONNECT_DELAY = 1000
 
 export function getSocket(): Socket {
   if (!_socket) {
-    const token = localStorage.getItem('aetherpulse_access_token')
+    const token = localStorage.getItem('nicori_access_token')
     const isElectronProd =
       typeof window !== 'undefined' && (window as any).electronAPI && location.protocol === 'file:'
     const serverUrl =
       import.meta.env.VITE_API_URL ||
-      (isElectronProd ? 'https://aether-pulse-server.onrender.com' : '')
+      (isElectronProd ? 'https://nicori-server.onrender.com' : '')
 
     _socket = io(serverUrl, {
       path: '/api/socket.io',
@@ -28,7 +28,7 @@ export function getSocket(): Socket {
       transports: ['websocket', 'polling'],
       upgrade: true,
       extraHeaders: {
-        'User-Agent': typeof navigator !== 'undefined' ? navigator.userAgent : 'AetherPulse',
+        'User-Agent': typeof navigator !== 'undefined' ? navigator.userAgent : 'Nicori',
       },
     })
 

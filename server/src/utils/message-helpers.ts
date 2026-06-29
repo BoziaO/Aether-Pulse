@@ -1,41 +1,18 @@
 import type { Server as SocketIOServer } from 'socket.io'
-import { Message, MessageReaction, User } from '@workspace/db'
-import type { IMessage } from '@workspace/db'
 
+import { MessageRepository, type LeanMessage, type ReactionSummary } from '../repositories/message.repository'
+import { UserRepository, type LeanUser } from '../repositories/user.repository'
 import { serializeUser } from './serialize-user'
-
-export type ReactionSummary = {
-  emoji: string
-  count: number
-  userIds: string[]
-}
 
 export async function getReactionsForMessages(
   messageIds: string[]
 ): Promise<Map<string, ReactionSummary[]>> {
-  const map = new Map<string, ReactionSummary[]>()
-  if (messageIds.length === 0) return map
-
-  const rows = await MessageReaction.find({ messageId: { $in: messageIds } }).lean()
-
-  for (const row of rows) {
-    const key = row.messageId.toString()
-    const list = map.get(key) ?? []
-    const existing = list.find((r) => r.emoji === row.emoji)
-    if (existing) {
-      existing.count += 1
-      existing.userIds.push(row.userId.toString())
-    } else {
-      list.push({ emoji: row.emoji, count: 1, userIds: [row.userId.toString()] })
-    }
-    map.set(key, list)
-  }
-  return map
+  return MessageRepository.getReactions(messageIds)
 }
 
 export function serializeMessageRow(
-  message: IMessage,
-  user: any,
+  message: LeanMessage,
+  user: LeanUser | null,
   reactions?: ReactionSummary[],
   replyTo?: { id: string; content: string; userId: string; isDeleted: boolean } | null
 ) {
@@ -59,15 +36,15 @@ export function serializeMessageRow(
 }
 
 export async function buildMessagePayload(messageId: string) {
-  const message = await Message.findById(messageId).lean()
+  const message = await MessageRepository.findById(messageId)
   if (!message) return null
 
-  const user = await User.findById(message.userId).lean()
+  const user = await UserRepository.findById(message.userId.toString())
 
   const reactionsMap = await getReactionsForMessages([messageId])
   let replyTo = null
   if (message.replyToId) {
-    const parent = await Message.findById(message.replyToId).lean()
+    const parent = await MessageRepository.findById(message.replyToId.toString())
     if (parent) {
       replyTo = {
         id: parent._id.toString(),
@@ -78,7 +55,7 @@ export async function buildMessagePayload(messageId: string) {
     }
   }
 
-  return serializeMessageRow(message as any, user, reactionsMap.get(messageId) ?? [], replyTo)
+  return serializeMessageRow(message, user, reactionsMap.get(messageId) ?? [], replyTo)
 }
 
 export function broadcastMessage(
