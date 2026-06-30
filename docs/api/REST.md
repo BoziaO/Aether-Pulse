@@ -709,4 +709,4 @@ Response headers include:
 
 ## Socket.IO Events
 
-See [SOCKET.md](./SOCKET.md) for WebSocket API documentation.
+See the server source code for WebSocket event handlers.

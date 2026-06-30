@@ -32,7 +32,7 @@ Nicori provides:
 | -------------- | -------------------------------------------- |
 | Frontend       | Vue 3, Pinia, Vite, TypeScript, Tailwind CSS |
 | Backend        | Node.js, Express, Socket.IO, TypeScript      |
-| Database       | SQLite (dev), PostgreSQL (prod), Drizzle ORM |
+| Database       | MongoDB (Mongoose)                           |
 | Real-time      | WebRTC, Socket.IO                            |
 | Infrastructure | Docker, Docker Compose, Nginx                |
 | DevOps         | GitHub Actions, pnpm, Turbo                  |
@@ -43,7 +43,7 @@ Nicori provides:
 - **Full-stack TypeScript** for type safety
 - **Real-time communication** via Socket.IO and WebRTC
 - **Modular design** with Pinia stores for state management
-- **Scalable architecture** with support for PostgreSQL and Redis
+- **Scalable architecture** with support for MongoDB and Redis
 
 ---
 

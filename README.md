@@ -21,51 +21,51 @@
 
 > Nie kolejny klon Discorda — coś zupełnie nowego.
 
-| Prywatność | Zero opłat | Wszędzie | Nowoczesność |
-|:---:|:---:|:---:|:---:|
-| 🔓 Kod open source | 💸 Żadnych subskrypcji | 🌍 Web, Windows, Linux, Android | ⚡ WebRTC, Socket.io, Vue 3 |
-| Hostuj samodzielnie lub korzystaj z naszej instancji | Żadnych limitów, żadnego premium | To samo konto, to samo doświadczenie | Technologia, która działa |
+|                      Prywatność                      |            Zero opłat            |               Wszędzie               |        Nowoczesność         |
+| :--------------------------------------------------: | :------------------------------: | :----------------------------------: | :-------------------------: |
+|                  🔓 Kod open source                  |      💸 Żadnych subskrypcji      |   🌍 Web, Windows, Linux, Android    | ⚡ WebRTC, Socket.io, Vue 3 |
+| Hostuj samodzielnie lub korzystaj z naszej instancji | Żadnych limitów, żadnego premium | To samo konto, to samo doświadczenie |  Technologia, która działa  |
 
 ---
 
 ## 🚀 Możliwości
 
-| Feature | Opis |
-|---------|------|
-| 🎙️ **Pokoje głosowe** | Twórz prywatne i publiczne pokoje z kontrolą dostępu, zapraszaj znajomych kodem |
-| 💬 **Czat w czasie rzeczywistym** | Szybkie wiadomości, reakcje, @wzmianki, edycja i usuwanie |
-| 📺 **Wideorozmowy i streaming** | Kamera HD, udostępnianie ekranu, Picture-in-Picture |
-| 🔊 **Krystaliczny dźwięk** | Redukcja szumów, dźwięk przestrzenny, niska latencja |
-| 👥 **System znajomych** | Dodawaj, obserwuj status, wysyłaj zaproszenia do pokoi |
-| 🎨 **Profile i personalizacja** | Avatar, status, badge'y, 4 motywy kolorystyczne |
-| 🔒 **Bezpieczeństwo** | JWT autentykacja, ochrona przed nadużyciami, szyfrowanie |
-| 🛠 **Developer mode** | Debug panel, podgląd WebRTC, logi Socket.io |
+| Feature                           | Opis                                                                            |
+| --------------------------------- | ------------------------------------------------------------------------------- |
+| 🎙️ **Pokoje głosowe**             | Twórz prywatne i publiczne pokoje z kontrolą dostępu, zapraszaj znajomych kodem |
+| 💬 **Czat w czasie rzeczywistym** | Szybkie wiadomości, reakcje, @wzmianki, edycja i usuwanie                       |
+| 📺 **Wideorozmowy i streaming**   | Kamera HD, udostępnianie ekranu, Picture-in-Picture                             |
+| 🔊 **Krystaliczny dźwięk**        | Redukcja szumów, dźwięk przestrzenny, niska latencja                            |
+| 👥 **System znajomych**           | Dodawaj, obserwuj status, wysyłaj zaproszenia do pokoi                          |
+| 🎨 **Profile i personalizacja**   | Avatar, status, badge'y, 4 motywy kolorystyczne                                 |
+| 🔒 **Bezpieczeństwo**             | JWT autentykacja, ochrona przed nadużyciami, szyfrowanie                        |
+| 🛠 **Developer mode**             | Debug panel, podgląd WebRTC, logi Socket.io                                     |
 
 ---
 
 ## 🎨 Motywy
 
-| Midnight Lavender | Candlelight | Aurora | Sakura Night |
-|:---:|:---:|:---:|:---:|
-| `#0F1018` · `#B7A7FF` | `#1A1513` · `#FFC78E` | `#09111D` · `#79F2FF` | `#14121C` · `#FFB7D5` |
-| Cicha noc, pastelowy cyber | Ciepły blask świec | Zorza północna i neon minimalizm | Delikatny, pastelowy wieczór |
+|     Midnight Lavender      |      Candlelight      |              Aurora              |         Sakura Night         |
+| :------------------------: | :-------------------: | :------------------------------: | :--------------------------: |
+|   `#0F1018` · `#B7A7FF`    | `#1A1513` · `#FFC78E` |      `#09111D` · `#79F2FF`       |    `#14121C` · `#FFB7D5`     |
+| Cicha noc, pastelowy cyber |  Ciepły blask świec   | Zorza północna i neon minimalizm | Delikatny, pastelowy wieczór |
 
 ---
 
 ## 🛠 Tech Stack
 
-| Obszar | Technologia |
-|--------|-------------|
-| **Frontend** | Vue 3, Vite, Pinia, Vue Router, Tailwind CSS 4, lucide-vue-next |
-| **Realtime** | Socket.io, WebRTC, simple-peer |
-| **Backend** | Node.js, Express 5, Socket.io, Helmet, rate limiting, Pino |
-| **Baza danych** | MongoDB, Mongoose |
-| **Desktop** | Electron, electron-builder |
-| **Mobile** | Capacitor Android |
-| **Język** | TypeScript (typowanie wszędzie) |
-| **Narzędzia** | pnpm workspaces, Turborepo, Vitest |
-| **Czat** | markdown-it, highlight.js, DOMPurify (Markdown + embedy) |
-| **Wydajność** | Code splitting, virtual scrolling, gzip/brotli, service worker |
+| Obszar          | Technologia                                                     |
+| --------------- | --------------------------------------------------------------- |
+| **Frontend**    | Vue 3, Vite, Pinia, Vue Router, Tailwind CSS 4, lucide-vue-next |
+| **Realtime**    | Socket.io, WebRTC, simple-peer                                  |
+| **Backend**     | Node.js, Express 5, Socket.io, Helmet, rate limiting, Pino      |
+| **Baza danych** | MongoDB, Mongoose                                               |
+| **Desktop**     | Electron, electron-builder                                      |
+| **Mobile**      | Capacitor Android                                               |
+| **Język**       | TypeScript (typowanie wszędzie)                                 |
+| **Narzędzia**   | pnpm workspaces, Turborepo, Vitest                              |
+| **Czat**        | markdown-it, highlight.js, DOMPurify (Markdown + embedy)        |
+| **Wydajność**   | Code splitting, virtual scrolling, gzip/brotli, service worker  |
 
 ---
 
@@ -73,20 +73,20 @@
 
 Nicori jest zoptymalizowany pod kątem szybkości i lekkości:
 
-| Technika | Opis |
-|----------|------|
-| **Route-based code splitting** | 13 lazy-loaded route chunks — żaden komponent nie blokuje startu |
-| **Component-level splitting** | 9 `defineAsyncComponent` w ciężkich widokach (RoomView, HomeView) |
-| **Vendor chunking** | 5 niezależnych chunków (vue, socket, webrtc, lucide, vueuse) |
-| **Virtual scrolling** | `vue-virtual-scroller` dla listy wiadomości (chat + DM) |
-| **`v-memo` optimization** | Memoizacja komponentów wiadomości zapobiega re-renderom |
-| **Selective imports** | `highlight.js/lib/core` zamiast pełnego pakietu (~300KB → ~50KB) |
-| **CSS: LightningCSS** | Ultra-szybka transformacja CSS zamiast PostCSS |
-| **CSS: content-visibility** | Off-screen sections pomijane podczas renderowania |
-| **Non-blocking fonts** | Google Fonts z `preload` + `onload` pattern |
-| **Compression** | gzip + brotli w build output |
-| **Service Worker** | Cache-first dla static assets, network-first dla API |
-| **`shallowRef`** | Maps i Streams bez deep reactivity overhead |
+| Technika                       | Opis                                                              |
+| ------------------------------ | ----------------------------------------------------------------- |
+| **Route-based code splitting** | 13 lazy-loaded route chunks — żaden komponent nie blokuje startu  |
+| **Component-level splitting**  | 9 `defineAsyncComponent` w ciężkich widokach (RoomView, HomeView) |
+| **Vendor chunking**            | 5 niezależnych chunków (vue, socket, webrtc, lucide, vueuse)      |
+| **Virtual scrolling**          | `vue-virtual-scroller` dla listy wiadomości (chat + DM)           |
+| **`v-memo` optimization**      | Memoizacja komponentów wiadomości zapobiega re-renderom           |
+| **Selective imports**          | `highlight.js/lib/core` zamiast pełnego pakietu (~300KB → ~50KB)  |
+| **CSS: LightningCSS**          | Ultra-szybka transformacja CSS zamiast PostCSS                    |
+| **CSS: content-visibility**    | Off-screen sections pomijane podczas renderowania                 |
+| **Non-blocking fonts**         | Google Fonts z `preload` + `onload` pattern                       |
+| **Compression**                | gzip + brotli w build output                                      |
+| **Service Worker**             | Cache-first dla static assets, network-first dla API              |
+| **`shallowRef`**               | Maps i Streams bez deep reactivity overhead                       |
 
 ---
 
@@ -151,19 +151,19 @@ Aplikacja będzie dostępna pod adresem `http://localhost:5174`.
 
 ## ✅ Skrypty
 
-| Komenda | Opis |
-|---------|------|
-| `pnpm dev` | Uruchom wszystko (Turborepo) |
-| `pnpm build` | Zbuduj wszystkie pakiety |
-| `pnpm typecheck` | Sprawdź typy TypeScript |
-| `pnpm lint` | Sprawdź kod linterem |
-| `pnpm test` | Uruchom testy (Vitest) |
-| `pnpm start:client` | Tylko klient Vite |
-| `pnpm start:server` | Tylko serwer Express |
-| `pnpm electron:dev` | Desktop (dev) |
-| `pnpm electron:build` | Desktop (Windows/Linux/Mac) |
-| `pnpm android:sync` | Sync do Capacitor |
-| `pnpm docker:up` | Stack produkcyjny |
+| Komenda               | Opis                         |
+| --------------------- | ---------------------------- |
+| `pnpm dev`            | Uruchom wszystko (Turborepo) |
+| `pnpm build`          | Zbuduj wszystkie pakiety     |
+| `pnpm typecheck`      | Sprawdź typy TypeScript      |
+| `pnpm lint`           | Sprawdź kod linterem         |
+| `pnpm test`           | Uruchom testy (Vitest)       |
+| `pnpm start:client`   | Tylko klient Vite            |
+| `pnpm start:server`   | Tylko serwer Express         |
+| `pnpm electron:dev`   | Desktop (dev)                |
+| `pnpm electron:build` | Desktop (Windows/Linux/Mac)  |
+| `pnpm android:sync`   | Sync do Capacitor            |
+| `pnpm docker:up`      | Stack produkcyjny            |
 
 ---
 
@@ -178,14 +178,14 @@ pnpm --filter nicori-server test   # Testy serwera
 
 ### Coverage
 
-| Area | Status |
-|------|--------|
-| Client stores | ✅ auth, settings |
-| Client components | ✅ Button |
-| Client utils | ✅ markdown, files |
-| Client composables | ✅ useSystemTheme |
-| Server utils | ✅ upload, serialize-user, room-auth |
-| Server routes | ✅ health, auth |
+| Area               | Status                               |
+| ------------------ | ------------------------------------ |
+| Client stores      | ✅ auth, settings                    |
+| Client components  | ✅ Button                            |
+| Client utils       | ✅ markdown, files                   |
+| Client composables | ✅ useSystemTheme                    |
+| Server utils       | ✅ upload, serialize-user, room-auth |
+| Server routes      | ✅ health, auth                      |
 
 ---
 
@@ -213,7 +213,7 @@ Repozytorium zawiera gotowe konfiguracje dla:
 2. Wdróż klienta na Vercel → ustaw `VITE_API_URL` na adres serwera
 3. Skonfiguruj automatyczny deploy z GitHub → `git push origin main`
 
-> 📖 Pełny poradnik deploy: [docs/DEPLOY.md](docs/DEPLOY.md)
+> 📖 Pełny poradnik deploy: [docs/deployment/DOCKER.md](docs/deployment/DOCKER.md)
 
 ---
 

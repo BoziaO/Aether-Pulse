@@ -6,7 +6,7 @@ Before you begin, ensure you have the following installed:
 
 | Tool    | Version | Installation                                                  |
 | ------- | ------- | ------------------------------------------------------------- |
-| Node.js | >= 20.x | [https://nodejs.org/](https://nodejs.org/)                    |
+| Node.js | >= 22.x | [https://nodejs.org/](https://nodejs.org/)                    |
 | pnpm    | >= 11.x | `npm install -g pnpm` or [https://pnpm.io/](https://pnpm.io/) |
 | Git     | >= 2.x  | [https://git-scm.com/](https://git-scm.com/)                  |
 | IDE     | Latest  | VS Code recommended                                           |
@@ -24,7 +24,7 @@ Before you begin, ensure you have the following installed:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-org/nicori.git
+git clone https://github.com/BoziaO/Nicori.git
 cd nicori
 ```
 
@@ -46,7 +46,6 @@ This will install dependencies for all packages in the monorepo:
 
 ```bash
 cp .env.example .env
-cp shared/db/.env.example shared/db/.env
 ```
 
 Edit `.env` with your local configuration:
@@ -56,21 +55,20 @@ Edit `.env` with your local configuration:
 PORT=3000
 NODE_ENV=development
 SESSION_SECRET=your_dev_secret
-DATABASE_URL=sqlite.db
+DATABASE_URL=mongodb://localhost:27017/nicori
 
 # Client
-CLIENT_PORT=5173
+CLIENT_PORT=5174
 ```
 
-### 4. Setup Database
+### 4. Start MongoDB
+
+Make sure MongoDB is running locally or use a cloud instance (MongoDB Atlas).
+
+### 5. Run the Application
 
 ```bash
-# Sync database schema (SQLite)
-pnpm db:push
-
-# Or for development with Turborepo
 pnpm dev
-# This will automatically sync the database
 ```
 
 ## Running the Application
@@ -82,11 +80,7 @@ pnpm dev
 pnpm dev
 ```
 
-This command:
-
-1. Copies `.env` to `shared/db/.env`
-2. Pushes database schema
-3. Starts both server and client with `turbo dev`
+This command starts both server and client with `turbo dev`.
 
 ### Individual Services
 
@@ -165,10 +159,9 @@ nicori/
 │   ├── api-spec/             # OpenAPI specification
 │   ├── api-zod/              # Zod schemas for API
 │   │   └── src/generated/    # Auto-generated from OpenAPI
-│   └── db/                   # Database layer
+│   └── db/                   # Database layer (Mongoose)
 │       ├── src/
-│       │   └── schema/       # Drizzle ORM schemas
-│       ├── drizzle.config.ts # Drizzle configuration
+│       │   └── models/       # Mongoose models
 │       └── tsconfig.json
 │
 ├── docker/                    # Docker configuration
@@ -186,7 +179,9 @@ nicori/
 │   └── development/
 │
 ├── scripts/                  # Utility scripts
-│   └── migrate-*.mjs         # Migration scripts
+│   ├── build-client.sh
+│   ├── build-server.sh
+│   └── post-merge.sh
 │
 ├── .eslintrc.cjs             # ESLint configuration
 ├── .prettierrc.cjs           # Prettier configuration
@@ -343,39 +338,30 @@ const count = ref(0)
 
 ## Database Operations
 
-### Using Drizzle ORM
+### Using Mongoose
 
 ```typescript
-import { db } from '@workspace/db'
-import { usersTable, eq } from '@workspace/db'
+import { User } from '@workspace/db'
 
-// Select all users
-const users = await db.select().from(usersTable)
+// Find all users
+const users = await User.find()
 
-// Select specific user
-const user = await db.select().from(usersTable).where(eq(usersTable.id, userId))
+// Find specific user
+const user = await User.findById(userId)
 
-// Insert
-const newUser = await db.insert(usersTable).values({ ... }).returning()
+// Create
+const newUser = await User.create({ ... })
 
 // Update
-const updated = await db.update(usersTable).set({ ... }).where(eq(usersTable.id, userId))
+const updated = await User.findByIdAndUpdate(userId, { ... }, { new: true })
 
 // Delete
-const deleted = await db.delete(usersTable).where(eq(usersTable.id, userId))
+const deleted = await User.findByIdAndDelete(userId)
 ```
 
-### Running Migrations
+### MongoDB Connection
 
-```bash
-# Push schema changes (development)
-pnpm db:push
-
-# Or use Drizzle Kit
-pnpm --filter @workspace/db push
-
-# For production, use migrations folder
-```
+The server connects to MongoDB automatically on startup using the `DATABASE_URL` environment variable.
 
 ## Socket.IO Development
 
@@ -485,15 +471,15 @@ debug.enabled = true
 
 ## Environment Variables
 
-| Variable         | Description             | Default                 |
-| ---------------- | ----------------------- | ----------------------- |
-| `NODE_ENV`       | Environment mode        | `development`           |
-| `PORT`           | Server port             | `3000`                  |
-| `DATABASE_URL`   | Database connection URL | `sqlite.db`             |
-| `SESSION_SECRET` | Session secret key      | -                       |
-| `CLIENT_URL`     | Client URL for CORS     | `http://localhost:5173` |
-| `REDIS_URL`      | Redis connection URL    | -                       |
-| `JWT_SECRET`     | JWT secret (future)     | -                       |
+| Variable         | Description             | Default                            |
+| ---------------- | ----------------------- | ---------------------------------- |
+| `NODE_ENV`       | Environment mode        | `development`                      |
+| `PORT`           | Server port             | `3000`                             |
+| `DATABASE_URL`   | Database connection URL | `mongodb://localhost:27017/nicori` |
+| `SESSION_SECRET` | Session secret key      | -                                  |
+| `CLIENT_URL`     | Client URL for CORS     | `http://localhost:5173`            |
+| `REDIS_URL`      | Redis connection URL    | -                                  |
+| `JWT_SECRET`     | JWT secret (future)     | -                                  |
 
 ## Tips and Tricks
 
@@ -520,9 +506,11 @@ rm -rf server/.tsbuildinfo
 ### Database Issues?
 
 ```bash
-# Reset SQLite database
-rm -f shared/db/sqlite.db
-pnpm db:push
+# Check MongoDB connection
+mongosh --eval "db.adminCommand('ping')"
+
+# Or check server logs for connection errors
+pnpm start:server
 ```
 
 ### Port Conflicts?

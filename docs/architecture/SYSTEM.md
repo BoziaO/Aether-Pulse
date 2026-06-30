@@ -27,7 +27,7 @@ nicori/
 │   └── build.mjs
 │
 ├── shared/           # Shared Code
-│   ├── db/           # Database schema and migrations
+│   ├── db/           # Database schemas and repositories
 │   ├── api-zod/      # API schemas and validation
 │   └── api-spec/     # OpenAPI specification
 │
@@ -110,10 +110,9 @@ nicori/
                               │
 ┌─────────────────────────────────────────────────────────┐
 │                    Database                                │
-│  SQLite (development) / PostgreSQL (production)            │
-│  Drizzle ORM for type-safe queries                         │
+│  MongoDB (Mongoose ODM)                                      │
 │                                                             │
-│  Tables:                                                  │
+│  Collections:                                              │
 │  - users                 - rooms                          │
 │  - room_members          - messages                       │
 │  - message_reactions    - friends                         │
@@ -271,6 +270,6 @@ nicori/
 - **Horizontal Scaling**: Stateless server design
 - **Session Storage**: Can be swapped to Redis for multi-instance
 - **Socket.IO**: Redis adapter for pub/sub across instances
-- **Database**: PostgreSQL for production with connection pooling
+- **Database**: MongoDB with replica set for production
 - **File Uploads**: Can be offloaded to S3 or similar
 - **Rate Limiting**: Per-IP rate limiting for API protection

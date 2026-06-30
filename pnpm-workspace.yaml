@@ -53,7 +53,7 @@ catalog:
   'helmet': ^8.0.0
   'ioredis': ^5.11.0
   'jsonwebtoken': ^9.0.2
-  'mongoose': ^5.11.97
+  'mongoose': ^8.7.0
   'nanoid': ^5.1.11
   'pino': ^10.3.1
   'pino-http': ^11.0.0
@@ -93,7 +93,6 @@ catalog:
   '@replit/vite-plugin-runtime-error-modal': ^0.0.6
   'class-variance-authority': ^0.7.1
   'clsx': ^2.1.1
-  'drizzle-orm': ^0.45.2
   'process': ^0.11.10
   'tailwind-merge': ^3.3.1
   'tslib': ^2.8.1
@@ -114,8 +113,6 @@ onlyBuiltDependencies:
 
 # Version overrides for security or compatibility
 overrides:
-  # drizzle-kit uses older esbuild - override to compatible version
-  '@esbuild-kit/esm-loader': 'npm:tsx@^4.21.0'
   'esbuild': '0.27.3'
   'thread-stream': '3.1.0'
 

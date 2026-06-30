@@ -16,7 +16,7 @@ with Docker and Docker Compose.
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-org/nicori.git
+git clone https://github.com/BoziaO/Nicori.git
 cd nicori
 ```
 
@@ -45,7 +45,7 @@ docker-compose -f docker/docker-compose.yml ps
 
 - **Frontend**: http://localhost:80 (via Nginx)
 - **Backend API**: http://localhost:3000/api
-- **Database**: localhost:5432 (PostgreSQL)
+- **Database**: localhost:27017 (MongoDB)
 - **Redis**: localhost:6379
 
 ## Production Deployment
@@ -57,7 +57,7 @@ Edit `.env` with production values:
 ```env
 NODE_ENV=production
 PORT=3000
-DATABASE_URL=postgresql://nicori:your_password@db:5432/nicori
+DATABASE_URL=mongodb://mongo:27017/nicori
 SESSION_SECRET=your_very_strong_secret_here
 JWT_SECRET=your_jwt_secret_here_minimum_32_characters
 CLIENT_URL=https://your-domain.com
@@ -84,7 +84,10 @@ docker-compose -f docker/docker-compose.yml logs -f
 docker-compose -f docker/docker-compose.yml exec server curl http://localhost:3000/api/health
 
 # Test database connection
-docker-compose -f docker/docker-compose.yml exec db psql -U nicori -d nicori -c "SELECT 1;"
+docker-compose -f docker/docker-compose.yml exec server node -e "
+const mongoose = require('mongoose');
+mongoose.connect(process.env.DATABASE_URL).then(() => { console.log('DB connection OK'); process.exit(0); }).catch(e => { console.error(e); process.exit(1); })
+"
 ```
 
 ## Docker Compose Configuration
@@ -93,19 +96,18 @@ The `docker/docker-compose.yml` file defines the following services:
 
 ### Services
 
-| Service | Port | Description                            |
-| ------- | ---- | -------------------------------------- |
-| nginx   | 80   | Reverse proxy and static file server   |
-| client  | 3001 | Vue frontend (built, served via Nginx) |
-| server  | 3000 | Node.js backend                        |
-| db      | 5432 | PostgreSQL database                    |
-| redis   | 6379 | Redis for sessions and Socket.io       |
-| turn    | 3478 | Coturn TURN server for WebRTC          |
+| Service | Port  | Description                            |
+| ------- | ----- | -------------------------------------- |
+| nginx   | 80    | Reverse proxy and static file server   |
+| client  | 80    | Vue frontend (built, served via Nginx) |
+| server  | 3000  | Node.js backend                        |
+| mongo   | 27017 | MongoDB database                       |
+| redis   | 6379  | Redis for sessions and Socket.io       |
 
 ### Volumes
 
-- `db-data`: Persistent PostgreSQL data
-- `redis-data`: Persistent Redis data
+- `mongo_data`: Persistent MongoDB data
+- `redis_data`: Persistent Redis data
 
 ### Networks
 
@@ -127,21 +129,21 @@ services:
       - '3000:3000' # Change to "3001:3000" to expose on port 3001
   db:
     ports:
-      - '5432:5432' # Remove to disable external DB access
+      - '27017:27017' # Remove to disable external DB access
 ```
 
 ### Using External Database
 
-To use an external PostgreSQL database instead of the container:
+To use an external MongoDB database instead of the container:
 
 ```yaml
 services:
   server:
     environment:
-      - DATABASE_URL=postgresql://user:password@your-external-db:5432/nicori
+      - DATABASE_URL=mongodb://your-external-mongo:27017/nicori
     # Remove db dependency
     # depends_on:
-    #   - db
+    #   - mongo
 ```
 
 ### Using External Redis
@@ -173,14 +175,12 @@ docker build -t nicori-client:latest -f docker/client/Dockerfile .
 ### Run Containers
 
 ```bash
-# Run PostgreSQL
-docker run -d --name nicori-db \
-  -e POSTGRES_USER=nicori \
-  -e POSTGRES_PASSWORD=your_password \
-  -e POSTGRES_DB=nicori \
-  -p 5432:5432 \
-  -v nicori-db-data:/var/lib/postgresql/data \
-  postgres:15-alpine
+# Run MongoDB
+docker run -d --name nicori-mongo \
+  -e MONGO_INITDB_DATABASE=nicori \
+  -p 27017:27017 \
+  -v nicori-mongo-data:/data/db \
+  mongo:6
 
 # Run Redis
 docker run -d --name nicori-redis \
@@ -192,7 +192,7 @@ docker run -d --name nicori-redis \
 docker run -d --name nicori-server \
   -e NODE_ENV=production \
   -e PORT=3000 \
-  -e DATABASE_URL=postgresql://nicori:your_password@host.docker.internal:5432/nicori \
+  -e DATABASE_URL=mongodb://host.docker.internal:27017/nicori \
   -e SESSION_SECRET=your_secret \
   -e REDIS_URL=redis://host.docker.internal:6379 \
   -p 3000:3000 \
@@ -254,7 +254,7 @@ kill -9 <PID>
 # Make sure Docker can create volumes
 sudo chown -R $USER:$USER /var/run/docker.sock
 
-# For PostgreSQL data directory
+# For MongoDB data directory
 sudo chown -R 1000:1000 /path/to/volume
 ```
 
@@ -262,15 +262,15 @@ sudo chown -R 1000:1000 /path/to/volume
 
 ```bash
 # Check database logs
-docker-compose -f docker/docker-compose.yml logs db
+docker-compose -f docker/docker-compose.yml logs mongo
 
 # Connect to database manually
-docker-compose -f docker/docker-compose.yml exec db psql -U nicori -d nicori
+docker-compose -f docker/docker-compose.yml exec mongo mongosh nicori
 
 # Test connection from server container
 docker-compose -f docker/docker-compose.yml exec server node -e "
-const { db } = require('./shared/db');
-db.select().from(usersTable).then(r => console.log('DB connection OK', r)).catch(e => console.error(e))
+const mongoose = require('mongoose');
+mongoose.connect(process.env.DATABASE_URL).then(() => { console.log('DB OK'); process.exit(0); }).catch(e => { console.error(e); process.exit(1); })
 "
 ```
 
@@ -394,7 +394,6 @@ server {
 - Use strong passwords
 - Create dedicated database users
 - Restrict database access to specific IPs
-- Enable PostgreSQL authentication
 
 ### Network Security
 
@@ -409,8 +408,7 @@ For production scaling, consider:
 1. **Multiple Server Instances**: Run multiple server containers behind a load balancer
 2. **Redis for Session Storage**: Use Redis to share sessions across instances
 3. **Redis Adapter for Socket.IO**: Enable Socket.io Redis adapter for multi-instance support
-4. **Database Connection Pooling**: Configure connection pool for PostgreSQL
-5. **Horizontal Scaling**: Use Kubernetes or Docker Swarm for orchestration
+4. **Horizontal Scaling**: Use Kubernetes or Docker Swarm for orchestration
 
 ### Example Scaled Setup
 
@@ -438,23 +436,21 @@ services:
       dockerfile: docker/server/Dockerfile
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://nicori:password@db:5432/nicori
+      - DATABASE_URL=mongodb://mongo:27017/nicori
       - REDIS_URL=redis://redis:6379
       - SESSION_SECRET=${SESSION_SECRET}
     depends_on:
-      - db
+      - mongo
       - redis
     deploy:
       replicas: 3
 
   db:
-    image: postgres:15
+    image: mongo:6
     environment:
-      - POSTGRES_USER=nicori
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=nicori
+      - MONGO_INITDB_DATABASE=nicori
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - mongo_data:/data/db
     deploy:
       resources:
         limits:
@@ -464,7 +460,7 @@ services:
   redis:
     image: redis:7
     volumes:
-      - redis-data:/data
+      - redis_data:/data
     deploy:
       resources:
         limits:
@@ -472,8 +468,8 @@ services:
           memory: 1G
 
 volumes:
-  db-data:
-  redis-data:
+  mongo_data:
+  redis_data:
 ```
 
 Run with:

@@ -1,55 +1,121 @@
 # Contributing to Nicori
 
-First off, thanks for taking the time to contribute! ❤️
+Thanks for your interest in contributing to Nicori! Every contribution helps make this project better.
 
-The following is a set of guidelines for contributing to Nicori. These are mostly guidelines, not rules. Use your best judgment, and feel free to propose changes to this document in a pull request.
-
-## How Can I Contribute?
+## How to Contribute
 
 ### Reporting Bugs
 
-This section guides you through submitting a bug report for Nicori. Following these guidelines helps maintainers and the community understand your report, reproduce the behavior, and find related reports.
+Before creating a bug report, please check [existing issues](https://github.com/BoziaO/Nicori/issues) to avoid duplicates.
 
-When you are creating a bug report, please [include as many details as possible](#how-do-i-submit-a-good-bug-report). Fill out [the required template](.github/ISSUE_TEMPLATE/bug_report.yml), the information it asks for helps us resolve issues faster.
+When creating a bug report, include:
 
-### Suggesting Enhancements
+- A clear and descriptive title
+- Steps to reproduce the issue
+- Expected behavior vs actual behavior
+- Your environment (OS, browser, Node.js version)
+- Screenshots or logs if applicable
 
-This section guides you through submitting an enhancement suggestion for Nicori, including completely new features and minor improvements to existing functionality. Following these guidelines helps maintainers and the community understand your suggestion and find related suggestions.
+Use the [bug report template](.github/ISSUE_TEMPLATE/bug_report.yml).
 
-When you are creating an enhancement suggestion, please [include as many details as possible](#how-do-i-submit-a-good-enhancement-suggestion). Fill out [the template](.github/ISSUE_TEMPLATE/feature_request.yml), including the steps that you imagine you would take if the feature you're requesting existed.
+### Suggesting Features
+
+Feature suggestions are welcome! Please use the [feature request template](.github/ISSUE_TEMPLATE/feature_request.yml) and describe:
+
+- The problem you're trying to solve
+- Your proposed solution
+- Alternatives you've considered
 
 ### Pull Requests
 
-The process which described below has been designed to make contributing to Nicori as easy as possible.
+1. Fork the repository
+2. Create a branch from `main` (`git checkout -b feature/my-feature`)
+3. Make your changes
+4. Run tests and linting (`pnpm typecheck && pnpm lint`)
+5. Commit with a [conventional commit](#commit-messages) message
+6. Push to your fork and open a Pull Request
 
-1. Fork the repo and create your branch from `main`.
-2. If you've added code that should be tested, add tests.
-3. If you've changed APIs, update the documentation.
-4. Ensure the test suite passes.
-5. Make sure your code lints.
-6. Issue that pull request!
+## Development Setup
 
-## Styleguides
+### Prerequisites
 
-### Git Commit Messages
+- Node.js >= 22
+- pnpm >= 11
+- MongoDB (local or Atlas)
 
-- Use the present tense ("Add feature" not "Added feature")
-- Use the imperative mood ("Move cursor to..." not "Moves cursor to...")
-- Limit the first line to 72 characters or less
-- Reference issues and pull requests liberally after the first line
+### Getting Started
 
-### JavaScript/TypeScript Styleguide
+```bash
+# Clone the repository
+git clone https://github.com/BoziaO/Nicori.git
+cd Nicori
 
-- Use TypeScript for all new code.
-- Follow the existing code style.
-- Use functional components and hooks for Vue.
+# Install dependencies
+pnpm install
 
-## Development Workflow
+# Copy environment file
+cp .env.example .env
 
-1. Install dependencies: `pnpm install`
-2. Run development servers: `pnpm dev`
-3. Run tests: `pnpm test` (if available)
-4. Build: `pnpm build`
+# Start development servers
+pnpm dev
+```
 
-Thanks!
-Nicori Team
+The client runs at `http://localhost:5174` and the server at `http://localhost:3000`.
+
+### Available Scripts
+
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Start all services (Turborepo) |
+| `pnpm build` | Build all packages |
+| `pnpm typecheck` | Type-check TypeScript |
+| `pnpm lint` | Run ESLint |
+| `pnpm test` | Run tests (Vitest) |
+| `pnpm format` | Format code with Prettier |
+
+## Code Style
+
+- **TypeScript** for all new code
+- **Vue 3 Composition API** with `<script setup>` for components
+- **Functional components** and hooks
+- Follow existing patterns in the codebase
+- Use Prettier for formatting (configured in `.prettierrc.cjs`)
+
+### Commit Messages
+
+Follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+- `feat: add new feature`
+- `fix: resolve bug`
+- `docs: update documentation`
+- `refactor: improve code structure`
+- `test: add or update tests`
+- `chore: maintenance tasks`
+
+### Project Structure
+
+```
+Nicori/
+├── client/          # Vue 3 frontend
+├── server/          # Express backend
+├── shared/          # Shared packages
+├── docker/          # Docker configuration
+└── docs/            # Documentation
+```
+
+## Testing
+
+```bash
+# Run all tests
+pnpm test
+
+# Run specific package tests
+pnpm --filter nicori-client test
+pnpm --filter nicori-server test
+```
+
+## Questions?
+
+If you have questions, feel free to open an issue or reach out to the maintainers.
+
+Thank you for contributing to Nicori!
