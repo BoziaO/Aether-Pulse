@@ -11,7 +11,7 @@
   import { defineAsyncComponent } from 'vue'
   import ChatMessage from '@/components/chat/ChatMessage.vue'
   import ChatInput from '@/components/chat/ChatInput.vue'
-  import UserAvatar from '@/components/profile/UserAvatar.vue'
+  import AnimatedProfile from '@/components/profile/AnimatedProfile.vue'
   import type { Message } from '@/types/message.types'
   import type { DmMessage } from '@/types/dm.types'
 
@@ -173,7 +173,7 @@
       <button class="btn btn-ghost dm-back" @click="router.push('/friends')">
         <ArrowLeft :size="16" />
       </button>
-      <UserAvatar v-if="otherUser" :user="otherUser" :size="36" />
+      <AnimatedProfile v-if="otherUser" :user="otherUser" :size="36" :show-animation="false" />
       <div class="header-info">
         <h2>{{ otherUser?.displayName || 'Direct Message' }}</h2>
         <p>@{{ otherUser?.username }}</p>

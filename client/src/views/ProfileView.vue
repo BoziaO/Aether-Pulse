@@ -29,7 +29,7 @@
   } from 'lucide-vue-next'
 
   import { useAuthStore } from '@/stores/auth.store'
-  import UserAvatar from '@/components/profile/UserAvatar.vue'
+  import AnimatedProfile from '@/components/profile/AnimatedProfile.vue'
   import GradientPicker from '@/components/profile/GradientPicker.vue'
   import ProfileBadge from '@/components/profile/ProfileBadge.vue'
   import GlassDropdown from '@/components/ui/GlassDropdown.vue'
@@ -775,7 +775,7 @@
             <label class="label">Avatar</label>
             <div class="upload-row">
               <div class="upload-preview avatar-preview-wrap">
-                <UserAvatar :user="previewUser" :size="64" />
+                <AnimatedProfile :user="previewUser" :size="64" :show-animation="false" />
               </div>
               <div class="upload-actions">
                 <label class="btn btn-ghost btn-sm">
@@ -1153,7 +1153,7 @@
         </div>
         <div class="card-shell">
           <div class="avatar-row">
-            <UserAvatar :user="previewUser" :size="86" />
+            <AnimatedProfile :user="previewUser" :size="86" :show-animation="true" class="preview-avatar" />
             <div v-if="previewUser.badges?.length" class="badge-row">
               <ProfileBadge v-for="badge in previewUser.badges" :key="badge" :badge="badge" />
             </div>
@@ -1769,8 +1769,11 @@
   min-height: 52px;
 }
 
-.avatar-row :deep(.avatar-wrap) {
+.avatar-row :deep(.preview-avatar) {
   margin-top: -43px;
+}
+
+.avatar-row :deep(.preview-avatar .avatar-wrapper) {
   border: 6px solid #111318;
   border-radius: 50%;
 }

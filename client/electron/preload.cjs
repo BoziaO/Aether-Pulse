@@ -1,67 +1,120 @@
-// Preload script for Electron
-// This script runs in the renderer context before the webpage is loaded.
-// Security: contextIsolation and worldSafeExecuteJavaScript are enabled
 const { contextBridge, ipcRenderer } = require('electron')
 
-// Validate channel names to prevent prototype pollution attacks
-function validateChannel(channel) {
-  const allowedChannels = new Set([
-    'get-desktop-sources',
-    'electron-message',
-    'desktop-capturer-get-sources',
-  ])
+// ============================================================================
+// Channel Validation
+// ============================================================================
 
-  if (typeof channel !== 'string' || !allowedChannels.has(channel)) {
+const ALLOWED_CHANNELS = new Set([
+  'get-desktop-sources',
+  'get-current-activity',
+  'get-presence-state',
+  'get-app-signatures',
+  'get-session-info',
+  'get-presence-themes',
+  'set-room-info',
+  'set-presence-theme',
+  'presence-changed',
+  'presence-tick',
+  'activity-changed',
+  'electron-message',
+  'desktop-capturer-get-sources',
+])
+
+function validateChannel(channel) {
+  if (typeof channel !== 'string' || !ALLOWED_CHANNELS.has(channel)) {
     throw new Error(`Invalid channel: ${channel}`)
   }
   return true
 }
 
-// Validate data to prevent injection attacks
-function validateData(data) {
-  // Simple validation - in production, use a more robust validation library
-  if (data && typeof data === 'object') {
-    // Check for circular references
-    try {
-      JSON.stringify(data)
-    } catch (e) {
-      throw new Error('Invalid data: circular reference detected')
-    }
+// ============================================================================
+// Data Validation
+// ============================================================================
+
+function hasCircularReference(obj) {
+  try {
+    JSON.stringify(obj)
+    return false
+  } catch {
+    return true
   }
-  return true
 }
 
-// Expose protected methods that allow the renderer process to use
-// the ipcRenderer without exposing the entire object
-// All methods are validated for security
+// ============================================================================
+// Context Bridge API
+// ============================================================================
+
 contextBridge.exposeInMainWorld('electronAPI', {
   send: (channel, data) => {
     validateChannel(channel)
-    validateData(data)
+    if (data !== undefined && hasCircularReference(data)) {
+      throw new Error('Data contains circular reference')
+    }
     ipcRenderer.send(channel, data)
   },
+
   on: (channel, func) => {
     validateChannel(channel)
-    ipcRenderer.on(channel, (event, ...args) => func(...args))
+    const subscription = (_event, ...args) => func(...args)
+    ipcRenderer.on(channel, subscription)
+    return () => ipcRenderer.removeListener(channel, subscription)
   },
+
   once: (channel, func) => {
     validateChannel(channel)
-    ipcRenderer.once(channel, (event, ...args) => func(...args))
+    ipcRenderer.once(channel, (_event, ...args) => func(...args))
   },
+
   invoke: (channel, ...args) => {
     validateChannel(channel)
-    validateData(args)
     return ipcRenderer.invoke(channel, ...args)
   },
+
   removeAllListeners: (channel) => {
     validateChannel(channel)
     ipcRenderer.removeAllListeners(channel)
   },
+
+  // Convenience: screen sharing
   getDesktopSources: () => ipcRenderer.invoke('get-desktop-sources'),
+
+  // Convenience: presence
+  getCurrentActivity: () => ipcRenderer.invoke('get-current-activity'),
+  getPresenceState: () => ipcRenderer.invoke('get-presence-state'),
+  getAppSignatures: () => ipcRenderer.invoke('get-app-signatures'),
+  getSessionInfo: () => ipcRenderer.invoke('get-session-info'),
+  getPresenceThemes: () => ipcRenderer.invoke('get-presence-themes'),
+
+  // Convenience: room info
+  setRoomInfo: (roomInfo) => ipcRenderer.send('set-room-info', roomInfo),
+
+  // Convenience: theme
+  setPresenceTheme: (themeId) => ipcRenderer.send('set-presence-theme', themeId),
+
+  // Convenience: event listeners
+  onPresenceChanged: (callback) => {
+    const handler = (_event, state) => callback(state)
+    ipcRenderer.on('presence-changed', handler)
+    return () => ipcRenderer.removeListener('presence-changed', handler)
+  },
+
+  onPresenceTick: (callback) => {
+    const handler = (_event, state) => callback(state)
+    ipcRenderer.on('presence-tick', handler)
+    return () => ipcRenderer.removeListener('presence-tick', handler)
+  },
+
+  onActivityChanged: (callback) => {
+    const handler = (_event, activities) => callback(activities)
+    ipcRenderer.on('activity-changed', handler)
+    return () => ipcRenderer.removeListener('activity-changed', handler)
+  },
 })
 
-// Polyfill for Node.js globals in the renderer process
-// Only expose safe, read-only properties
+// ============================================================================
+// Node.js Polyfill (read-only)
+// ============================================================================
+
 window.process = Object.freeze({
   versions: Object.freeze({
     node: process.versions?.node || false,
@@ -69,22 +122,17 @@ window.process = Object.freeze({
     electron: process.versions?.electron || false,
   }),
   platform: process.platform,
-  env: Object.freeze({
-    NODE_ENV: process.env.NODE_ENV,
-  }),
+  env: Object.freeze({ NODE_ENV: process.env.NODE_ENV }),
 })
 
-// Expose WebRTC globals for Electron compatibility
+// ============================================================================
+// WebRTC Polyfill
+// ============================================================================
+
 if (process.versions?.electron) {
-  // These are already available in the renderer process with contextIsolation
   window.wrtc = window.wrtc || {
     RTCPeerConnection: window.RTCPeerConnection,
     RTCSessionDescription: window.RTCSessionDescription,
     RTCIceCandidate: window.RTCIceCandidate,
   }
 }
-
-// Security: Freeze sensitive objects
-Object.freeze(window.process)
-Object.freeze(window.process.versions)
-Object.freeze(window.process.env)

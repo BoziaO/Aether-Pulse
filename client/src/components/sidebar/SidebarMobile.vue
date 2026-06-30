@@ -7,7 +7,7 @@
   import { useRtcStore } from '@/stores/rtc.store'
   import { useFriendsStore } from '@/stores/friends.store'
   import { useDmStore } from '@/stores/dm.store'
-  import UserAvatar from '@/components/profile/UserAvatar.vue'
+  import AnimatedProfile from '@/components/profile/AnimatedProfile.vue'
 
   const router = useRouter()
   const route = useRoute()
@@ -155,7 +155,7 @@
           <span>Voice Connected</span>
         </div>
         <div class="user-item" @click="goToProfile">
-          <UserAvatar :user="auth.user" :size="32" />
+          <AnimatedProfile :user="auth.user" :size="32" :show-animation="false" />
           <div class="user-info">
             <span class="user-name">{{ auth.user?.displayName }}</span>
             <span class="user-status">{{ auth.user?.customStatus || auth.user?.status }}</span>

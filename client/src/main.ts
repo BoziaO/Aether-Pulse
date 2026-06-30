@@ -6,18 +6,20 @@ import App from './App.vue'
 import { router } from './app/router/index'
 import { useSettingsStore } from './stores/settings.store'
 import { useToastStore } from './stores/toast.store'
+import { privacy } from './services/privacy/tracker-blocker'
+import { syncEngine } from './services/offline/sync-engine'
 import './styles/main.css'
 
-// Polyfill for browser bundles that depend on Node globals (e.g., simple-peer/readable-stream).
 if (!(globalThis as unknown as { process?: unknown }).process) {
   (globalThis as unknown as { process: unknown }).process = process
 }
+
+privacy.init()
 
 const app = createApp(App)
 const pinia = createPinia()
 app.use(pinia)
 
-// Global error handler for Vue components
 app.config.errorHandler = (err, _instance, info) => {
   console.error('Vue error:', err, info)
   try {
@@ -28,8 +30,9 @@ app.config.errorHandler = (err, _instance, info) => {
   }
 }
 
-// Apply persisted theme ASAP to avoid flash.
 useSettingsStore(pinia).applyTheme()
+
+syncEngine.init()
 
 app.use(router)
 app.mount('#app')

@@ -2,7 +2,7 @@
   import { computed } from 'vue'
   import { Headphones, Mic } from 'lucide-vue-next'
 
-  import UserAvatar from '@/components/profile/UserAvatar.vue'
+  import AnimatedProfile from '@/components/profile/AnimatedProfile.vue'
   import { useRtcStore } from '@/stores/rtc.store'
   import { usePresenceStore } from '@/stores/presence.store'
   import type { User } from '@/types/user.types'
@@ -51,7 +51,7 @@
         type="button"
         @click="emit('open-profile', member.id)"
       >
-        <UserAvatar :user="member" :size="34" />
+        <AnimatedProfile :user="member" :size="34" :show-animation="false" />
         <div class="member-info">
           <span class="member-name">{{ member.displayName }}</span>
           <span class="member-meta">

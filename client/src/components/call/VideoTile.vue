@@ -2,7 +2,7 @@
   import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
   import { MicOff, Maximize2, Minimize2 } from 'lucide-vue-next'
 
-  import UserAvatar from '@/components/profile/UserAvatar.vue'
+  import AnimatedProfile from '@/components/profile/AnimatedProfile.vue'
   import { userApi } from '@/services/api/user.api'
   import { useSettingsStore } from '@/stores/settings.store'
   import type { User } from '@/types/user.types'
@@ -151,7 +151,7 @@
       </div>
     </div>
     <div v-if="!stream" class="video-placeholder">
-      <UserAvatar v-if="displayUser" :user="displayUser" :size="72" />
+      <AnimatedProfile v-if="displayUser" :user="displayUser" :size="72" :show-animation="true" />
       <div
         v-else
         class="placeholder-avatar"

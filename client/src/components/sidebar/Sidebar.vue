@@ -8,7 +8,7 @@
   import { useRtcStore } from '@/stores/rtc.store'
   import { useFriendsStore } from '@/stores/friends.store'
   import { useDmStore } from '@/stores/dm.store'
-  import UserAvatar from '@/components/profile/UserAvatar.vue'
+  import AnimatedProfile from '@/components/profile/AnimatedProfile.vue'
   import CreateRoomModal from '@/components/rooms/CreateRoomModal.vue'
 
   const router = useRouter()
@@ -171,7 +171,7 @@
 
       <div class="sidebar-user">
         <div class="sidebar-user-info" @click="router.push('/app/profile')">
-          <UserAvatar :user="auth.user" :size="36" />
+          <AnimatedProfile :user="auth.user" :size="36" :show-animation="false" />
           <div class="sidebar-user-details">
             <div class="sidebar-user-name">{{ auth.user?.displayName }}</div>
             <div v-if="auth.user?.richPresence" class="sidebar-user-status sidebar-rp">

@@ -21,7 +21,7 @@
   import { userApi, type UserStats } from '@/services/api/user.api'
   import { useAuthStore } from '@/stores/auth.store'
   import { useFriendsStore } from '@/stores/friends.store'
-  import UserAvatar from './UserAvatar.vue'
+  import AnimatedProfile from './AnimatedProfile.vue'
   import ProfileBadge from './ProfileBadge.vue'
   import type { User } from '@/types/user.types'
   import type { FriendshipStatus } from '@/types/friend.types'
@@ -210,7 +210,14 @@
 
         <div class="shell">
           <div class="avatar-row">
-            <UserAvatar :user="user" :size="92" />
+            <AnimatedProfile
+              :user="user"
+              :size="92"
+              :show-animation="true"
+              class="profile-avatar"
+            >
+              <span class="sr-only">{{ user?.displayName }}</span>
+            </AnimatedProfile>
             <div v-if="user?.badges?.length" class="badge-row">
               <ProfileBadge v-for="badge in user.badges" :key="badge" :badge="badge" />
             </div>
@@ -445,10 +452,25 @@
   align-items: flex-end;
   justify-content: space-between;
 }
-.avatar-row :deep(.avatar-wrap) {
+.avatar-row :deep(.profile-avatar) {
   margin-top: -52px;
+}
+
+.avatar-row :deep(.profile-avatar .avatar-wrapper) {
   border: 6px solid var(--profile-bg, #111318);
   border-radius: 50%;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
 .badge-row {
   display: flex;

@@ -5,7 +5,8 @@
 
   import { useFriendsStore } from '@/stores/friends.store'
   import { friendsApi } from '@/services/api/friends.api'
-  import UserAvatar from '@/components/profile/UserAvatar.vue'
+  import AnimatedProfile from '@/components/profile/AnimatedProfile.vue'
+  import AnimatedCard from '@/components/ui/AnimatedCard.vue'
   import type { UserSearchResult } from '@/types/friend.types'
 
   const friendsStore = useFriendsStore()
@@ -118,36 +119,40 @@
         <h2 class="friends-section-title">Wyniki wyszukiwania</h2>
         <div v-if="searching" class="friends-empty">Szukanie...</div>
         <div v-else-if="searchResults.length === 0" class="friends-empty">Nie znaleziono użytkowników.</div>
-        <div v-for="result in searchResults" :key="result.user.id" class="user-row card glass">
-          <UserAvatar :user="result.user" :size="44" />
-          <div class="user-info">
-            <strong>{{ result.user.displayName }}</strong>
-            <span>@{{ result.user.username }}</span>
-          </div>
-          <button
-            v-if="result.status === 'none'"
-            class="btn btn-primary btn-sm"
-            @click="sendRequest(result.user.id)"
-          >
-            <UserPlus :size="14" />
-            Dodaj
-          </button>
-          <span v-else-if="result.status === 'friends'" class="badge badge-success">
-            <Check :size="12" />
-            Znajomi
-          </span>
-          <span v-else-if="result.status === 'pending_outgoing'" class="badge badge-warning">
-            <Clock :size="12" />
-            Oczekuje
-          </span>
-          <button
-            v-else-if="result.status === 'pending_incoming'"
-            class="btn btn-primary btn-sm"
-            @click="accept(result.user.id)"
-          >
-            <Check :size="14" />
-            Akceptuj
-          </button>
+        <div v-for="result in searchResults" :key="result.user.id" class="user-row">
+          <AnimatedCard variant="glass" :hoverable="true" class="user-row-card">
+            <div class="user-row-inner">
+              <AnimatedProfile :user="result.user" :size="44" :show-animation="false" />
+              <div class="user-info">
+                <strong>{{ result.user.displayName }}</strong>
+                <span>@{{ result.user.username }}</span>
+              </div>
+              <button
+                v-if="result.status === 'none'"
+                class="btn btn-primary btn-sm"
+                @click="sendRequest(result.user.id)"
+              >
+                <UserPlus :size="14" />
+                Dodaj
+              </button>
+              <span v-else-if="result.status === 'friends'" class="badge badge-success">
+                <Check :size="12" />
+                Znajomi
+              </span>
+              <span v-else-if="result.status === 'pending_outgoing'" class="badge badge-warning">
+                <Clock :size="12" />
+                Oczekuje
+              </span>
+              <button
+                v-else-if="result.status === 'pending_incoming'"
+                class="btn btn-primary btn-sm"
+                @click="accept(result.user.id)"
+              >
+                <Check :size="14" />
+                Akceptuj
+              </button>
+            </div>
+          </AnimatedCard>
         </div>
       </div>
 
@@ -157,52 +162,64 @@
           <button class="btn btn-ghost btn-sm" @click="fetchSuggestions">Odśwież</button>
         </div>
         <div v-if="loadingSuggestions" class="friends-empty">Ładowanie sugestii...</div>
-        <div v-for="result in suggestions" :key="result.user.id" class="user-row card glass">
-          <UserAvatar :user="result.user" :size="44" />
-          <div class="user-info">
-            <strong>{{ result.user.displayName }}</strong>
-            <span>@{{ result.user.username }}</span>
-          </div>
-          <button class="btn btn-primary btn-sm" @click="sendRequest(result.user.id)">
-            <UserPlus :size="14" />
-            Dodaj
-          </button>
+        <div v-for="result in suggestions" :key="result.user.id" class="user-row">
+          <AnimatedCard variant="glass" :hoverable="true" class="user-row-card">
+            <div class="user-row-inner">
+              <AnimatedProfile :user="result.user" :size="44" :show-animation="false" />
+              <div class="user-info">
+                <strong>{{ result.user.displayName }}</strong>
+                <span>@{{ result.user.username }}</span>
+              </div>
+              <button class="btn btn-primary btn-sm" @click="sendRequest(result.user.id)">
+                <UserPlus :size="14" />
+                Dodaj
+              </button>
+            </div>
+          </AnimatedCard>
         </div>
       </div>
 
       <div v-if="friendsStore.outgoing.length" class="friends-section">
         <h2 class="friends-section-title">Wysłane zaproszenia ({{ friendsStore.outgoing.length }})</h2>
-        <div v-for="req in friendsStore.outgoing" :key="req.requestId" class="user-row card glass">
-          <UserAvatar :user="req.user" :size="44" />
-          <div class="user-info">
-            <strong>{{ req.user.displayName }}</strong>
-            <span>@{{ req.user.username }}</span>
-          </div>
-          <span class="badge badge-warning">
-            <Clock :size="12" />
-            Oczekuje
-          </span>
-          <button class="btn btn-ghost btn-sm friends-danger" @click="friendsStore.remove(req.user.id)">
-            Anuluj
-          </button>
+        <div v-for="req in friendsStore.outgoing" :key="req.requestId" class="user-row">
+          <AnimatedCard variant="glass" :hoverable="true" class="user-row-card">
+            <div class="user-row-inner">
+              <AnimatedProfile :user="req.user" :size="44" :show-animation="false" />
+              <div class="user-info">
+                <strong>{{ req.user.displayName }}</strong>
+                <span>@{{ req.user.username }}</span>
+              </div>
+              <span class="badge badge-warning">
+                <Clock :size="12" />
+                Oczekuje
+              </span>
+              <button class="btn btn-ghost btn-sm friends-danger" @click="friendsStore.remove(req.user.id)">
+                Anuluj
+              </button>
+            </div>
+          </AnimatedCard>
         </div>
       </div>
 
       <div v-if="friendsStore.incoming.length" class="friends-section">
         <h2 class="friends-section-title">Otrzymane zaproszenia ({{ friendsStore.incoming.length }})</h2>
-        <div v-for="req in friendsStore.incoming" :key="req.requestId" class="user-row card glass">
-          <UserAvatar :user="req.user" :size="44" />
-          <div class="user-info">
-            <strong>{{ req.user.displayName }}</strong>
-            <span>@{{ req.user.username }}</span>
-          </div>
-          <button class="btn btn-primary btn-sm" @click="accept(req.user.id)">
-            <Check :size="14" />
-            Akceptuj
-          </button>
-          <button class="btn btn-ghost btn-sm" @click="reject(req.user.id)">
-            <X :size="14" />
-          </button>
+        <div v-for="req in friendsStore.incoming" :key="req.requestId" class="user-row">
+          <AnimatedCard variant="glass" :hoverable="true" class="user-row-card">
+            <div class="user-row-inner">
+              <AnimatedProfile :user="req.user" :size="44" :show-animation="false" />
+              <div class="user-info">
+                <strong>{{ req.user.displayName }}</strong>
+                <span>@{{ req.user.username }}</span>
+              </div>
+              <button class="btn btn-primary btn-sm" @click="accept(req.user.id)">
+                <Check :size="14" />
+                Akceptuj
+              </button>
+              <button class="btn btn-ghost btn-sm" @click="reject(req.user.id)">
+                <X :size="14" />
+              </button>
+            </div>
+          </AnimatedCard>
         </div>
       </div>
 
@@ -215,19 +232,23 @@
           <h3>Brak znajomych</h3>
           <p>Szukaj użytkowników powyżej, aby dodać kogoś do znajomych!</p>
         </div>
-        <div v-for="entry in friendsStore.friends" :key="entry.user.id" class="user-row card glass">
-          <UserAvatar :user="entry.user" :size="44" />
-          <div class="user-info">
-            <strong>{{ entry.user.displayName }}</strong>
-            <span>@{{ entry.user.username }}</span>
-          </div>
-          <button class="btn btn-ghost btn-sm" @click="openDm(entry.user.id)">
-            <MessageCircle :size="14" />
-            Wiadomość
-          </button>
-          <button class="btn btn-ghost btn-sm friends-danger" @click="friendsStore.remove(entry.user.id)">
-            Usuń
-          </button>
+        <div v-for="entry in friendsStore.friends" :key="entry.user.id" class="user-row">
+          <AnimatedCard variant="glass" :hoverable="true" class="user-row-card">
+            <div class="user-row-inner">
+              <AnimatedProfile :user="entry.user" :size="44" :show-animation="false" />
+              <div class="user-info">
+                <strong>{{ entry.user.displayName }}</strong>
+                <span>@{{ entry.user.username }}</span>
+              </div>
+              <button class="btn btn-ghost btn-sm" @click="openDm(entry.user.id)">
+                <MessageCircle :size="14" />
+                Wiadomość
+              </button>
+              <button class="btn btn-ghost btn-sm friends-danger" @click="friendsStore.remove(entry.user.id)">
+                Usuń
+              </button>
+            </div>
+          </AnimatedCard>
         </div>
       </div>
     </div>
@@ -405,15 +426,21 @@
 
 /* USER ROW */
 .user-row {
+  position: relative;
+}
+
+.user-row-card {
+  width: 100%;
+}
+
+.user-row-inner {
   display: flex;
   align-items: center;
   gap: 14px;
   padding: 14px 16px;
-  transition: all 0.2s;
 }
 
 .user-row:hover {
-  border-color: var(--border-accent);
   transform: translateY(-1px);
 }
 

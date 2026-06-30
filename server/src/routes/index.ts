@@ -8,9 +8,12 @@ import linkPreviewRouter from './linkPreview'
 import messagesRouter from './messages'
 import roomsRouter from './rooms'
 import usersRouter from './users'
+import apiDocsRouter from './api-docs'
+import { apiKeyAuth } from '../middleware/api-key'
 
 const router: IRouter = Router()
 
+router.use(apiKeyAuth)
 router.use(healthRouter)
 router.use(authRouter)
 router.use(usersRouter)
@@ -19,5 +22,6 @@ router.use(messagesRouter)
 router.use(friendsRouter)
 router.use(dmsRouter)
 router.use(linkPreviewRouter)
+router.use(apiDocsRouter)
 
 export default router
