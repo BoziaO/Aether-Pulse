@@ -30,6 +30,15 @@ export const useRtcStore = defineStore('rtc', () => {
   const audioDetected = ref(false)
   const noMicrophoneDetected = ref(false)
   const microphonePermissionDenied = ref(false)
+  const currentAudioLevel = ref(0)
+  const isSpeaking = ref(false)
+
+  // Speaking detection thresholds & hysteresis
+  const SPEAKING_THRESHOLD = 8
+  const SPEAKING_ON_DELAY = 150 // ms above threshold before marking as speaking
+  const SPEAKING_OFF_DELAY = 400 // ms below threshold before marking as stopped
+  let speakingStart = 0
+  let silenceStart = 0
 
   let peerManager: PeerManager | null = null
   let currentRoomId: string | null = null
@@ -207,9 +216,29 @@ export const useRtcStore = defineStore('rtc', () => {
             }
             const average = sum / dataArray.length
 
+            // Normalize to 0-100 range (average is 0-128 from silence midpoint)
+            const normalizedLevel = Math.min(100, Math.round((average / 32) * 100))
+            currentAudioLevel.value = normalizedLevel
+
             // If we detect audio above threshold, mark as detected
             if (average > 5) {
               audioDetected.value = true
+            }
+
+            // Speaking detection with hysteresis
+            const now = Date.now()
+            if (average >= SPEAKING_THRESHOLD) {
+              if (speakingStart === 0) speakingStart = now
+              silenceStart = 0
+              if (now - speakingStart >= SPEAKING_ON_DELAY) {
+                isSpeaking.value = true
+              }
+            } else {
+              if (silenceStart === 0) silenceStart = now
+              speakingStart = 0
+              if (now - silenceStart >= SPEAKING_OFF_DELAY) {
+                isSpeaking.value = false
+              }
             }
           }
         }, 200)
@@ -242,6 +271,10 @@ export const useRtcStore = defineStore('rtc', () => {
     inputGainNode = null
     inputDestination = null
     processedLocalStream = null
+    currentAudioLevel.value = 0
+    isSpeaking.value = false
+    speakingStart = 0
+    silenceStart = 0
   }
 
   /**
@@ -703,7 +736,7 @@ export const useRtcStore = defineStore('rtc', () => {
       if (!stream) return
       if (!pipVideo) {
         pipVideo = document.createElement('video')
-        pipVideo.muted = true
+        pipVideo.muted = !pipAudioEnabled
         pipVideo.autoplay = true
         pipVideo.playsInline = true
         pipVideo.style.position = 'fixed'
@@ -783,6 +816,42 @@ export const useRtcStore = defineStore('rtc', () => {
     }
   }
 
+  async function switchCamera(deviceId: string) {
+    if (!isVideoOn.value) return
+    try {
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: { deviceId: { exact: deviceId } },
+      })
+      const newVideoTrack = newStream.getVideoTracks()[0]
+      if (!newVideoTrack) return
+
+      // Remove old video track
+      localStream.value?.getVideoTracks().forEach((t) => {
+        t.stop()
+        peerManager?.removeTrack(t, localStream.value!)
+        localStream.value?.removeTrack(t)
+      })
+
+      // Add new video track
+      if (localStream.value) {
+        localStream.value.addTrack(newVideoTrack)
+        peerManager?.addTrack(newVideoTrack, localStream.value)
+      }
+    } catch (e: any) {
+      const toastStore = useToastStore()
+      toastStore.error('Failed to switch camera: ' + (e.message || 'Unknown error'))
+    }
+  }
+
+  let pipAudioEnabled = false
+
+  function setPipAudio(enabled: boolean) {
+    pipAudioEnabled = enabled
+    if (pipVideo) {
+      pipVideo.muted = !enabled
+    }
+  }
+
   async function shareScreen(quality: ScreenShareQuality, electronSourceId?: string) {
     try {
       const stream = await startScreenShare(quality, electronSourceId)
@@ -844,6 +913,8 @@ export const useRtcStore = defineStore('rtc', () => {
     audioDetected,
     noMicrophoneDetected,
     microphonePermissionDenied,
+    currentAudioLevel,
+    isSpeaking,
     connectionHealth,
     joinRoom,
     leaveRoom,
@@ -851,6 +922,8 @@ export const useRtcStore = defineStore('rtc', () => {
     endCall,
     toggleMute,
     toggleVideo,
+    switchCamera,
+    setPipAudio,
     shareScreen,
     stopScreenShare,
     enterPiP,

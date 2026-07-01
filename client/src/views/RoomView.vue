@@ -280,6 +280,8 @@
               :user="auth.user"
               :is-muted="rtc.isMuted"
               :is-local="true"
+              :is-speaking="rtc.isSpeaking"
+              :audio-level="rtc.currentAudioLevel"
               label="Ty"
             />
             <VideoTile

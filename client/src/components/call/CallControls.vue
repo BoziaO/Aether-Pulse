@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
+  import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
   import {
     Mic,
     MicOff,
@@ -10,10 +10,14 @@
     PhoneOff,
     Headphones,
     PictureInPicture2,
+    Camera,
+    Volume2,
+    VolumeX,
   } from 'lucide-vue-next'
 
   import { useRtcStore } from '@/stores/rtc.store'
   import { useSettingsStore } from '@/stores/settings.store'
+  import SpeakingIndicator from './SpeakingIndicator.vue'
   import type { ScreenShareQuality } from '@/services/rtc/screen-share'
   import ScreenPicker from './picker/ScreenPicker.vue'
   import type { DesktopSource } from './picker/ScreenPicker.vue'
@@ -25,6 +29,13 @@
   const pickerQuality = ref<ScreenShareQuality | null>(null)
   const pickerSources = ref<DesktopSource[]>([])
 
+  const showCameraMenu = ref(false)
+  const availableCameras = ref<MediaDeviceInfo[]>([])
+  const selectedCameraId = ref<string | null>(null)
+
+  const showAudioMenu = ref(false)
+  const pipAudioEnabled = ref(false)
+
   const isElectron = !!(window as any).electronAPI?.getDesktopSources
 
   const isAndroid =
@@ -32,11 +43,27 @@
 
   const pipSupported = computed(() => !isAndroid && !!(document as any).pictureInPictureEnabled)
 
-  const shareOptions: { quality: ScreenShareQuality; label: string }[] = [
-    { quality: 'gaming', label: '🎮 Gaming (1080p 60fps)' },
-    { quality: 'movie', label: '🎬 Movie (1080p 30fps)' },
-    { quality: 'standard', label: '🖥️ Standard (720p 30fps)' },
+  const shareOptions: { quality: ScreenShareQuality; label: string; icon: string }[] = [
+    { quality: 'gaming', label: 'Gaming', icon: '🎮' },
+    { quality: 'movie', label: 'Movie', icon: '🎬' },
+    { quality: 'standard', label: 'Standard', icon: '🖥️' },
   ]
+
+  async function loadCameras() {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices()
+      availableCameras.value = devices.filter((d) => d.kind === 'videoinput')
+      if (availableCameras.value.length > 0 && !selectedCameraId.value) {
+        selectedCameraId.value = availableCameras.value[0].deviceId
+      }
+    } catch (e) {
+      console.warn('Failed to enumerate cameras:', e)
+    }
+  }
+
+  onMounted(() => {
+    loadCameras()
+  })
 
   async function handleShare(quality: ScreenShareQuality) {
     showShareMenu.value = false
@@ -74,6 +101,40 @@
     if (rtc.isPiP) rtc.exitPiP()
     else await rtc.enterPiP()
   }
+
+  function toggleCameraMenu() {
+    showCameraMenu.value = !showCameraMenu.value
+    if (showCameraMenu.value) {
+      loadCameras()
+    }
+  }
+
+  async function selectCamera(deviceId: string) {
+    selectedCameraId.value = deviceId
+    showCameraMenu.value = false
+    await rtc.switchCamera(deviceId)
+  }
+
+  function togglePipAudio() {
+    pipAudioEnabled.value = !pipAudioEnabled.value
+    rtc.setPipAudio(pipAudioEnabled.value)
+  }
+
+  function handleClickOutside(e: MouseEvent) {
+    const target = e.target as HTMLElement
+    if (!target.closest('.camera-wrap') && !target.closest('.audio-wrap')) {
+      showCameraMenu.value = false
+      showAudioMenu.value = false
+    }
+  }
+
+  onMounted(() => {
+    document.addEventListener('click', handleClickOutside)
+  })
+
+  onBeforeUnmount(() => {
+    document.removeEventListener('click', handleClickOutside)
+  })
 </script>
 
 <template>
@@ -86,24 +147,57 @@
       <!-- Mute -->
       <button
         class="ctrl-btn"
-        :class="{ active: !rtc.isMuted, danger: rtc.isMuted }"
+        :class="{
+          active: !rtc.isMuted && !rtc.isSpeaking,
+          danger: rtc.isMuted,
+          speaking: rtc.isSpeaking && !rtc.isMuted,
+        }"
         :title="rtc.isMuted ? 'Unmute' : 'Mute'"
         @click="rtc.toggleMute()"
       >
-        <MicOff v-if="rtc.isMuted" :size="20" />
-        <Mic v-else :size="20" />
+        <SpeakingIndicator
+          v-if="rtc.isSpeaking && !rtc.isMuted"
+          :is-speaking="true"
+          :audio-level="rtc.currentAudioLevel"
+          size="md"
+        />
+        <template v-else>
+          <MicOff v-if="rtc.isMuted" :size="20" />
+          <Mic v-else :size="20" />
+        </template>
       </button>
 
-      <!-- Camera -->
-      <button
-        class="ctrl-btn"
-        :class="{ active: rtc.isVideoOn }"
-        title="Toggle camera"
-        @click="rtc.toggleVideo()"
-      >
-        <VideoOff v-if="!rtc.isVideoOn" :size="20" />
-        <Video v-else :size="20" />
-      </button>
+      <!-- Camera with selection -->
+      <div class="camera-wrap">
+        <button
+          class="ctrl-btn"
+          :class="{ active: rtc.isVideoOn }"
+          title="Toggle camera"
+          @click="rtc.toggleVideo()"
+        >
+          <VideoOff v-if="!rtc.isVideoOn" :size="20" />
+          <Video v-else :size="20" />
+        </button>
+        <button
+          v-if="availableCameras.length > 1 && rtc.isVideoOn"
+          class="ctrl-btn-small"
+          title="Select camera"
+          @click.stop="toggleCameraMenu"
+        >
+          <Camera :size="14" />
+        </button>
+        <div v-if="showCameraMenu && availableCameras.length > 0" class="dropdown-menu camera-menu">
+          <button
+            v-for="camera in availableCameras"
+            :key="camera.deviceId"
+            class="dropdown-item"
+            :class="{ selected: camera.deviceId === selectedCameraId }"
+            @click.stop="selectCamera(camera.deviceId)"
+          >
+            {{ camera.label || `Camera ${availableCameras.indexOf(camera) + 1}` }}
+          </button>
+        </div>
+      </div>
 
       <ScreenPicker
         v-if="showPicker && pickerSources.length"
@@ -125,14 +219,16 @@
         <button v-else class="ctrl-btn danger" title="Stop sharing" @click="rtc.stopScreenShare()">
           <MonitorOff :size="20" />
         </button>
-        <div v-if="showShareMenu" class="share-menu">
+        <div v-if="showShareMenu" class="dropdown-menu share-menu">
+          <div class="menu-header">Screen Share Quality</div>
           <button
             v-for="opt in shareOptions"
             :key="opt.quality"
-            class="share-option"
+            class="dropdown-item"
             @click="handleShare(opt.quality)"
           >
-            {{ opt.label }}
+            <span class="item-icon">{{ opt.icon }}</span>
+            <span class="item-label">{{ opt.label }}</span>
           </button>
         </div>
       </div>
@@ -160,15 +256,26 @@
       </button>
 
       <!-- Picture-in-Picture (browser/Electron only) -->
-      <button
-        v-if="pipSupported"
-        class="ctrl-btn"
-        :class="{ active: rtc.isPiP }"
-        title="Picture in Picture"
-        @click="togglePiP"
-      >
-        <PictureInPicture2 :size="20" />
-      </button>
+      <div v-if="pipSupported" class="audio-wrap">
+        <button
+          class="ctrl-btn"
+          :class="{ active: rtc.isPiP }"
+          title="Picture in Picture"
+          @click="togglePiP"
+        >
+          <PictureInPicture2 :size="20" />
+        </button>
+        <button
+          v-if="rtc.isPiP"
+          class="ctrl-btn-small"
+          :class="{ active: pipAudioEnabled }"
+          title="Toggle stream audio"
+          @click.stop="togglePipAudio"
+        >
+          <VolumeX v-if="!pipAudioEnabled" :size="14" />
+          <Volume2 v-else :size="14" />
+        </button>
+      </div>
 
       <!-- End call -->
       <button class="ctrl-btn end-call" title="End call" @click="rtc.endCall()">
@@ -242,6 +349,17 @@
   background: rgba(239, 68, 68, 0.15);
   color: var(--danger);
 }
+.ctrl-btn.speaking {
+  background: rgba(139, 92, 246, 0.2);
+  color: var(--accent-violet);
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
+  animation: speaking-pulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes speaking-pulse {
+  from { box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2); }
+  to { box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.45), 0 0 12px rgba(139, 92, 246, 0.2); }
+}
 .ctrl-btn.end-call {
   background: var(--danger);
   color: white;
@@ -249,10 +367,42 @@
 .ctrl-btn.end-call:hover {
   background: #dc2626;
 }
+
+/* Small action buttons */
+.ctrl-btn-small {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.4);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  transition: all 0.15s;
+}
+
+.ctrl-btn-small:hover {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.ctrl-btn-small.active {
+  background: var(--accent-violet);
+}
+
+/* Wrappers for relative positioning */
+.camera-wrap,
+.audio-wrap,
 .share-wrap {
   position: relative;
 }
-.share-menu {
+
+/* Dropdown menus */
+.dropdown-menu {
   position: absolute;
   bottom: calc(100% + 8px);
   left: 50%;
@@ -261,24 +411,55 @@
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 6px;
-  min-width: 200px;
+  min-width: 180px;
   z-index: 100;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
-.share-option {
+
+.menu-header {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  padding: 6px 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dropdown-item {
   width: 100%;
   text-align: left;
   background: transparent;
   border: none;
   color: var(--text-secondary);
   font-size: 13px;
-  padding: 8px 12px;
+  padding: 8px 10px;
   border-radius: 6px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
-.share-option:hover {
+
+.dropdown-item:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
+}
+
+.dropdown-item.selected {
+  background: rgba(139, 92, 246, 0.15);
+  color: var(--accent-violet);
+}
+
+.item-icon {
+  font-size: 14px;
+}
+
+.item-label {
+  flex: 1;
+}
+
+.share-menu {
+  min-width: 200px;
 }
 
 @media (max-width: 767px) {
@@ -295,6 +476,12 @@
   }
   .controls-center {
     gap: 6px;
+  }
+  .dropdown-menu {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
   }
 }
 </style>
