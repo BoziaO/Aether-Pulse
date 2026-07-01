@@ -1,6 +1,6 @@
 {
   "buildCommand": "pnpm --filter nicori-client build",
-  "outputDirectory": "dist",
+  "outputDirectory": "client/dist",
   "installCommand": "pnpm install",
   "framework": "vite",
   "rewrites": [
