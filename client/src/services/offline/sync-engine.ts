@@ -90,11 +90,11 @@ export function initSync() {
   }, 30000)
 }
 
-export function setOnSyncComplete(handler: () => void) {
+function setOnSyncComplete(handler: () => void) {
   onSyncComplete = handler
 }
 
-export function getPendingCount(): Promise<number> {
+function getPendingCount(): Promise<number> {
   return Promise.all([
     offlineDB.getPendingMessages(),
     offlineDB.getPendingDms(),
