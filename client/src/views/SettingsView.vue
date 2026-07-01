@@ -1467,7 +1467,8 @@
   }
   .nav-item {
     white-space: nowrap !important;
-    padding: 6px 12px !important;
+    padding: 10px 14px !important;
+    min-height: 44px;
     font-size: 13px !important;
     border-radius: 20px !important;
   }

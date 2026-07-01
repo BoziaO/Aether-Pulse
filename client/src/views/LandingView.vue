@@ -1616,33 +1616,62 @@
   }
 
   .hero-visual {
-    height: 260px;
+    height: 200px;
   }
 
   .hero-mascot {
-    width: 110px;
-    height: 110px;
+    width: 90px;
+    height: 90px;
   }
 
   .hero-ring--outer {
-    width: 200px;
-    height: 200px;
+    width: 160px;
+    height: 160px;
   }
 
   .hero-ring--inner {
-    width: 150px;
-    height: 150px;
+    width: 120px;
+    height: 120px;
   }
 
   .hero-glow {
-    width: 200px;
-    height: 200px;
+    width: 160px;
+    height: 160px;
+  }
+
+  .showcase-card {
+    padding: 20px;
+  }
+
+  .showcase-stat {
+    font-size: 32px;
+  }
+
+  .audience-card {
+    padding: 20px;
+  }
+
+  .download-card {
+    padding: 24px 20px;
+  }
+
+  .container {
+    padding: 0 16px;
   }
 }
 
 @media (max-width: 480px) {
   .hero {
-    padding: 80px 16px 40px;
+    padding: 72px 16px 32px;
+  }
+
+  .hero-title {
+    font-size: clamp(32px, 9vw, 48px);
+  }
+
+  .hero-desc {
+    font-size: 15px;
+    margin-bottom: 24px;
   }
 
   .hero-actions {
@@ -1671,15 +1700,23 @@
   }
 
   .section {
-    padding: 60px 0;
+    padding: 48px 0;
   }
 
   .section-title {
-    font-size: clamp(24px, 6vw, 36px);
+    font-size: clamp(22px, 7vw, 36px);
   }
 
   .cta {
-    padding: 80px 16px calc(80px + 68px + env(safe-area-inset-bottom, 0px));
+    padding: 60px 16px calc(60px + 68px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .cta-desc {
+    font-size: 15px;
+  }
+
+  .footer {
+    padding-bottom: calc(28px + 68px + env(safe-area-inset-bottom, 0px));
   }
 }
 </style>

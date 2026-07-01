@@ -235,8 +235,13 @@
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 4px;
-  border-radius: 6px;
+  padding: 12px;
+  min-width: 48px;
+  min-height: 48px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .close-btn:hover {
@@ -420,8 +425,13 @@
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 8px;
+  padding: 10px;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .footer-btn:hover {

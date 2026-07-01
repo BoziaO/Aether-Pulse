@@ -418,10 +418,13 @@
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 8px;
+  padding: 12px;
+  min-width: 48px;
+  min-height: 48px;
   border-radius: 8px;
   display: flex;
   align-items: center;
+  justify-content: center;
   transition: all 0.15s;
 }
 
@@ -501,7 +504,8 @@
   border: 1px solid var(--border);
   color: var(--text-secondary);
   cursor: pointer;
-  padding: 6px 12px;
+  padding: 10px 14px;
+  min-height: 44px;
   border-radius: 8px;
   display: inline-flex;
   align-items: center;
@@ -736,7 +740,8 @@
   .room-tab-btn {
     display: inline-flex !important;
     font-size: 12px;
-    padding: 6px 14px;
+    padding: 10px 16px;
+    min-height: 44px;
   }
 
   .desktop-only {

@@ -327,7 +327,9 @@
 }
 
 .dm-back {
-  padding: 6px;
+  padding: 12px;
+  min-width: 48px;
+  min-height: 48px;
   border-radius: 8px;
 }
 

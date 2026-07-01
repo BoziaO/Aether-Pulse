@@ -177,9 +177,9 @@
         <img src="/icons/logo.png" alt="Nicori" class="mobile-logo" />
         <span class="mobile-title">Nicori</span>
       </div>
-      <div class="mobile-user-avatar" style="cursor: pointer" @click="$router.push('/app/profile')">
+      <button class="mobile-user-avatar" style="cursor: pointer; background: none; border: none; padding: 8px; border-radius: 8px; display: flex; align-items: center;" @click="$router.push('/app/profile')">
         <UserAvatar :user="auth.user" :size="28" />
-      </div>
+      </button>
     </header>
 
     <!-- Mobile Sidebar Drawer Overlay -->
@@ -295,10 +295,13 @@
   border: none;
   color: var(--text-secondary);
   cursor: pointer;
-  padding: 6px;
-  border-radius: 6px;
+  padding: 12px;
+  min-width: 48px;
+  min-height: 48px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
+  justify-content: center;
 }
 
 .hamburger-btn:hover {
