@@ -9,10 +9,10 @@
 </p>
 
 <p align="center">
-  <a href="https://nicari-beta.vercel.app">🌐 Wypróbuj online</a> ·
-  <a href="https://github.com/BoziaO/Nicari/releases">💻 Pobierz</a> ·
-  <a href="https://github.com/BoziaO/Nicari/issues">🐛 Zgłoś problem</a> ·
-  <a href="https://github.com/BoziaO/Nicari/tree/main/.github/Assets">📷 Zrzuty ekranu</a>
+  <a href="https://nicori-beta.vercel.app">🌐 Wypróbuj online</a> ·
+  <a href="https://github.com/BoziaO/Nicori/releases">💻 Pobierz</a> ·
+  <a href="https://github.com/BoziaO/Nicori/issues">🐛 Zgłoś problem</a> ·
+  <a href="https://github.com/BoziaO/Nicori/tree/main/.github/Assets">📷 Zrzuty ekranu</a>
 </p>
 
 ---
