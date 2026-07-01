@@ -6,6 +6,7 @@ import { createRateLimiter, cleanupRateLimiter } from './rate-limiter'
 import { cleanupUserDedup } from './dedup'
 import { roomUsers, callUsers, removeAllSocketRooms } from './state'
 import { startHeartbeat, untrackHeartbeat } from './heartbeat'
+import { StatusService } from '../services/status.service'
 import { registerRoomHandlers } from './handlers/room'
 import { registerCallHandlers } from './handlers/call'
 import { registerChatHandlers } from './handlers/chat'
@@ -50,6 +51,8 @@ function registerDisconnectHandler(
   authedUserId: string
 ) {
   socket.on('disconnect', async () => {
+    await StatusService.setOffline(authedUserId)
+
     const socketId = socket.id
     const roomIds = removeAllSocketRooms(socketId)
 

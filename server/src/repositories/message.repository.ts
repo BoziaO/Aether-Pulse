@@ -1,6 +1,12 @@
 import mongoose from 'mongoose'
 import { Message, MessageReaction } from '@workspace/db'
 
+function validateObjectId(id: string): void {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new Error('Invalid ID format')
+  }
+}
+
 export type LeanMessage = {
   _id: mongoose.Types.ObjectId
   roomId: mongoose.Types.ObjectId
@@ -53,6 +59,7 @@ type MessageUpdateData = {
 
 export const MessageRepository = {
   async findById(id: string): Promise<LeanMessage | null> {
+    validateObjectId(id)
     return Message.findById(id).lean() as Promise<LeanMessage | null>
   },
 
@@ -66,6 +73,7 @@ export const MessageRepository = {
   },
 
   async findByIdAndUpdate(id: string, data: MessageUpdateData): Promise<void> {
+    validateObjectId(id)
     await Message.findByIdAndUpdate(id, data)
   },
 
@@ -74,12 +82,14 @@ export const MessageRepository = {
     before: string | null,
     limit: number
   ): Promise<LeanMessage[]> {
+    validateObjectId(roomId)
     const query: Record<string, unknown> = { roomId }
     if (before) query._id = { $lt: before }
     return Message.find(query).sort({ createdAt: -1 }).limit(limit).lean() as Promise<LeanMessage[]>
   },
 
   async searchMessages(roomId: string, query: string, limit = 25): Promise<LeanMessage[]> {
+    validateObjectId(roomId)
     return Message.find({
       roomId,
       isDeleted: false,
@@ -92,6 +102,7 @@ export const MessageRepository = {
   },
 
   async softDelete(id: string): Promise<void> {
+    validateObjectId(id)
     await Message.findByIdAndUpdate(id, { isDeleted: true, content: '' })
   },
 
@@ -99,6 +110,7 @@ export const MessageRepository = {
     const map = new Map<string, ReactionSummary[]>()
     if (messageIds.length === 0) return map
 
+    messageIds.forEach(validateObjectId)
     const rows = await MessageReaction.find({ messageId: { $in: messageIds } }).lean() as LeanReaction[]
 
     for (const row of rows) {
@@ -117,6 +129,8 @@ export const MessageRepository = {
   },
 
   async addReaction(messageId: string, userId: string, emoji: string): Promise<void> {
+    validateObjectId(messageId)
+    validateObjectId(userId)
     await MessageReaction.create({ messageId, userId, emoji })
   },
 
@@ -129,18 +143,23 @@ export const MessageRepository = {
     userId: string,
     emoji: string
   ): Promise<LeanReaction | null> {
+    validateObjectId(messageId)
+    validateObjectId(userId)
     return MessageReaction.findOne({ messageId, userId, emoji }).lean() as Promise<LeanReaction | null>
   },
 
   async findByIds(ids: string[]): Promise<LeanMessage[]> {
+    ids.forEach(validateObjectId)
     return Message.find({ _id: { $in: ids } }).lean() as Promise<LeanMessage[]>
   },
 
   async countByUser(userId: string): Promise<number> {
+    validateObjectId(userId)
     return Message.countDocuments({ userId, isDeleted: false })
   },
 
   async getTopReactions(userId: string, limit = 5) {
+    validateObjectId(userId)
     const userObjectId = new mongoose.Types.ObjectId(userId)
     return MessageReaction.aggregate([
       { $match: { userId: userObjectId } },
@@ -151,6 +170,7 @@ export const MessageRepository = {
   },
 
   async getActivityByDay(userId: string, days = 7) {
+    validateObjectId(userId)
     const userObjectId = new mongoose.Types.ObjectId(userId)
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
     return Message.aggregate([

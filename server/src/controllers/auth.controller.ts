@@ -3,6 +3,7 @@ import { RegisterBody, LoginBody, RefreshBody } from '@workspace/api-zod'
 
 import { AuthService } from '../services/auth.service'
 import { asyncHandler } from '../utils/async-handler'
+import { type AuthenticatedRequest } from '../middleware/auth'
 
 export const AuthController = {
   register: asyncHandler(async (req: Request, res: Response) => {
@@ -26,19 +27,19 @@ export const AuthController = {
   }),
 
   logout: asyncHandler(async (req: Request, res: Response) => {
-    const userId = (req as any).user?.userId
+    const userId = (req as AuthenticatedRequest).user?.userId
     await AuthService.logout(userId)
     res.json({ ok: true })
   }),
 
   me: asyncHandler(async (req: Request, res: Response) => {
-    const userId = (req as any).user?.userId
+    const userId = (req as AuthenticatedRequest).user?.userId
     const result = await AuthService.getMe(userId)
     res.json(result)
   }),
 
   changePassword: asyncHandler(async (req: Request, res: Response) => {
-    const userId = (req as any).user?.userId
+    const userId = (req as AuthenticatedRequest).user?.userId
     if (!userId) {
       res.status(401).json({ error: 'Not authenticated' })
       return

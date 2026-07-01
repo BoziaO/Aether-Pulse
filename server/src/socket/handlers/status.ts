@@ -3,11 +3,16 @@ import type { Socket } from 'socket.io'
 import { UserRepository } from '../../repositories/user.repository'
 import { serializeUser } from '../../utils/serialize-user'
 import { logger } from '../../utils/logger'
+import { isValidObjectId } from '../validators'
 
 export function registerStatusHandlers(socket: Socket, io: any, authedUserId: string) {
   socket.on('user-status', async ({ userId, status }) => {
     if (!userId || userId !== authedUserId) {
       socket.emit('error', { message: 'Unauthorized' })
+      return
+    }
+    if (!isValidObjectId(userId)) {
+      socket.emit('error', { message: 'Invalid ID format', code: 'INVALID_ID' })
       return
     }
 
@@ -25,6 +30,10 @@ export function registerStatusHandlers(socket: Socket, io: any, authedUserId: st
   socket.on('set-rich-presence', async ({ userId, richPresence }) => {
     if (!userId || userId !== authedUserId) {
       socket.emit('error', { message: 'Unauthorized' })
+      return
+    }
+    if (!isValidObjectId(userId)) {
+      socket.emit('error', { message: 'Invalid ID format', code: 'INVALID_ID' })
       return
     }
 

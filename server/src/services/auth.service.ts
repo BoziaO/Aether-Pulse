@@ -5,6 +5,7 @@ import nodemailer from 'nodemailer'
 import { UserRepository } from '../repositories/user.repository'
 import { generateTokens, verifyRefreshToken } from '../middleware/auth'
 import { serializeUser } from '../utils/serialize-user'
+import { StatusService } from './status.service'
 import {
   ConflictError,
   UnauthorizedError,
@@ -13,6 +14,7 @@ import {
 } from '../errors/AppError'
 
 const resetTokenExpiresIn = 60 * 60 * 1000
+const MIN_PASSWORD_LENGTH = 8
 
 const transporter =
   process.env.SMTP_HOST
@@ -65,7 +67,7 @@ export const AuthService = {
     const valid = await bcrypt.compare(password, user.passwordHash)
     if (!valid) throw new UnauthorizedError('Invalid credentials')
 
-    await UserRepository.updateStatus(user._id.toString(), 'online')
+    await StatusService.setOnline(user._id.toString())
 
     const tokens = generateTokens(user._id.toString(), user.username)
     return {
@@ -76,7 +78,7 @@ export const AuthService = {
 
   async logout(userId: string | undefined) {
     if (userId) {
-      await UserRepository.updateStatus(userId, 'offline')
+      await StatusService.setOffline(userId)
     }
   },
 
@@ -88,8 +90,8 @@ export const AuthService = {
   },
 
   async changePassword(userId: string, currentPassword: string, newPassword: string) {
-    if (newPassword.length < 8) {
-      throw new ValidationError('New password must be at least 8 characters')
+    if (newPassword.length < MIN_PASSWORD_LENGTH) {
+      throw new ValidationError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters`)
     }
 
     const user = await UserRepository.findById(userId)
@@ -99,7 +101,7 @@ export const AuthService = {
     if (!valid) throw new UnauthorizedError('Current password is incorrect')
 
     const passwordHash = await bcrypt.hash(newPassword, 10)
-    await UserRepository.findByIdAndUpdate(userId, { passwordHash } as any)
+    await UserRepository.updatePasswordHash(userId, passwordHash)
   },
 
   async refresh(refreshToken: string) {
@@ -123,10 +125,7 @@ export const AuthService = {
     const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex')
     const expires = new Date(Date.now() + resetTokenExpiresIn)
 
-    await UserRepository.findByIdAndUpdate(user._id.toString(), {
-      resetPasswordToken: resetTokenHash,
-      resetPasswordExpires: expires,
-    } as any)
+    await UserRepository.updateResetToken(user._id.toString(), resetTokenHash, expires)
 
     if (transporter) {
       const clientUrl = process.env.CLIENT_URL || 'http://localhost:5174'
@@ -151,8 +150,8 @@ export const AuthService = {
   },
 
   async resetPassword(token: string, newPassword: string) {
-    if (newPassword.length < 6) {
-      throw new ValidationError('Password must be at least 6 characters')
+    if (newPassword.length < MIN_PASSWORD_LENGTH) {
+      throw new ValidationError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters`)
     }
 
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex')
@@ -167,11 +166,8 @@ export const AuthService = {
     }
 
     const passwordHash = await bcrypt.hash(newPassword, 10)
-    await UserRepository.findByIdAndUpdate(user._id.toString(), {
-      passwordHash,
-      resetPasswordToken: null,
-      resetPasswordExpires: null,
-    } as any)
+    await UserRepository.updatePasswordHash(user._id.toString(), passwordHash)
+    await UserRepository.updateResetToken(user._id.toString(), null, null)
 
     return { ok: true }
   },
@@ -197,6 +193,10 @@ export const AuthService = {
   },
 
   async handleOAuthCallback(provider: 'google' | 'github', code: string) {
+    if (!code || typeof code !== 'string' || code.length > 1000) {
+      throw new ValidationError('Invalid authorization code')
+    }
+
     let providerId: string
     let email: string | null = null
     let displayName: string
@@ -271,7 +271,7 @@ export const AuthService = {
     if (!user && email) {
       user = await UserRepository.findOne({ email })
       if (user) {
-        await UserRepository.findByIdAndUpdate(user._id.toString(), { [idField]: providerId } as any)
+        await UserRepository.updateOAuthId(user._id.toString(), idField, providerId)
       }
     }
 
@@ -295,7 +295,7 @@ export const AuthService = {
       })
     }
 
-    await UserRepository.updateStatus(user._id.toString(), 'online')
+    await StatusService.setOnline(user._id.toString())
 
     const tokens = generateTokens(user._id.toString(), user.username)
     return {

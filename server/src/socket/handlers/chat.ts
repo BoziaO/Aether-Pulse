@@ -5,11 +5,16 @@ import { buildMessagePayload, broadcastMessage } from '../../utils/message-helpe
 import { isRoomMember } from '../../utils/room-auth'
 import { isDuplicateMessage } from '../dedup'
 import { logger } from '../../utils/logger'
+import { isValidObjectId } from '../validators'
 
 export function registerChatHandlers(socket: Socket, io: any, authedUserId: string) {
   socket.on('chat-message', async ({ roomId, userId, content, replyToId }) => {
     if (!roomId || !userId) {
       socket.emit('error', { message: 'Invalid room or user ID' })
+      return
+    }
+    if (!isValidObjectId(roomId) || !isValidObjectId(userId)) {
+      socket.emit('error', { message: 'Invalid ID format', code: 'INVALID_ID' })
       return
     }
     if (userId !== authedUserId) {
@@ -59,6 +64,10 @@ export function registerChatHandlers(socket: Socket, io: any, authedUserId: stri
   socket.on('user-typing', async ({ roomId, userId, isTyping }) => {
     if (!roomId || !userId) {
       socket.emit('error', { message: 'Invalid room or user ID' })
+      return
+    }
+    if (!isValidObjectId(roomId) || !isValidObjectId(userId)) {
+      socket.emit('error', { message: 'Invalid ID format', code: 'INVALID_ID' })
       return
     }
     if (userId !== authedUserId) {

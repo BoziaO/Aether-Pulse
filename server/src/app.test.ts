@@ -6,6 +6,7 @@ vi.stubEnv('JWT_SECRET', 'test-secret-key-for-testing-only')
 vi.stubEnv('SESSION_SECRET', 'test-session-secret-for-testing-123456789012')
 vi.stubEnv('DATABASE_URL', 'mongodb://localhost:27017/test')
 vi.stubEnv('PORT', '3000')
+vi.stubEnv('SERVER_URL', 'http://localhost:3000')
 
 // Mock the db module to prevent connection attempts
 vi.mock('@workspace/db', () => ({

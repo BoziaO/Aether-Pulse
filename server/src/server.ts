@@ -7,8 +7,13 @@ import { registerSocketHandlers } from './socket'
 import { logger } from './utils/logger'
 import { env } from './config/env'
 
-await connectDb()
-logger.info('Connected to MongoDB successfully')
+try {
+  await connectDb()
+  logger.info('Connected to MongoDB successfully')
+} catch (error) {
+  logger.error({ err: error }, 'Failed to connect to MongoDB')
+  process.exit(1)
+}
 
 const httpServer = createServer(app)
 

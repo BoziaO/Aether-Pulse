@@ -9,12 +9,17 @@ import {
   untrackSocketRoom,
 } from '../state'
 import { logger } from '../../utils/logger'
+import { isValidObjectId } from '../validators'
 
 export function registerRoomHandlers(socket: Socket, authedUserId: string) {
   socket.on('join-room', async ({ roomId, userId }) => {
     try {
       if (!roomId || !userId) {
         socket.emit('error', { message: 'Invalid room or user ID' })
+        return
+      }
+      if (!isValidObjectId(roomId) || !isValidObjectId(userId)) {
+        socket.emit('error', { message: 'Invalid ID format', code: 'INVALID_ID' })
         return
       }
       if (userId !== authedUserId) {
@@ -61,6 +66,10 @@ export function registerRoomHandlers(socket: Socket, authedUserId: string) {
     try {
       if (!roomId || !userId) {
         socket.emit('error', { message: 'Invalid room or user ID' })
+        return
+      }
+      if (!isValidObjectId(roomId) || !isValidObjectId(userId)) {
+        socket.emit('error', { message: 'Invalid ID format', code: 'INVALID_ID' })
         return
       }
       if (userId !== authedUserId) {

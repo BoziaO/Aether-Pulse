@@ -1,6 +1,12 @@
 import mongoose from 'mongoose'
 import { Friendship, User } from '@workspace/db'
 
+function validateObjectId(id: string): void {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new Error('Invalid ID format')
+  }
+}
+
 export type LeanFriendship = {
   _id: mongoose.Types.ObjectId
   requesterId: mongoose.Types.ObjectId
@@ -18,6 +24,8 @@ type FriendshipCreateData = {
 
 export const FriendRepository = {
   async findFriendship(userId: string, otherId: string): Promise<LeanFriendship | null> {
+    validateObjectId(userId)
+    validateObjectId(otherId)
     return Friendship.findOne({
       $or: [
         { requesterId: userId, addresseeId: otherId },
@@ -27,6 +35,7 @@ export const FriendRepository = {
   },
 
   async findAllForUser(userId: string): Promise<LeanFriendship[]> {
+    validateObjectId(userId)
     return Friendship.find({
       $or: [{ requesterId: userId }, { addresseeId: userId }],
     }).lean() as Promise<LeanFriendship[]>
@@ -46,6 +55,7 @@ export const FriendRepository = {
   },
 
   async countAccepted(userId: string): Promise<number> {
+    validateObjectId(userId)
     return Friendship.countDocuments({
       status: 'accepted',
       $or: [{ requesterId: userId }, { addresseeId: userId }],
@@ -53,6 +63,8 @@ export const FriendRepository = {
   },
 
   async areFriends(userId: string, otherId: string): Promise<boolean> {
+    validateObjectId(userId)
+    validateObjectId(otherId)
     const row = await Friendship.findOne({
       status: 'accepted',
       $or: [
@@ -64,6 +76,7 @@ export const FriendRepository = {
   },
 
   async getSuggestions(excludeIds: string[], limit = 6) {
+    excludeIds.forEach(validateObjectId)
     const objectIds = excludeIds.map((id) => new mongoose.Types.ObjectId(id))
     return User.aggregate([{ $match: { _id: { $nin: objectIds } } }, { $sample: { size: limit } }])
   },

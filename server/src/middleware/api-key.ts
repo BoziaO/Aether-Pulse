@@ -1,7 +1,21 @@
 import type { Request, Response, NextFunction } from 'express'
+import type { AuthenticatedRequest } from './auth'
 
 const API_KEY_HEADER = 'X-API-Key'
 const API_KEY_STORE = new Map<string, { userId: string; createdAt: number; name: string }>()
+
+const MAX_AGE = 30 * 24 * 60 * 60 * 1000 // 30 days
+
+function cleanupApiKeys() {
+  const now = Date.now()
+  for (const [key, value] of API_KEY_STORE.entries()) {
+    if (now - value.createdAt > MAX_AGE) {
+      API_KEY_STORE.delete(key)
+    }
+  }
+}
+
+setInterval(cleanupApiKeys, 24 * 60 * 60 * 1000)
 
 export function generateApiKey(userId: string, name: string): string {
   const key = `nicori_${Array.from(crypto.getRandomValues(new Uint8Array(32)))
@@ -44,7 +58,7 @@ export function apiKeyAuth(req: Request, res: Response, next: NextFunction) {
     return
   }
 
-  ;(req as any).userId = entry.userId
+  ;(req as AuthenticatedRequest).user = { userId: entry.userId, username: entry.name }
   ;(req as any).authMethod = 'api-key'
   next()
 }

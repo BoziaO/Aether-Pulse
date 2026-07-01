@@ -5,20 +5,40 @@ const uploadsDir = path.resolve(process.cwd(), 'uploads')
 fs.mkdirSync(uploadsDir, { recursive: true })
 
 const ALLOWED_MIMES: Record<string, string> = {
+  // Images
   'image/png': 'png',
   'image/jpeg': 'jpg',
   'image/jpg': 'jpg',
   'image/webp': 'webp',
   'image/gif': 'gif',
+  'image/svg+xml': 'svg',
+  'image/apng': 'apng',
+  'image/avif': 'avif',
+
+  // Documents
   'application/pdf': 'pdf',
   'text/plain': 'txt',
   'application/zip': 'zip',
-  'video/mp4': 'mp4',
+  'application/x-rar-compressed': 'rar',
+  'application/x-7z-compressed': '7z',
+
+  // Audio
   'audio/mpeg': 'mp3',
   'audio/wav': 'wav',
+  'audio/ogg': 'ogg',
+  'audio/aac': 'aac',
+  'audio/webm': 'webm',
+  'audio/flac': 'flac',
+
+  // Video
+  'video/mp4': 'mp4',
+  'video/webm': 'webm',
+  'video/ogg': 'ogv',
+  'video/quicktime': 'mov',
 }
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024
+const MAX_DATA_URL_LENGTH = 15 * 1024 * 1024 // 15MB (accounts for base64 overhead)
 
 export function parseFileDataUrl(
   dataUrl: string
@@ -51,6 +71,7 @@ export function saveUploadedFile(
   mime: string
 } | null {
   if (typeof dataUrl !== 'string') return null
+  if (dataUrl.length > MAX_DATA_URL_LENGTH) return null
 
   const parsed = parseFileDataUrl(dataUrl)
   if (!parsed) return null
@@ -76,4 +97,4 @@ export function saveUploadedFile(
   }
 }
 
-export { MAX_FILE_SIZE, ALLOWED_MIMES }
+export { MAX_FILE_SIZE, MAX_DATA_URL_LENGTH, ALLOWED_MIMES }

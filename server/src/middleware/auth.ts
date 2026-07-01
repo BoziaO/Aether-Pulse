@@ -2,6 +2,14 @@ import { type Request, type Response, type NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 import 'express-session'
 
+export interface AuthenticatedRequest extends Request {
+  user?: JwtPayload
+}
+
+export function isAuthenticated(req: Request): req is AuthenticatedRequest {
+  return (req as AuthenticatedRequest).user !== undefined
+}
+
 const jwtSecret = process.env.JWT_SECRET
 const jwtExpiresIn = process.env.JWT_EXPIRES_IN || '1d'
 const refreshExpiresIn = process.env.JWT_REFRESH_EXPIRES_IN || '7d'
@@ -93,7 +101,7 @@ export function jwtMiddleware(req: Request, res: Response, next: NextFunction): 
   }
 
   // Attach user to request
-  (req as any).user = payload
+  ;(req as AuthenticatedRequest).user = payload
   next()
 }
 
@@ -108,15 +116,15 @@ export function optionalJwtMiddleware(req: Request, _res: Response, next: NextFu
   if (token) {
     const payload = verifyToken(token)
     if (payload) {
-      (req as any).user = payload
+      ;(req as AuthenticatedRequest).user = payload
     }
   }
 
   next()
 }
 
-export function requireAuth(req: any, res: any): string | null {
-  const userId = req.user?.userId
+export function requireAuth(req: Request, res: Response): string | null {
+  const userId = (req as AuthenticatedRequest).user?.userId
   if (!userId) {
     res.status(401).json({ error: 'Not authenticated' })
     return null

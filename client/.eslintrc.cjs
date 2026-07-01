@@ -51,6 +51,9 @@ module.exports = {
     'no-var': 'error',
     'prefer-const': 'error',
     'prefer-arrow-callback': 'error',
+    'quotes': ['error', 'single', { avoidEscape: true }],
+    'semi': ['error', 'never'],
+    'comma-dangle': ['error', 'always-multiline'],
     'import/order': [
       'error',
       { groups: [['builtin', 'external'], ['internal']], 'newlines-between': 'always' },

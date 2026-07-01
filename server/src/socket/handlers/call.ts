@@ -8,6 +8,7 @@ import { broadcastMessage } from '../../utils/message-helpers'
 import { isRoomMember } from '../../utils/room-auth'
 import { callUsers, addUserSocket, removeSocketFromList } from '../state'
 import { logger } from '../../utils/logger'
+import { isValidObjectId } from '../validators'
 
 function updateRoomActiveState(io: any, roomId: string) {
   const callers = callUsers.get(roomId) ?? []
@@ -50,6 +51,10 @@ export function registerCallHandlers(socket: Socket, io: any, authedUserId: stri
     try {
       if (!roomId || !userId) {
         socket.emit('error', { message: 'Invalid room or user ID' })
+        return
+      }
+      if (!isValidObjectId(roomId) || !isValidObjectId(userId)) {
+        socket.emit('error', { message: 'Invalid ID format', code: 'INVALID_ID' })
         return
       }
       if (userId !== authedUserId) {
@@ -104,6 +109,10 @@ export function registerCallHandlers(socket: Socket, io: any, authedUserId: stri
     try {
       if (!roomId || !userId) {
         socket.emit('error', { message: 'Invalid room or user ID' })
+        return
+      }
+      if (!isValidObjectId(roomId) || !isValidObjectId(userId)) {
+        socket.emit('error', { message: 'Invalid ID format', code: 'INVALID_ID' })
         return
       }
       if (userId !== authedUserId) {

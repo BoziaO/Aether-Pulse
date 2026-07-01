@@ -4,11 +4,16 @@ import { DmRepository } from '../../repositories/dm.repository'
 import { buildDmMessagePayload, isDmParticipant } from '../../utils/dm-helpers'
 import { isDuplicateMessage } from '../dedup'
 import { logger } from '../../utils/logger'
+import { isValidObjectId } from '../validators'
 
 export function registerDmHandlers(socket: Socket, io: any, authedUserId: string) {
   socket.on('join-dm', async ({ conversationId }) => {
     if (!conversationId) {
       socket.emit('error', { message: 'Invalid conversation ID' })
+      return
+    }
+    if (!isValidObjectId(conversationId)) {
+      socket.emit('error', { message: 'Invalid ID format', code: 'INVALID_ID' })
       return
     }
 
@@ -29,12 +34,20 @@ export function registerDmHandlers(socket: Socket, io: any, authedUserId: string
       socket.emit('error', { message: 'Invalid conversation ID' })
       return
     }
+    if (!isValidObjectId(conversationId)) {
+      socket.emit('error', { message: 'Invalid ID format', code: 'INVALID_ID' })
+      return
+    }
     socket.leave(`dm:${conversationId}`)
   })
 
   socket.on('dm-typing', async ({ conversationId, isTyping }) => {
     if (!conversationId) {
       socket.emit('error', { message: 'Invalid conversation ID' })
+      return
+    }
+    if (!isValidObjectId(conversationId)) {
+      socket.emit('error', { message: 'Invalid ID format', code: 'INVALID_ID' })
       return
     }
 
@@ -54,6 +67,10 @@ export function registerDmHandlers(socket: Socket, io: any, authedUserId: string
   socket.on('dm-message', async ({ conversationId, content, replyToId }) => {
     if (!conversationId || !content?.trim()) {
       socket.emit('error', { message: 'Invalid conversation ID or empty content' })
+      return
+    }
+    if (!isValidObjectId(conversationId)) {
+      socket.emit('error', { message: 'Invalid ID format', code: 'INVALID_ID' })
       return
     }
 

@@ -3,11 +3,12 @@ import { UpdateUserBody } from '@workspace/api-zod'
 
 import { UserService } from '../services/user.service'
 import { asyncHandler } from '../utils/async-handler'
+import { type AuthenticatedRequest } from '../middleware/auth'
 
 export const UserController = {
   getProfile: asyncHandler(async (req: Request, res: Response) => {
     const rawId = Array.isArray(req.params.userId) ? req.params.userId[0] : req.params.userId
-    const viewerId = (req as any).user?.userId ?? null
+    const viewerId = (req as AuthenticatedRequest).user?.userId ?? null
     const result = await UserService.getProfile(rawId, viewerId)
     res.json(result)
   }),
@@ -19,7 +20,7 @@ export const UserController = {
   }),
 
   updateProfile: asyncHandler(async (req: Request, res: Response) => {
-    const userId = (req as any).user?.userId
+    const userId = (req as AuthenticatedRequest).user?.userId
     if (!userId) {
       res.status(401).json({ error: 'Not authenticated' })
       return
@@ -44,7 +45,7 @@ export const UserController = {
   }),
 
   uploadAvatar: asyncHandler(async (req: Request, res: Response) => {
-    const sessionUserId = (req as any).user?.userId
+    const sessionUserId = (req as AuthenticatedRequest).user?.userId
     if (!sessionUserId) {
       res.status(401).json({ error: 'Not authenticated' })
       return
@@ -70,7 +71,7 @@ export const UserController = {
   }),
 
   uploadBanner: asyncHandler(async (req: Request, res: Response) => {
-    const sessionUserId = (req as any).user?.userId
+    const sessionUserId = (req as AuthenticatedRequest).user?.userId
     if (!sessionUserId) {
       res.status(401).json({ error: 'Not authenticated' })
       return

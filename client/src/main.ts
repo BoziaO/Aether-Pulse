@@ -24,11 +24,22 @@ app.config.errorHandler = (err, _instance, info) => {
   console.error('Vue error:', err, info)
   try {
     const toast = useToastStore(pinia)
-    toast.error('An unexpected error occurred. Please try again.')
+    const message = err instanceof Error ? err.message : 'An unexpected error occurred'
+    toast.error(message)
   } catch (e) {
     console.error('Failed to show error toast:', e)
   }
 }
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Unhandled rejection:', event.reason)
+  try {
+    const toast = useToastStore(pinia)
+    toast.error('An unexpected error occurred. Please refresh the page.')
+  } catch (e) {
+    console.error('Failed to show error toast:', e)
+  }
+})
 
 useSettingsStore(pinia).applyTheme()
 

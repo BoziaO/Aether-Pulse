@@ -3,6 +3,12 @@ import { DmConversation, DmParticipant, DmMessage } from '@workspace/db'
 
 import { UserRepository } from './user.repository'
 
+function validateObjectId(id: string): void {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new Error('Invalid ID format')
+  }
+}
+
 export type LeanDmConversation = {
   _id: mongoose.Types.ObjectId
   createdAt: Date
@@ -51,6 +57,8 @@ type DmMessageUpdateData = {
 
 export const DmRepository = {
   async findConversationBetween(userA: string, userB: string): Promise<string | null> {
+    validateObjectId(userA)
+    validateObjectId(userB)
     const participationsA = await DmParticipant.find({ userId: userA }).lean() as LeanDmParticipant[]
     const convIdsA = participationsA.map((p) => p.conversationId.toString())
     if (convIdsA.length === 0) return null
@@ -74,19 +82,26 @@ export const DmRepository = {
   },
 
   async addParticipants(conversationId: string, userIds: string[]): Promise<void> {
+    validateObjectId(conversationId)
+    userIds.forEach(validateObjectId)
     await DmParticipant.create(userIds.map((userId) => ({ conversationId, userId })))
   },
 
   async isParticipant(conversationId: string, userId: string): Promise<boolean> {
+    validateObjectId(conversationId)
+    validateObjectId(userId)
     const row = await DmParticipant.findOne({ conversationId, userId }).lean()
     return Boolean(row)
   },
 
   async getParticipants(conversationId: string): Promise<LeanDmParticipant[]> {
+    validateObjectId(conversationId)
     return DmParticipant.find({ conversationId }).lean() as Promise<LeanDmParticipant[]>
   },
 
   async getOtherParticipant(conversationId: string, userId: string) {
+    validateObjectId(conversationId)
+    validateObjectId(userId)
     const participants = await DmParticipant.find({ conversationId }).lean() as LeanDmParticipant[]
     const other = participants.find((p) => p.userId.toString() !== userId)
     if (!other) return null
@@ -98,6 +113,7 @@ export const DmRepository = {
     before: string | null,
     limit: number
   ): Promise<LeanDmMessage[]> {
+    validateObjectId(conversationId)
     const query: Record<string, unknown> = { conversationId }
     if (before) query._id = { $lt: before }
     return DmMessage.find(query).sort({ createdAt: -1 }).limit(limit).lean() as Promise<LeanDmMessage[]>
@@ -109,26 +125,32 @@ export const DmRepository = {
   },
 
   async updateMessage(id: string, data: DmMessageUpdateData): Promise<void> {
+    validateObjectId(id)
     await DmMessage.findByIdAndUpdate(id, data)
   },
 
   async findMessageById(id: string): Promise<LeanDmMessage | null> {
+    validateObjectId(id)
     return DmMessage.findById(id).lean() as Promise<LeanDmMessage | null>
   },
 
   async getLastMessage(conversationId: string): Promise<LeanDmMessage | null> {
+    validateObjectId(conversationId)
     return DmMessage.findOne({ conversationId }).sort({ createdAt: -1 }).lean() as Promise<LeanDmMessage | null>
   },
 
   async updateConversationTimestamp(conversationId: string): Promise<void> {
+    validateObjectId(conversationId)
     await DmConversation.findByIdAndUpdate(conversationId, { updatedAt: new Date() })
   },
 
   async getConversationById(id: string): Promise<LeanDmConversation | null> {
+    validateObjectId(id)
     return DmConversation.findById(id).lean() as Promise<LeanDmConversation | null>
   },
 
   async getUserParticipations(userId: string): Promise<LeanDmParticipant[]> {
+    validateObjectId(userId)
     return DmParticipant.find({ userId }).lean() as Promise<LeanDmParticipant[]>
   },
 }

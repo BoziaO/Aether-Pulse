@@ -19,6 +19,7 @@ const CONNECTION_OPTIONS: mongoose.ConnectOptions = {
 let isConnected = false
 let isConnecting = false
 let connectPromise: Promise<void> | null = null
+let connectionLock = false
 
 function setupConnectionEvents() {
   const conn = mongoose.connection
@@ -56,12 +57,33 @@ export async function connectDb(): Promise<void> {
   if (isConnected) return
   if (isConnecting && connectPromise) return connectPromise
 
+  if (connectionLock) {
+    return connectPromise!
+  }
+
+  connectionLock = true
   isConnecting = true
   setupConnectionEvents()
 
   connectPromise = (async () => {
     try {
       await mongoose.connect(process.env.DATABASE_URL!, CONNECTION_OPTIONS)
+      // Verify connection is fully ready
+      if (mongoose.connection.readyState !== 1) {
+        await new Promise<void>((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Connection readyState timeout'))
+          }, 5000)
+          mongoose.connection.once('connected', () => {
+            clearTimeout(timeout)
+            resolve()
+          })
+          mongoose.connection.once('error', (err) => {
+            clearTimeout(timeout)
+            reject(err)
+          })
+        })
+      }
       isConnected = true
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : String(error)
@@ -75,6 +97,7 @@ export async function connectDb(): Promise<void> {
       throw error
     } finally {
       isConnecting = false
+      connectionLock = false
     }
   })()
 

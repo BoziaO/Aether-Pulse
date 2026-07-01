@@ -1,6 +1,12 @@
 import mongoose from 'mongoose'
 import { User } from '@workspace/db'
 
+function validateObjectId(id: string): void {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new Error('Invalid ID format')
+  }
+}
+
 export type LeanUser = {
   _id: mongoose.Types.ObjectId
   username: string
@@ -90,6 +96,7 @@ type UserUpdateData = Partial<Omit<UserCreateData, 'username' | 'passwordHash'>>
 
 export const UserRepository = {
   async findById(id: string): Promise<LeanUser | null> {
+    validateObjectId(id)
     return User.findById(id).lean() as Promise<LeanUser | null>
   },
 
@@ -98,6 +105,7 @@ export const UserRepository = {
     data: UserUpdateData,
     options?: { new?: boolean }
   ): Promise<LeanUser | null> {
+    validateObjectId(id)
     return User.findByIdAndUpdate(id, data, { new: true, ...options }).lean() as Promise<LeanUser | null>
   },
 
@@ -106,7 +114,27 @@ export const UserRepository = {
   },
 
   async updateStatus(id: string, status: string): Promise<void> {
+    validateObjectId(id)
     await User.findByIdAndUpdate(id, { status })
+  },
+
+  async updatePasswordHash(id: string, passwordHash: string): Promise<void> {
+    validateObjectId(id)
+    await User.findByIdAndUpdate(id, { passwordHash })
+  },
+
+  async updateResetToken(
+    id: string,
+    resetPasswordToken: string | null,
+    resetPasswordExpires: Date | null
+  ): Promise<void> {
+    validateObjectId(id)
+    await User.findByIdAndUpdate(id, { resetPasswordToken, resetPasswordExpires })
+  },
+
+  async updateOAuthId(id: string, idField: 'googleId' | 'githubId', providerId: string): Promise<void> {
+    validateObjectId(id)
+    await User.findByIdAndUpdate(id, { [idField]: providerId })
   },
 
   async create(data: UserCreateData): Promise<LeanUser> {
@@ -115,6 +143,7 @@ export const UserRepository = {
   },
 
   async search(query: string, excludeId: string, limit = 20): Promise<LeanUser[]> {
+    validateObjectId(excludeId)
     return User.find({
       _id: { $ne: excludeId },
       $or: [
@@ -127,6 +156,7 @@ export const UserRepository = {
   },
 
   async findByIds(ids: string[]): Promise<LeanUser[]> {
+    ids.forEach(validateObjectId)
     return User.find({ _id: { $in: ids } }).lean() as Promise<LeanUser[]>
   },
 }

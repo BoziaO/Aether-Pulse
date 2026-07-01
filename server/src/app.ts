@@ -16,10 +16,11 @@ const app: Express = express()
 app.set('trust proxy', 1)
 
 // Security middleware
-const serverUrl =
-  process.env.RENDER_EXTERNAL_URL ||
-  process.env.SERVER_URL ||
-  'https://nicori-server.onrender.com'
+const serverUrl = process.env.RENDER_EXTERNAL_URL || process.env.SERVER_URL
+
+if (!serverUrl) {
+  throw new Error('SERVER_URL or RENDER_EXTERNAL_URL must be configured')
+}
 
 app.use(
   helmet({
@@ -62,7 +63,7 @@ if (!jwtSecret) {
   throw new Error('JWT_SECRET environment variable is required')
 }
 if (jwtSecret.length < 16) {
-  logger.warn('JWT_SECRET is shorter than 16 characters! This is not secure for production.')
+  throw new Error('JWT_SECRET must be at least 16 characters for production security')
 }
 
 if (!sessionSecret) {
@@ -156,9 +157,12 @@ app.use('/api/', apiLimiter)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10, // limit each IP to 10 auth requests per windowMs
-  skip: (req) =>
+  skip: (req) => {
     // req.path is relative to mount point (/api/auth/)
-    req.path !== '/login' && req.path !== '/register' && req.path !== '/refresh',
+    // Only apply rate limiting to login, register, and refresh endpoints
+    const authPaths = ['/login', '/register', '/refresh']
+    return !authPaths.some((p) => req.path === p || req.path.endsWith(p))
+  },
   standardHeaders: false,
   legacyHeaders: false,
   keyGenerator: (req) => req.ip || req.socket.remoteAddress || 'anonymous',
