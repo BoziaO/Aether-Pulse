@@ -5,6 +5,7 @@
 
   import Sidebar from '@/components/sidebar/Sidebar.vue'
   import SidebarMobile from '@/components/sidebar/SidebarMobile.vue'
+  import BottomNav from '@/components/navigation/BottomNav.vue'
   import CreateRoomModal from '@/components/rooms/CreateRoomModal.vue'
   import UserAvatar from '@/components/profile/UserAvatar.vue'
   import { useAuthStore } from '@/stores/auth.store'
@@ -60,6 +61,7 @@
   const activityEvents = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll']
 
   onMounted(async () => {
+    document.body.classList.add('app-layout-active')
     // Always try to fetch current user first if we have tokens
     if (TokenManager.getAccessToken() && !auth.user) {
       await auth.fetchMe()
@@ -141,6 +143,7 @@
   })
 
   onUnmounted(() => {
+    document.body.classList.remove('app-layout-active')
     activityEvents.forEach((evt) => document.removeEventListener(evt, resetAwayTimer))
     if (awayTimer) clearTimeout(awayTimer)
     if (pingTimer) clearInterval(pingTimer)
@@ -202,6 +205,7 @@
         </Transition>
       </RouterView>
     </main>
+    <BottomNav />
   </div>
 </template>
 
@@ -276,6 +280,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px 16px;
+  padding-top: calc(10px + env(safe-area-inset-top, 0px));
   height: 56px;
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border);

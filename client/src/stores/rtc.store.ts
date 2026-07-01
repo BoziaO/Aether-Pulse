@@ -11,6 +11,7 @@ import { usePresenceStore } from './presence.store'
 import { useRoomStore } from './room.store'
 import { useSettingsStore } from './settings.store'
 import { useToastStore } from './toast.store'
+import { useDeveloperStore } from './developer.store'
 import { router } from '@/app/router'
 import { notifyNewMessage } from '@/utils/notifications'
 import type { Message } from '@/types/message.types'
@@ -132,6 +133,11 @@ export const useRtcStore = defineStore('rtc', () => {
 
   function onRemoteStream(userId: string, stream: MediaStream) {
     remoteStreams.value = new Map(remoteStreams.value.set(userId, stream))
+    useDeveloperStore().updateWebRTCInfo({
+      state: 'connected',
+      remoteStreams: remoteStreams.value.size,
+    })
+    useDeveloperStore().addLog('info', 'WebRTC', `Remote stream received from ${userId}`)
     if (spatialAudio.enabled) {
       const index = Array.from(remoteStreams.value.keys()).indexOf(userId)
       const pos = calculateSpatialPosition(index)
@@ -143,6 +149,8 @@ export const useRtcStore = defineStore('rtc', () => {
     const newMap = new Map(remoteStreams.value)
     newMap.delete(userId)
     remoteStreams.value = newMap
+    useDeveloperStore().updateWebRTCInfo({ remoteStreams: remoteStreams.value.size })
+    useDeveloperStore().addLog('warn', 'WebRTC', `Peer disconnected: ${userId}`)
     spatialAudio.detachStream(userId)
   }
 
@@ -359,6 +367,8 @@ export const useRtcStore = defineStore('rtc', () => {
   async function joinRoom(roomId: string, userId: string) {
     currentRoomId = roomId
     const socket = connectSocket()
+    const devStore = useDeveloperStore()
+    devStore.attachSocket(socket)
 
     // Remove existing listeners to prevent leaks
     socket.off('new-message')
@@ -595,6 +605,11 @@ export const useRtcStore = defineStore('rtc', () => {
 
       localStream.value = stream
       inCall.value = true
+      useDeveloperStore().updateWebRTCInfo({
+        state: 'connecting',
+        localStreams: 1,
+      })
+      useDeveloperStore().addLog('info', 'WebRTC', 'Call started, establishing peer connections')
 
       const socket = getSocket()
       peerManager = new PeerManager(socket, authStore.user.id, onRemoteStream, onPeerClose)
@@ -692,6 +707,14 @@ export const useRtcStore = defineStore('rtc', () => {
 
     // Clear remote streams
     remoteStreams.value = new Map()
+
+    useDeveloperStore().updateWebRTCInfo({
+      state: 'disconnected',
+      localStreams: 0,
+      remoteStreams: 0,
+      iceState: null,
+    })
+    useDeveloperStore().addLog('info', 'WebRTC', 'Call ended')
 
     // Clean up spatial audio
     spatialAudio.cleanup()

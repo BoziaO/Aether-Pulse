@@ -4,8 +4,8 @@
   "description": "Prywatne pokoje głosowe, chat realtime, stream z kamery lub ekranu i wygodny tryb Picture-in-Picture na telefonie.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#070a13",
-  "theme_color": "#070a13",
+  "background_color": "#0F1018",
+  "theme_color": "#0F1018",
   "orientation": "portrait-primary",
   "status_bar_style": "black-translucent",
   "icons": [

@@ -26,9 +26,6 @@ function handleKeydown(e: KeyboardEvent) {
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
-  if (settingsStore.developerMode) {
-    devStore.startTracking()
-  }
 })
 
 onUnmounted(() => {
@@ -37,9 +34,20 @@ onUnmounted(() => {
 })
 
 watch(
+  () => devStore.isPanelOpen,
+  (open) => {
+    if (open && settingsStore.developerMode) {
+      devStore.startTracking()
+    } else if (!open) {
+      devStore.stopTracking()
+    }
+  }
+)
+
+watch(
   () => settingsStore.developerMode,
   (enabled) => {
-    if (enabled) {
+    if (enabled && devStore.isPanelOpen) {
       devStore.startTracking()
     } else {
       devStore.stopTracking()

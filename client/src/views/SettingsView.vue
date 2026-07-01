@@ -1443,11 +1443,39 @@
 }
 
 @media (max-width: 640px) {
+  .settings-view {
+    flex-direction: column !important;
+  }
   .settings-nav {
-    width: 160px;
+    width: 100% !important;
+    min-width: 100% !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--border) !important;
+    padding: 8px 12px !important;
+    gap: 4px !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .settings-nav::-webkit-scrollbar {
+    display: none;
+  }
+  .nav-label {
+    display: none !important;
+  }
+  .nav-item {
+    white-space: nowrap !important;
+    padding: 6px 12px !important;
+    font-size: 13px !important;
+    border-radius: 20px !important;
+  }
+  .nav-item.active {
+    background: rgba(139, 92, 246, 0.2) !important;
   }
   .settings-content {
-    padding: 24px;
+    padding: 16px !important;
   }
   .themes-grid {
     grid-template-columns: repeat(1, minmax(0, 1fr));

@@ -170,7 +170,7 @@
     </div>
 
     <header class="dm-header">
-      <button class="btn btn-ghost dm-back" @click="router.push('/friends')">
+      <button class="btn btn-ghost dm-back" @click="router.push('/app/friends')">
         <ArrowLeft :size="16" />
       </button>
       <AnimatedProfile v-if="otherUser" :user="otherUser" :size="36" :show-animation="false" />

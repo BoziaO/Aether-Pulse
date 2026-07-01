@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import type { Socket } from 'socket.io-client'
 
 export interface LogEntry {
   id: number
@@ -78,8 +79,11 @@ export const useDeveloperStore = defineStore('developer', () => {
 
   let fpsFrameCount = 0
   let fpsLastTime = performance.now()
-  let fpsInterval: ReturnType<typeof setInterval> | null = null
   let perfInterval: ReturnType<typeof setInterval> | null = null
+  let latencyInterval: ReturnType<typeof setInterval> | null = null
+  let dbInterval: ReturnType<typeof setInterval> | null = null
+  let rafId: number | null = null
+  let socketRef: Socket | null = null
 
   function addLog(level: LogEntry['level'], source: string, message: string, data?: unknown) {
     const entry: LogEntry = {
@@ -120,7 +124,9 @@ export const useDeveloperStore = defineStore('developer', () => {
     Object.assign(debugInfo.value.db, info)
   }
 
+  // --- FPS measurement via requestAnimationFrame ---
   function measureFps() {
+    fpsFrameCount++
     const now = performance.now()
     const delta = now - fpsLastTime
     if (delta >= 1000) {
@@ -128,12 +134,10 @@ export const useDeveloperStore = defineStore('developer', () => {
       fpsFrameCount = 0
       fpsLastTime = now
     }
-    fpsFrameCount++
-    if (isPanelOpen.value) {
-      requestAnimationFrame(measureFps)
-    }
+    rafId = requestAnimationFrame(measureFps)
   }
 
+  // --- Memory + latency polling ---
   function updatePerformanceMetrics() {
     const perf = performance as any
     if (perf.memory) {
@@ -142,23 +146,111 @@ export const useDeveloperStore = defineStore('developer', () => {
     }
   }
 
+  // --- Socket.IO ping latency ---
+  async function measureLatency() {
+    if (!socketRef?.connected) return
+    const start = performance.now()
+    socketRef.emit('ping')
+    socketRef.once('pong', () => {
+      performanceMetrics.value.latency = Math.round(performance.now() - start)
+    })
+  }
+
+  // --- DB health check ---
+  async function fetchDbHealth() {
+    try {
+      const res = await fetch('/api/health')
+      const data = await res.json()
+      debugInfo.value.db.connected = data.db?.ok ?? false
+      debugInfo.value.db.latency = data.db?.latencyMs ?? null
+    } catch {
+      debugInfo.value.db.connected = false
+      debugInfo.value.db.latency = null
+    }
+  }
+
+  // --- Attach to a live Socket.IO instance ---
+  function attachSocket(socket: Socket) {
+    if (socketRef === socket) return
+    socketRef = socket
+
+    // Connection state
+    socket.on('connect', () => {
+      const transport = (socket as any).transport?.name || (socket as any).io?.engine?.transport?.name || 'unknown'
+      updateSocketInfo({
+        connected: true,
+        socketId: socket.id ?? null,
+        transport,
+      })
+      addLog('info', 'Socket', `Connected (id: ${socket.id}, transport: ${transport})`)
+    })
+
+    socket.on('disconnect', (reason: string) => {
+      updateSocketInfo({ connected: false })
+      addLog('warn', 'Socket', `Disconnected: ${reason}`)
+    })
+
+    socket.on('connect_error', (err: Error) => {
+      updateSocketInfo({ connected: false })
+      addLog('error', 'Socket', `Connection error: ${err.message}`)
+    })
+
+    socket.io.on('reconnect', (attempt: number) => {
+      addLog('info', 'Socket', `Reconnected after ${attempt} attempts`)
+    })
+
+    // Packet counting
+    const origEmit = socket.emit.bind(socket)
+    const wrappedEmit: typeof socket.emit = function (ev: any) {
+      updateSocketInfo({ packetsSent: debugInfo.value.socket.packetsSent + 1 })
+      return (origEmit as any)(ev, ...Array.prototype.slice.call(arguments, 1))
+    } as any
+    socket.emit = wrappedEmit
+
+    socket.onAny(() => {
+      updateSocketInfo({ packetsReceived: debugInfo.value.socket.packetsReceived + 1 })
+    })
+
+    // Sync initial state if already connected
+    if (socket.connected) {
+      const transport = (socket as any).transport?.name || (socket as any).io?.engine?.transport?.name || 'unknown'
+      updateSocketInfo({
+        connected: true,
+        socketId: socket.id ?? null,
+        transport,
+      })
+    }
+  }
+
+  // --- FPS tracking ---
   function startTracking() {
-    if (fpsInterval) return
+    if (rafId !== null) return
     fpsLastTime = performance.now()
     fpsFrameCount = 0
-    requestAnimationFrame(measureFps)
+    measureFps()
     perfInterval = setInterval(updatePerformanceMetrics, 1000)
+    latencyInterval = setInterval(measureLatency, 5000)
+    dbInterval = setInterval(fetchDbHealth, 10000)
+    fetchDbHealth()
     addLog('info', 'DevTools', 'Performance tracking started')
   }
 
   function stopTracking() {
-    if (fpsInterval) {
-      clearInterval(fpsInterval)
-      fpsInterval = null
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId)
+      rafId = null
     }
     if (perfInterval) {
       clearInterval(perfInterval)
       perfInterval = null
+    }
+    if (latencyInterval) {
+      clearInterval(latencyInterval)
+      latencyInterval = null
+    }
+    if (dbInterval) {
+      clearInterval(dbInterval)
+      dbInterval = null
     }
   }
 
@@ -187,6 +279,7 @@ export const useDeveloperStore = defineStore('developer', () => {
     updateSocketInfo,
     updateWebRTCInfo,
     updateDbInfo,
+    attachSocket,
     startTracking,
     stopTracking,
     $dispose,

@@ -185,11 +185,13 @@
   justify-content: flex-start;
   z-index: 1000;
   padding: 20px;
+  padding-top: calc(20px + env(safe-area-inset-top, 0px));
 }
 
 .sidebar-mobile {
   width: 280px;
   max-width: 100%;
+  max-height: 100dvh;
   max-height: 100vh;
   background: var(--bg-secondary);
   border: 1px solid var(--border);

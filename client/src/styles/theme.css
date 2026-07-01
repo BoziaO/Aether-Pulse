@@ -125,6 +125,7 @@
   display: flex !important;
   flex-direction: row !important;
   align-items: stretch !important;
+  height: 100dvh !important;
   height: 100vh !important;
   width: 100vw !important;
   padding: 12px;
@@ -466,6 +467,7 @@
     padding: 0 !important;
     gap: 0 !important;
     flex-direction: column !important;
+    height: 100dvh !important;
     height: 100vh !important;
     width: 100vw !important;
     overflow: hidden !important;
@@ -480,7 +482,9 @@
     border: none !important;
     box-shadow: none !important;
     flex: 1 !important;
-    height: calc(100vh - 56px) !important; /* Subtract mobile header height */
+    height: calc(100dvh - 56px - 56px) !important;
+    height: calc(100vh - 56px - 56px) !important;
+    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
   }
 
   .home-view {
