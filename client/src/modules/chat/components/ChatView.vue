@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-  import { Search, Users, X } from 'lucide-vue-next'
+  import { Search, Users, X, ArrowDown } from 'lucide-vue-next'
 
   import { useChatStore } from '../stores/chat.store'
   import { useComposerStore } from '../stores/composer.store'
@@ -16,6 +16,7 @@
   import ChatSearch from './ChatSearch.vue'
   import type { Message } from '../types/message.types'
   import UserProfileModal from '@/components/profile/UserProfileModal.vue'
+  import ConfirmationModal from '@/components/modals/ConfirmationModal.vue'
 
   const props = withDefaults(
     defineProps<{
@@ -43,6 +44,9 @@
   const socket = ChatSocketService.getInstance()
   const selectedUserId = ref<string | null>(null)
   const showSearch = ref(false)
+  const deleteTargetId = ref<string | null>(null)
+  const showDeleteConfirm = ref(false)
+  const messageListRef = ref<InstanceType<typeof ChatMessageList> | null>(null)
 
   let cleanupFns: Array<() => void> = []
 
@@ -172,11 +176,29 @@
   }
 
   function handleDelete(messageId: string): void {
-    chatStore.deleteMessage(props.roomId, messageId).catch(() => {})
+    deleteTargetId.value = messageId
+    showDeleteConfirm.value = true
+  }
+
+  function confirmDelete(): void {
+    if (deleteTargetId.value) {
+      chatStore.deleteMessage(props.roomId, deleteTargetId.value).catch(() => {})
+    }
+    deleteTargetId.value = null
+    showDeleteConfirm.value = false
+  }
+
+  function cancelDelete(): void {
+    deleteTargetId.value = null
+    showDeleteConfirm.value = false
   }
 
   function handleReact(msgServerId: string, emoji: string): void {
     chatStore.toggleReaction(props.roomId, msgServerId, emoji).catch(() => {})
+  }
+
+  function handleStar(msgServerId: string): void {
+    chatStore.toggleStar(props.roomId, msgServerId).catch(() => {})
   }
 
   function handleLoadMore(): void {
@@ -190,6 +212,10 @@
   function handleSearchClose(): void {
     showSearch.value = false
     searchStore.clear()
+  }
+
+  function scrollToFirstUnread(): void {
+    messageListRef.value?.scrollToFirstUnread()
   }
 </script>
 
@@ -239,9 +265,19 @@
       @edit="handleEdit"
       @delete="handleDelete"
       @react="handleReact"
+      @star="handleStar"
       @open-profile="handleOpenProfile"
       @load-more="handleLoadMore"
     />
+
+    <button
+      v-if="chatStore.newMessageCount > 0 && chatStore.lastReadMessageId"
+      class="scroll-unread-btn"
+      @click="scrollToFirstUnread"
+    >
+      <ArrowDown :size="14" />
+      {{ chatStore.newMessageCount }} new messages
+    </button>
 
     <ChatComposer :room-id="roomId" :members="members" @send="handleSend" @typing="handleTyping" />
   </div>
@@ -250,6 +286,18 @@
     v-if="selectedUserId"
     :user-id="selectedUserId"
     @close="selectedUserId = null"
+  />
+
+  <ConfirmationModal
+    :show="showDeleteConfirm"
+    title="Delete message"
+    message="Are you sure you want to delete this message? This action cannot be undone."
+    confirm-text="Delete"
+    cancel-text="Cancel"
+    type="danger"
+    @confirm="confirmDelete"
+    @cancel="cancelDelete"
+    @update:show="showDeleteConfirm = $event"
   />
 </template>
 
@@ -334,6 +382,41 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.scroll-unread-btn {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--accent-violet);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  z-index: 20;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+  transition: all 0.2s;
+  animation: slideUp 0.2s ease-out;
+}
+.scroll-unread-btn:hover {
+  transform: translateX(-50%) translateY(-2px);
+  box-shadow: 0 6px 16px rgba(139, 92, 246, 0.5);
+}
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 @media (max-width: 767px) {

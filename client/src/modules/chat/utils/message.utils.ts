@@ -56,6 +56,7 @@ export function serverPayloadToMessage(payload: ServerMessagePayload): Message {
     createdAt: payload.createdAt,
     editedAt: payload.editedAt || null,
     isDeleted: payload.isDeleted || false,
+    isStarred: payload.isStarred || false,
     user: payload.user || null,
   }
 }

@@ -34,6 +34,7 @@
     extractGitHubRepo,
   } from '@/services/api/linkPreview.api'
   import type { LinkPreview, GitHubRepo, EmbedEntry } from '@/services/api/linkPreview.api'
+  import { EMOJI_SHORTCUTS } from '@/utils/text-formatter'
 
   const props = defineProps<{
     type: string
@@ -43,6 +44,7 @@
   const URL_REGEX =
     /https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_+.~#?&//=]*)/g
 
+  // Custom renderer for @mentions
   const md: MarkdownIt = new MarkdownIt({
     linkify: true,
     breaks: true,
@@ -100,7 +102,19 @@
     return c
   })
 
-  const html = computed(() => DOMPurify.sanitize(md.render(cleanContent.value)))
+  // Process content to convert emoji shortcuts before markdown rendering
+  const processedContent = computed(() => {
+    let content = cleanContent.value
+
+    // Convert emoji shortcuts like :smile: to actual emojis
+    content = content.replace(/:[a-z0-9_]+:/gi, (match) => {
+      return EMOJI_SHORTCUTS[match.toLowerCase()] || match
+    })
+
+    return content
+  })
+
+  const html = computed(() => DOMPurify.sanitize(md.render(processedContent.value)))
 
   // Preview cache with TTL
   const CACHE_TTL = 5 * 60 * 1000
@@ -354,6 +368,12 @@
 .message-content :deep(strong) {
   color: var(--text-primary);
   font-weight: 700;
+}
+.message-content :deep(del) {
+  opacity: 0.6;
+}
+.message-content :deep(em) {
+  font-style: italic;
 }
 
 /* Embed containers */

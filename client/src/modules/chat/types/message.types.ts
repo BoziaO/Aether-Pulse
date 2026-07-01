@@ -58,6 +58,7 @@ export interface Message {
   createdAt: string
   editedAt?: string | null
   isDeleted: boolean
+  isStarred?: boolean
   user?: MessageUser | null
 }
 
@@ -70,6 +71,7 @@ export interface ServerMessagePayload {
   replyToId?: string | null
   editedAt?: string | null
   isDeleted?: boolean
+  isStarred?: boolean
   createdAt: string
   user?: MessageUser | null
   reactions?: Array<{ emoji: string; count: number; userIds: string[] }> | null

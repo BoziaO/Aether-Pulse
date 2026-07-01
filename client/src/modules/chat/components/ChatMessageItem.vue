@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { computed, ref } from 'vue'
-  import { MessageSquare, Edit3, Trash2, AlertCircle } from 'lucide-vue-next'
+  import { MessageSquare, Edit3, Trash2, AlertCircle, Star } from 'lucide-vue-next'
 
   import type { Message } from '../types/message.types'
   import { MessageStatus } from '../types/message.types'
@@ -23,6 +23,7 @@
     (e: 'edit', message: Message): void
     (e: 'delete', messageId: string): void
     (e: 'react', messageId: string, emoji: string): void
+    (e: 'star', messageId: string): void
     (e: 'open-profile', userId: string): void
   }>()
 
@@ -30,8 +31,8 @@
   const showActions = ref(false)
 
   const isOwn = computed(() => props.message.userId === authStore.user?.id)
-
   const isFailed = computed(() => props.message.status === MessageStatus.Failed)
+  const isStarred = computed(() => props.message.isStarred ?? false)
 
   const messageTime = computed(() => {
     const date = new Date(props.message.createdAt)
@@ -61,6 +62,12 @@
   function handleReact(emoji: string): void {
     if (props.message.serverId) {
       emit('react', props.message.serverId, emoji)
+    }
+  }
+
+  function handleStar(): void {
+    if (props.message.serverId) {
+      emit('star', props.message.serverId)
     }
   }
 </script>
@@ -102,6 +109,7 @@
             {{ message.user?.displayName || 'Unknown' }}
           </button>
           <span class="message-time">{{ messageTime }}</span>
+          <span v-if="message.editedAt" class="edited-tag">(edited)</span>
           <ChatMessageStatus :status="message.status" :is-own="isOwn" />
         </div>
 
@@ -149,6 +157,15 @@
       <div v-if="showActions && !message.isDeleted" class="message-actions">
         <button class="action-btn" aria-label="Reply" title="Reply" @click="handleReply">
           <MessageSquare :size="14" />
+        </button>
+        <button
+          class="action-btn"
+          :class="{ 'action-starred': isStarred }"
+          aria-label="Star message"
+          :title="isStarred ? 'Unstar' : 'Star'"
+          @click="handleStar"
+        >
+          <Star :size="14" :fill="isStarred ? 'currentColor' : 'none'" />
         </button>
         <button
           v-if="isOwn && !isFailed"
@@ -239,6 +256,11 @@
   font-size: 10px;
   color: var(--text-muted);
 }
+.edited-tag {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-style: italic;
+}
 .message-deleted-content {
   color: var(--text-muted);
   font-style: italic;
@@ -323,6 +345,12 @@
 }
 .action-btn.action-danger:hover {
   color: var(--danger);
+}
+.action-btn.action-starred {
+  color: #fbbf24;
+}
+.action-btn.action-starred:hover {
+  color: #f59e0b;
 }
 .failed-banner {
   display: flex;

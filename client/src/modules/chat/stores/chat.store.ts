@@ -20,6 +20,7 @@ export const useChatStore = defineStore('chatModule', () => {
   const hasMore = ref(true)
   const error = ref<string | null>(null)
   const newMessageCount = ref(0)
+  const lastReadMessageId = ref<string | null>(null)
 
   const sortedMessages = computed(() => getSortedMessages(messages.value))
 
@@ -240,6 +241,29 @@ export const useChatStore = defineStore('chatModule', () => {
     }
   }
 
+  async function toggleStar(roomId: string, messageId: string): Promise<void> {
+    try {
+      const updated = await chatApi.toggleStar(roomId, messageId)
+      const payload: ServerMessagePayload = {
+        id: updated.serverId || updated.clientId,
+        roomId: updated.roomId,
+        userId: updated.userId,
+        content: updated.content,
+        type: updated.type,
+        createdAt: updated.createdAt,
+        editedAt: updated.editedAt ?? null,
+        isDeleted: updated.isDeleted,
+        user: updated.user ?? null,
+        reactions: updated.reactions ?? null,
+        replyTo: updated.replyTo ?? null,
+      }
+      handleMessageUpdate(payload)
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Failed to toggle star'
+      throw e
+    }
+  }
+
   async function retryMessage(clientId: string): Promise<void> {
     const msg = messages.value.get(clientId)
     if (!msg || msg.status !== MessageStatus.Failed) return
@@ -263,6 +287,11 @@ export const useChatStore = defineStore('chatModule', () => {
     newMessageCount.value = 0
   }
 
+  function setLastReadMessage(messageId: string): void {
+    lastReadMessageId.value = messageId
+    newMessageCount.value = 0
+  }
+
   function clearMessages(): void {
     messages.value = new Map()
     triggerRef(messages)
@@ -272,6 +301,7 @@ export const useChatStore = defineStore('chatModule', () => {
     hasMore.value = true
     error.value = null
     newMessageCount.value = 0
+    lastReadMessageId.value = null
   }
 
   return {
@@ -282,6 +312,7 @@ export const useChatStore = defineStore('chatModule', () => {
     hasMore,
     error,
     newMessageCount,
+    lastReadMessageId,
     sortedMessages,
     lastMessageId,
     loadMessages,
@@ -289,6 +320,7 @@ export const useChatStore = defineStore('chatModule', () => {
     editMessage,
     deleteMessage,
     toggleReaction,
+    toggleStar,
     retryMessage,
     handleIncomingMessage,
     handleMessageUpdate,
@@ -297,6 +329,7 @@ export const useChatStore = defineStore('chatModule', () => {
     updateMessageInCache,
     incrementNewCount,
     resetNewCount,
+    setLastReadMessage,
     clearMessages,
   }
 })

@@ -1,11 +1,26 @@
 <script setup lang="ts">
   import { computed, ref, watch, nextTick } from 'vue'
-  import { Send, X, Paperclip } from 'lucide-vue-next'
+  import {
+    Send,
+    X,
+    Paperclip,
+    Bold,
+    Italic,
+    Strikethrough,
+    Code,
+    List,
+    ListOrdered,
+  } from 'lucide-vue-next'
 
   import EmojiPicker from './EmojiPicker.vue'
   import { fileToDataUrl, validateFile } from '@/utils/files'
   import type { ReplyTarget } from '@/types/message.types'
   import { useSettingsStore } from '@/stores/settings.store'
+  import {
+    insertFormatting,
+    insertListFormatting,
+    insertCodeBlock,
+  } from '@/utils/text-formatter'
 
   const props = defineProps<{
     roomId?: string
@@ -13,7 +28,7 @@
     replyTo?: ReplyTarget | null
     initialValue?: string
     uploading?: boolean
-    members?: Array<{ id: string; displayName: string }> | undefined
+    members?: Array<{ id: string; displayName: string; avatar?: string; status?: string }> | undefined
   }>()
 
   const emit = defineEmits<{
@@ -31,6 +46,9 @@
   const isCompactInput = computed(() => settings.compactChatMode || settings.chatLayout === 'compact')
   const layoutClass = computed(() => `layout-${settings.chatLayout}`)
   const dragOver = ref(false)
+  const showFormatting = ref(true)
+
+  // Mention state
   const mentionQuery = ref('')
   const mentionIndex = ref(-1)
   const showMentions = ref(false)
@@ -73,13 +91,8 @@
     )
   })
 
-  // Dummy user list for mentions — real list should come from props/store
-  const knownUsers = computed(() => {
-    // This should be populated from the room member list
-    // Using a simple ref that can be set externally
-    return mentionableUsers.value
-  })
-  const mentionableUsers = ref<Array<{ id: string; displayName: string }>>([])
+  // User list for mentions
+  const mentionableUsers = ref<Array<{ id: string; displayName: string; avatar?: string; status?: string }>>([])
 
   watch(
     () => props.members,
@@ -90,9 +103,12 @@
   )
 
   const filteredMentions = computed(() => {
-    if (!mentionQuery.value) return knownUsers.value
+    if (!mentionQuery.value) return mentionableUsers.value
     const q = mentionQuery.value.toLowerCase()
-    return knownUsers.value.filter((u) => u.displayName.toLowerCase().includes(q))
+    return mentionableUsers.value.filter(
+      (u) =>
+        u.displayName.toLowerCase().includes(q)
+    )
   })
 
   let typingTimeout: ReturnType<typeof setTimeout> | null = null
@@ -262,6 +278,24 @@
       }
     }
 
+    // Formatting shortcuts
+    if (e.ctrlKey || e.metaKey) {
+      switch (e.key.toLowerCase()) {
+        case 'b':
+          e.preventDefault()
+          applyFormatting('bold')
+          return
+        case 'i':
+          e.preventDefault()
+          applyFormatting('italic')
+          return
+        case 'u':
+          e.preventDefault()
+          applyFormatting('underline')
+          return
+      }
+    }
+
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       sendMessage()
@@ -271,9 +305,51 @@
     }
   }
 
+  function applyFormatting(type: 'bold' | 'italic' | 'underline' | 'strikethrough' | 'code' | 'codeblock' | 'list' | 'orderedList') {
+    if (!textareaRef.value) return
+
+    switch (type) {
+      case 'bold':
+        insertFormatting(textareaRef.value, '**', '**')
+        break
+      case 'italic':
+        insertFormatting(textareaRef.value, '*', '*')
+        break
+      case 'underline':
+        insertFormatting(textareaRef.value, '__', '__')
+        break
+      case 'strikethrough':
+        insertFormatting(textareaRef.value, '~~', '~~')
+        break
+      case 'code':
+        insertFormatting(textareaRef.value, '`', '`')
+        break
+      case 'codeblock':
+        insertCodeBlock(textareaRef.value)
+        break
+      case 'list':
+        insertListFormatting(textareaRef.value, false)
+        break
+      case 'orderedList':
+        insertListFormatting(textareaRef.value, true)
+        break
+    }
+
+    input.value = textareaRef.value.value
+  }
+
   function insertEmoji(emoji: string) {
-    input.value += emoji
-    handleInput()
+    if (!textareaRef.value) return
+    const start = textareaRef.value.selectionStart
+    const end = textareaRef.value.selectionEnd
+    const text = input.value
+    input.value = text.substring(0, start) + emoji + text.substring(end)
+    nextTick(() => {
+      if (textareaRef.value) {
+        textareaRef.value.setSelectionRange(start + emoji.length, start + emoji.length)
+        textareaRef.value.focus()
+      }
+    })
   }
 
   async function onFileSelected(e: Event) {
@@ -351,6 +427,76 @@
     </div>
     <p v-if="fileError" class="file-error">{{ fileError }}</p>
 
+    <!-- Formatting toolbar -->
+    <div v-if="showFormatting" class="formatting-toolbar">
+      <button
+        type="button"
+        class="format-btn"
+        title="Bold (Ctrl+B)"
+        @click="applyFormatting('bold')"
+      >
+        <Bold :size="15" />
+      </button>
+      <button
+        type="button"
+        class="format-btn"
+        title="Italic (Ctrl+I)"
+        @click="applyFormatting('italic')"
+      >
+        <Italic :size="15" />
+      </button>
+      <button
+        type="button"
+        class="format-btn"
+        title="Underline (Ctrl+U)"
+        @click="applyFormatting('underline')"
+      >
+        <span class="format-icon">U</span>
+      </button>
+      <button
+        type="button"
+        class="format-btn"
+        title="Strikethrough"
+        @click="applyFormatting('strikethrough')"
+      >
+        <Strikethrough :size="15" />
+      </button>
+      <span class="format-divider"></span>
+      <button
+        type="button"
+        class="format-btn"
+        title="Inline Code"
+        @click="applyFormatting('code')"
+      >
+        <Code :size="15" />
+      </button>
+      <button
+        type="button"
+        class="format-btn"
+        title="Code Block"
+        @click="applyFormatting('codeblock')"
+      >
+        <span class="format-icon">```</span>
+      </button>
+      <span class="format-divider"></span>
+      <button
+        type="button"
+        class="format-btn"
+        title="Bullet List"
+        @click="applyFormatting('list')"
+      >
+        <List :size="15" />
+      </button>
+      <button
+        type="button"
+        class="format-btn"
+        title="Numbered List"
+        @click="applyFormatting('orderedList')"
+      >
+        <ListOrdered :size="15" />
+      </button>
+    </div>
+
     <!-- Slash command menu -->
     <div v-if="showSlashMenu && filteredCommands.length > 0" class="slash-menu">
       <button
@@ -405,7 +551,9 @@
         <Send :size="16" />
       </button>
     </div>
-    <div class="input-hint">Attach images, PDF, ZIP, audio · max 10MB</div>
+    <div class="input-hint">
+      <span>**bold** *italic* ~~strike~~ `code` :emoji:</span>
+    </div>
   </div>
 </template>
 
@@ -467,6 +615,52 @@
 .hidden-file {
   display: none;
 }
+
+/* Formatting toolbar */
+.formatting-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 16px 0;
+  flex-wrap: wrap;
+}
+
+.format-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.format-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.format-btn:active {
+  transform: scale(0.95);
+}
+
+.format-icon {
+  font-size: 12px;
+  font-weight: 700;
+  font-family: monospace;
+}
+
+.format-divider {
+  width: 1px;
+  height: 16px;
+  background: var(--border);
+  margin: 0 4px;
+}
+
 .chat-input-wrap {
   display: flex;
   align-items: flex-end;
@@ -551,6 +745,7 @@
   padding: 0 16px 10px;
   font-size: 11px;
   color: var(--text-muted);
+  font-family: monospace;
 }
 .chat-input-area.compact .input-hint {
   padding-bottom: 8px;
@@ -645,6 +840,9 @@
     border-radius: 0 !important;
     border-left: none !important;
     border-right: none !important;
+  }
+  .formatting-toolbar {
+    padding: 6px 12px 0;
   }
 }
 </style>

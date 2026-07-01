@@ -16,6 +16,7 @@
   import { useSettingsStore } from '@/stores/settings.store'
   import UserAvatar from '@/components/profile/UserAvatar.vue'
   import MessageContent from './MessageContent.vue'
+  import MessageReactions from './MessageReactions.vue'
 
   const props = defineProps<{
     message: Message
@@ -49,10 +50,6 @@
   function formatTime(iso: string) {
     const d = new Date(iso)
     return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  }
-
-  function hasReacted(reaction: { emoji: string; userIds: string[] }) {
-    return props.currentUserId != null && reaction.userIds.includes(props.currentUserId)
   }
 
   const isImage = computed(() => props.message.attachmentMime?.startsWith('image/') ?? false)
@@ -110,6 +107,24 @@
         return ''
     }
   })
+
+  // Transform reactions to match MessageReactions format
+  const transformedReactions = computed(() => {
+    if (!props.message.reactions) return []
+    return props.message.reactions.map((r) => ({
+      emoji: r.emoji,
+      count: r.count,
+      users: r.userIds.map((id) => ({ id, username: id })),
+    }))
+  })
+
+  function handleAddReaction(emoji: string) {
+    emit('react', props.message.id, emoji)
+  }
+
+  function handleRemoveReaction(emoji: string) {
+    emit('react', props.message.id, emoji)
+  }
 </script>
 
 <template>
@@ -216,18 +231,13 @@
       </template>
       <MessageContent v-else :content="message.content" :type="message.type" />
 
-      <div v-if="message.reactions?.length" class="reactions">
-        <button
-          v-for="reaction in message.reactions"
-          :key="reaction.emoji"
-          class="reaction-chip"
-          :class="{ active: hasReacted(reaction) }"
-          type="button"
-          @click="emit('react', message.id, reaction.emoji)"
-        >
-          {{ reaction.emoji }} {{ reaction.count }}
-        </button>
-      </div>
+      <MessageReactions
+        v-if="message.reactions?.length || true"
+        :reactions="transformedReactions"
+        :current-user-id="currentUserId || ''"
+        @add="handleAddReaction"
+        @remove="handleRemoveReaction"
+      />
     </div>
 
     <div
@@ -392,31 +402,6 @@
   font-size: 13px;
   color: var(--text-muted);
   font-style: italic;
-}
-.reactions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 6px;
-}
-.message.compact .reactions {
-  gap: 4px;
-}
-.reaction-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--bg-surface-2);
-  color: var(--text-secondary);
-  font-size: 12px;
-  cursor: pointer;
-}
-.reaction-chip.active {
-  border-color: var(--border-accent);
-  background: rgba(139, 92, 246, 0.15);
 }
 .message-actions {
   position: absolute;

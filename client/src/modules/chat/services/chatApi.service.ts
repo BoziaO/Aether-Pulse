@@ -68,4 +68,10 @@ export const chatApi = {
       body: JSON.stringify({ dataUrl, fileName, caption }),
     }).then(parseMessage)
   },
+
+  toggleStar: (roomId: string, messageId: string) => {
+    return apiFetch<ServerMessagePayload>(`/rooms/${roomId}/messages/${messageId}/star`, {
+      method: 'POST',
+    }).then(parseMessage)
+  },
 }

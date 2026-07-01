@@ -26,6 +26,7 @@
     (e: 'edit', message: Message): void
     (e: 'delete', messageId: string): void
     (e: 'react', messageId: string, emoji: string): void
+    (e: 'star', messageId: string): void
     (e: 'open-profile', userId: string): void
     (e: 'load-more'): void
   }>()
@@ -35,6 +36,7 @@
   const settingsStore = useSettingsStore()
 
   const containerRef = ref<HTMLElement | null>(null)
+  const lastReadIndex = ref<number>(-1)
 
   const {
     nearBottom: _,
@@ -92,6 +94,21 @@
     scrollDown(smooth)
   }
 
+  function scrollToFirstUnread(): void {
+    if (!chatStore.lastReadMessageId) return
+    const idx = displayMessages.value.findIndex(
+      (m) => m.serverId === chatStore.lastReadMessageId || m.clientId === chatStore.lastReadMessageId
+    )
+    if (idx >= 0) {
+      lastReadIndex.value = idx
+      // Scroll to the unread message - we'll use a simple approach
+      const el = document.getElementById('msg-' + displayMessages.value[idx].clientId)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    }
+  }
+
   function handleReact(msgId: string, emoji: string): void {
     emit('react', msgId, emoji)
   }
@@ -110,7 +127,7 @@
     }
   )
 
-  defineExpose({ scrollToBottom })
+  defineExpose({ scrollToBottom, scrollToFirstUnread })
 </script>
 
 <template>
@@ -133,31 +150,38 @@
       >
         <template #default="{ item, active }">
           <DynamicScrollerItem :item="item" :active="active" :size-dirty="false">
-            <ChatMessageItem
-              v-memo="[
-                item.clientId,
-                item.serverId,
-                item.content,
-                item.editedAt,
-                item.reactions,
-                item.isDeleted,
-                item.status,
-                item.attachments,
-                groupMeta.get(item.clientId)?.showAvatar,
-                groupMeta.get(item.clientId)?.showAuthor,
-                groupMeta.get(item.clientId)?.isGrouped,
-              ]"
-              :message="item"
-              :room-id="roomId"
-              :show-avatar="groupMeta.get(item.clientId)?.showAvatar ?? true"
-              :show-author="groupMeta.get(item.clientId)?.showAuthor ?? true"
-              :is-grouped="groupMeta.get(item.clientId)?.isGrouped ?? false"
-              @reply="emit('reply', $event)"
-              @edit="emit('edit', $event)"
-              @delete="emit('delete', $event)"
-              @react="(msgId: string, emoji: string) => handleReact(msgId, emoji)"
-              @open-profile="emit('open-profile', $event)"
-            />
+            <div
+              :id="'msg-' + item.clientId"
+              :class="{ 'unread-divider': chatStore.lastReadMessageId && item.serverId === chatStore.lastReadMessageId }"
+            >
+              <ChatMessageItem
+                v-memo="[
+                  item.clientId,
+                  item.serverId,
+                  item.content,
+                  item.editedAt,
+                  item.reactions,
+                  item.isDeleted,
+                  item.isStarred,
+                  item.status,
+                  item.attachments,
+                  groupMeta.get(item.clientId)?.showAvatar,
+                  groupMeta.get(item.clientId)?.showAuthor,
+                  groupMeta.get(item.clientId)?.isGrouped,
+                ]"
+                :message="item"
+                :room-id="roomId"
+                :show-avatar="groupMeta.get(item.clientId)?.showAvatar ?? true"
+                :show-author="groupMeta.get(item.clientId)?.showAuthor ?? true"
+                :is-grouped="groupMeta.get(item.clientId)?.isGrouped ?? false"
+                @reply="emit('reply', $event)"
+                @edit="emit('edit', $event)"
+                @delete="emit('delete', $event)"
+                @react="(msgId: string, emoji: string) => handleReact(msgId, emoji)"
+                @star="(msgId: string) => emit('star', msgId)"
+                @open-profile="emit('open-profile', $event)"
+              />
+            </div>
           </DynamicScrollerItem>
         </template>
         <template #before>
@@ -209,5 +233,32 @@
   color: var(--text-muted);
   font-size: 14px;
   padding: 48px 20px;
+}
+.unread-divider {
+  position: relative;
+}
+.unread-divider::before {
+  content: 'NEW';
+  position: absolute;
+  top: -1px;
+  left: 16px;
+  right: 16px;
+  height: 2px;
+  background: var(--accent-violet);
+  z-index: 2;
+}
+.unread-divider::after {
+  content: 'NEW';
+  position: absolute;
+  top: -8px;
+  left: 16px;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--accent-violet);
+  background: var(--bg-secondary);
+  padding: 1px 6px;
+  border-radius: 4px;
+  z-index: 3;
+  letter-spacing: 0.5px;
 }
 </style>
