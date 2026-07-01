@@ -13,7 +13,6 @@
   import { useRoomStore } from '@/stores/room.store'
   import { useFriendsStore } from '@/stores/friends.store'
   import { useDmStore } from '@/stores/dm.store'
-  import { useChatStore } from '@/stores/chat.store'
   import { connectSocket, getSocket } from '@/services/socket/socket'
 
   const auth = useAuthStore()
@@ -21,7 +20,6 @@
   const roomStore = useRoomStore()
   const friendsStore = useFriendsStore()
   const dmStore = useDmStore()
-  const chatStore = useChatStore()
 
   const showCreateRoomModal = ref(false)
 
@@ -124,12 +122,7 @@
           }
         })
 
-        // 5. Update active messages lists (sender user details)
-        chatStore.messages.forEach((m) => {
-          if (m.userId === updatedUser.id && m.user) {
-            m.user = { ...m.user, ...updatedUser }
-          }
-        })
+        // 5. Update active DM messages lists (sender user details)
         dmStore.messages.forEach((m) => {
           if (m.userId === updatedUser.id && m.user) {
             m.user = { ...m.user, ...updatedUser }
